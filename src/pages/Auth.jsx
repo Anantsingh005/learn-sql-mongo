@@ -1,0 +1,146 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
+
+function Field({ label, type = 'text', value, onChange, placeholder, autoComplete }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-semibold text-slate-400">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-indigo-500"
+      />
+    </label>
+  )
+}
+
+function AuthPage() {
+  const { configured, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth()
+  const [mode, setMode] = useState('signin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(null)
+  const [message, setMessage] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const navigate = useNavigate()
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setError(null)
+    setMessage(null)
+    setBusy(true)
+    const action = mode === 'signin' ? signInWithPassword : signUpWithPassword
+    const { error: err, data } = await action(email.trim(), password)
+    setBusy(false)
+    if (err) {
+      setError(err.message)
+      return
+    }
+    if (mode === 'signup') {
+      if (data?.user && !data.session) {
+        setMessage('Check your inbox to confirm your email, then sign in.')
+        setMode('signin')
+        return
+      }
+      navigate('/')
+      return
+    }
+    navigate('/')
+  }
+
+  const google = async () => {
+    setError(null)
+    setBusy(true)
+    const { error: err } = await signInWithGoogle()
+    setBusy(false)
+    if (err) setError(err.message)
+  }
+
+  if (!configured) {
+    return (
+      <div className="mx-auto max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
+        <div className="font-mono text-2xl font-bold text-white">Sign up / Sign in</div>
+        <p className="mt-4 text-sm text-slate-400">
+          You're in <span className="text-indigo-300">local demo mode</span> — create an account right here,
+          no keys or email confirmation needed. It switches to real Supabase auth automatically
+          once the project keys are added.
+        </p>
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => navigate('/auth?mode=signup')}
+            className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-indigo-500"
+          >
+            Create account
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto max-w-md">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8">
+        <div className="font-mono text-2xl font-bold text-white">
+          {mode === 'signin' ? 'Welcome back' : 'Create account'}
+        </div>
+
+        <div className="mt-4 flex rounded-lg bg-slate-950 p-1 text-sm">
+          <button
+            type="button"
+            onClick={() => { setMode('signin'); setError(null); setMessage(null) }}
+            className={`flex-1 rounded-md px-3 py-1.5 font-medium transition-colors ${
+              mode === 'signin' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode('signup'); setError(null); setMessage(null) }}
+            className={`flex-1 rounded-md px-3 py-1.5 font-medium transition-colors ${
+              mode === 'signup' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Sign up
+          </button>
+        </div>
+
+        <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
+          <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" />
+          <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} />
+          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {message && <p className="text-sm text-emerald-400">{message}</p>}
+          <button
+            type="submit"
+            disabled={busy || !email || !password}
+            className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+          </button>
+        </form>
+
+        <div className="my-5 flex items-center gap-3 text-xs text-slate-600">
+          <span className="h-px flex-1 bg-slate-800" />
+          or
+          <span className="h-px flex-1 bg-slate-800" />
+        </div>
+
+        <button
+          type="button"
+          disabled={busy}
+          onClick={google}
+          className="w-full rounded-lg border border-slate-600 px-5 py-2 text-sm font-semibold text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+        >
+          Continue with Google
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default AuthPage
