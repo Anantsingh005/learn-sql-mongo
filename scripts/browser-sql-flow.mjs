@@ -6,9 +6,10 @@ const PORT = 9226
 const DEV_PORT = 5173
 
 function bootServer() {
-  return spawn('npm.cmd', ['run', 'dev', '--', '--port', String(DEV_PORT), '--strictPort', '--host', '127.0.0.1'], {
+  return spawn(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'dev', '--', '--port', String(DEV_PORT), '--strictPort', '--host', '127.0.0.1'], {
     cwd: process.cwd(),
     stdio: 'ignore',
+    shell: process.platform === 'win32',
   })
 }
 
@@ -86,7 +87,6 @@ async function clickByText(ws, text, label) {
 
 const steps = []
 const pass = (s) => steps.push('PASS ' + s)
-const fail = (s) => steps.push('FAIL ' + s)
 
 async function main() {
   const server = bootServer()
@@ -112,7 +112,7 @@ async function main() {
       await sleep(1500)
 
       await clickByText(ws, 'SQL', 'home SQL card')
-      await sleep(1200 laquelle')
+      await sleep(1200)
       await waitFor(ws, `document.body.innerText.includes('Multiple Choice')`, 'mode cards visible')
       pass('mode cards rendered')
 

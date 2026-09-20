@@ -1,300 +1,62 @@
 export const writeQuery = [
-  {
-    id: 'write-01',
-    type: 'write',
-    topic: 'SELECT · WHERE',
-    difficulty: 'easy',
-    question: 'Write a query that shows the name and salary of every employee earning more than $60,000.',
-    schema: {
-      employees: {
-        columns: ['id', 'name', 'salary'],
-        rows: [
-          [1, 'Alice', 70000],
-          [2, 'Bob', 50000],
-          [3, 'Carol', 85000],
-          [4, 'Dave', 45000],
-          [5, 'Eve', 60000],
-          [6, 'Frank', 62000],
-        ],
-      },
-    },
-    expected: {
-      columns: ['name', 'salary'],
-      rows: [
-        ['Alice', 70000],
-        ['Carol', 85000],
-        ['Frank', 62000],
-      ],
-      orderMatters: false,
-    },
-    hint: 'Use WHERE salary > 60000.',
-    explanation:
-      'SELECT name, salary FROM employees WHERE salary > 60000; Eve earns exactly $60,000, which is not more than $60,000, so she is excluded.',
-  },
-  {
-    id: 'write-02',
-    type: 'write',
-    topic: 'DISTINCT',
-    difficulty: 'easy',
-    question: 'Write a query that lists every unique department exactly once.',
-    schema: {
-      employees: {
-        columns: ['id', 'name', 'dept'],
-        rows: [
-          [1, 'Alice', 'Engineering'],
-          [2, 'Bob', 'Sales'],
-          [3, 'Carol', 'Engineering'],
-          [4, 'Dave', 'Marketing'],
-          [5, 'Eve', 'Engineering'],
-          [6, 'Frank', 'Sales'],
-        ],
-      },
-    },
-    expected: {
-      columns: ['dept'],
-      rows: [['Engineering'], ['Sales'], ['Marketing']],
-      orderMatters: false,
-    },
-    hint: 'SELECT DISTINCT dept FROM employees;',
-    explanation:
-      'SELECT DISTINCT dept FROM employees; removes duplicates, so Engineering and Sales appear only once.',
-  },
-  {
-    id: 'write-03',
-    type: 'write',
-    topic: 'ORDER BY · LIMIT',
-    difficulty: 'easy',
-    question: 'Write a query that returns the names of the 3 cheapest products, cheapest first.',
-    schema: {
-      products: {
-        columns: ['id', 'name', 'price'],
-        rows: [
-          [1, 'Phone', 999.99],
-          [2, 'Mouse', 19.99],
-          [3, 'Keyboard', 49.99],
-          [4, 'Monitor', 199.99],
-          [5, 'Cable', 9.99],
-        ],
-      },
-    },
-    expected: {
-      columns: ['name'],
-      rows: [['Cable'], ['Mouse'], ['Keyboard']],
-      orderMatters: true,
-    },
-    hint: 'ORDER BY price ASC LIMIT 3.',
-    explanation:
-      'SELECT name FROM products ORDER BY price ASC LIMIT 3; sorts by price rising and keeps the first 3 rows (Cable, Mouse, Keyboard).',
-  },
-  {
-    id: 'write-04',
-    type: 'write',
-    topic: 'GROUP BY · SUM',
-    difficulty: 'medium',
-    question: 'Write a query that shows each customer along with the total amount they have spent.',
-    schema: {
-      orders: {
-        columns: ['id', 'customer', 'amount'],
-        rows: [
-          [1, 'Alice', 100],
-          [2, 'Bob', 50],
-          [3, 'Alice', 75],
-          [4, 'Carol', 200],
-          [5, 'Bob', 25],
-        ],
-      },
-    },
-    expected: {
-      columns: ['customer', 'total'],
-      rows: [
-        ['Alice', 175],
-        ['Bob', 75],
-        ['Carol', 200],
-      ],
-      orderMatters: false,
-    },
-    hint: 'GROUP BY customer and use SUM(amount).',
-    explanation:
-      'SELECT customer, SUM(amount) AS total FROM orders GROUP BY customer; Alice spends 100+75=175, Bob 50+25=75, Carol 200.',
-  },
-  {
-    id: 'write-05',
-    type: 'write',
-    topic: 'INNER JOIN',
-    difficulty: 'medium',
-    question:
-      'Write a query that pairs each student with their grade in each subject (student name, subject, grade).',
-    schema: {
-      students: {
-        columns: ['id', 'name'],
-        rows: [
-          [1, 'Amy'],
-          [2, 'Ben'],
-          [3, 'Cid'],
-        ],
-      },
-      scores: {
-        columns: ['student_id', 'subject', 'grade'],
-        rows: [
-          [1, 'Math', 90],
-          [1, 'Science', 85],
-          [2, 'Math', 78],
-          [2, 'History', 92],
-        ],
-      },
-    },
-    expected: {
-      columns: ['name', 'subject', 'grade'],
-      rows: [
-        ['Amy', 'Math', 90],
-        ['Amy', 'Science', 85],
-        ['Ben', 'Math', 78],
-        ['Ben', 'History', 92],
-      ],
-      orderMatters: false,
-    },
-    hint: 'INNER JOIN scores ON students.id = scores.student_id',
-    explanation:
-      'Joining on students.id = scores.student_id pairs each score row with its student. Cid has no scores and therefore does not appear in an INNER JOIN.',
-  },
-  {
-    id: 'write-06',
-    type: 'write',
-    topic: 'GROUP BY · HAVING',
-    difficulty: 'medium',
-    question:
-      'Write a query that shows each student and the number of courses they take, but only for students taking 2 or more courses.',
-    schema: {
-      enrollments: {
-        columns: ['student', 'course'],
-        rows: [
-          ['Amy', 'Math'],
-          ['Amy', 'Science'],
-          ['Ben', 'Math'],
-          ['Cid', 'Math'],
-          ['Cid', 'Art'],
-          ['Cid', 'Music'],
-        ],
-      },
-    },
-    expected: {
-      columns: ['student', 'courses'],
-      rows: [
-        ['Amy', 2],
-        ['Cid', 3],
-      ],
-      orderMatters: false,
-    },
-    hint: 'GROUP BY student with COUNT(*) and HAVING COUNT(*) >= 2.',
-    explanation:
-      'SELECT student, COUNT(*) AS courses FROM enrollments GROUP BY student HAVING COUNT(*) >= 2; includes Amy (2) and Cid (3), not Ben (1).',
-  },
-  {
-    id: 'write-07',
-    type: 'write',
-    topic: 'LEFT JOIN · COUNT',
-    difficulty: 'medium',
-    question:
-      'Write a query that shows each author and how many books they have written. Authors with no books must still appear, with 0.',
-    schema: {
-      authors: {
-        columns: ['id', 'name'],
-        rows: [
-          [1, 'Maya'],
-          [2, 'Leo'],
-          [3, 'Ivy'],
-        ],
-      },
-      books: {
-        columns: ['id', 'author_id', 'title'],
-        rows: [
-          [1, 1, 'Dawn'],
-          [2, 1, 'Night'],
-          [3, 2, 'Storm'],
-        ],
-      },
-    },
-    expected: {
-      columns: ['name', 'book_count'],
-      rows: [
-        ['Maya', 2],
-        ['Leo', 1],
-        ['Ivy', 0],
-      ],
-      orderMatters: false,
-    },
-    hint: 'LEFT JOIN keeps every author; count matched books.',
-    explanation:
-      'SELECT a.name, COUNT(b.id) FROM authors a LEFT JOIN books b ON a.id = b.author_id GROUP BY a.name; Ivy has no books but still appears with 0.',
-  },
-  {
-    id: 'write-08',
-    type: 'write',
-    topic: 'Subquery · MAX',
-    difficulty: 'hard',
-    question: 'Write a query that returns the name and price of the most expensive product.',
-    schema: {
-      products: {
-        columns: ['id', 'name', 'price'],
-        rows: [
-          [1, 'Laptop', 999.99],
-          [2, 'Mouse', 19.99],
-          [3, 'Monitor', 199.99],
-          [4, 'Desk', 299.99],
-        ],
-      },
-    },
-    expected: {
-      columns: ['name', 'price'],
-      rows: [['Laptop', 999.99]],
-      orderMatters: false,
-    },
-    hint: 'Compare price to (SELECT MAX(price) FROM products).',
-    explanation:
-      'SELECT name, price FROM products WHERE price = (SELECT MAX(price) FROM products); finds the highest price first, then the product(s) matching it.',
-  },
-  {
-    id: 'write-09',
-    type: 'write',
-    topic: 'JOIN · aggregate',
-    difficulty: 'hard',
-    question:
-      'Write a query that shows total revenue per category, where order items are in sales and products have a price.',
-    schema: {
-      products: {
-        columns: ['id', 'name', 'category', 'price'],
-        rows: [
-          [1, 'Laptop', 'Electronics', 999.99],
-          [2, 'Mouse', 'Electronics', 19.99],
-          [3, 'Keyboard', 'Accessories', 49.99],
-          [4, 'Monitor', 'Electronics', 199.99],
-          [5, 'Desk', 'Furniture', 299.99],
-        ],
-      },
-      sales: {
-        columns: ['product_id', 'qty'],
-        rows: [
-          [1, 2],
-          [2, 10],
-          [3, 5],
-          [4, 1],
-          [5, 3],
-        ],
-      },
-    },
-    expected: {
-      columns: ['category', 'revenue'],
-      rows: [
-        ['Electronics', 2399.87],
-        ['Accessories', 249.95],
-        ['Furniture', 899.97],
-      ],
-      orderMatters: false,
-    },
-    hint: 'Join products to sales, sum price * qty, group by category.',
-    explanation:
-      'SELECT p.category, SUM(p.price * s.qty) AS revenue FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.category; Electronics = 999.99*2 + 19.99*10 + 199.99*1 = 2399.87.',
-  },
+  {"id":"write-01","type":"write","topic":"SELECT · WHERE","difficulty":"easy","question":"easy","schema":{"employees":{"columns":["id","name","salary"],"rows":[[1,"Alice",70000],[2,"Bob",50000],[3,"Carol",85000],[4,"Dave",45000],[5,"Eve",60000],[6,"Frank",62000]]}},"expected":{"columns":["name","salary"],"rows":[["Alice",70000],["Carol",85000],["Frank",62000]],"orderMatters":false},"hint":"Use WHERE salary > 60000. Eve earns exactly 60000, which is not more, so she is excluded.","explanation":"SELECT name, salary FROM employees WHERE salary > 60000;"},
+  {"id":"write-02","type":"write","topic":"DISTINCT","difficulty":"easy","question":"easy","schema":{"employees":{"columns":["id","name","dept"],"rows":[[1,"Alice","Sales"],[2,"Bob","Eng"],[3,"Carol","Sales"],[4,"Dave","Mkt"]]}},"expected":{"columns":["dept"],"rows":[["Sales"],["Eng"],["Mkt"]],"orderMatters":false},"hint":"SELECT DISTINCT dept removes duplicate Sales.","explanation":"SELECT DISTINCT dept FROM employees;"},
+  {"id":"write-03","type":"write","topic":"ORDER BY · LIMIT","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Phone",999],[2,"Mouse",20],[3,"Keyboard",50],[4,"Monitor",200],[5,"Cable",10]]}},"expected":{"columns":["name"],"rows":[["Cable"],["Mouse"],["Keyboard"]],"orderMatters":true},"hint":"ORDER BY price ASC then LIMIT 3.","explanation":"SELECT name FROM products ORDER BY price ASC LIMIT 3;"},
+  {"id":"write-e4","type":"write","topic":"COUNT","difficulty":"easy","question":"easy","schema":{"employees":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"],[3,"Ci"]]}},"expected":{"columns":["count"],"rows":[[3]],"orderMatters":false},"hint":"SELECT COUNT(*) AS count.","explanation":"SELECT COUNT(*) AS count FROM employees;"},
+  {"id":"write-e5","type":"write","topic":"SELECT · WHERE","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",200],[3,"Cup",10],[4,"Chair",15]]}},"expected":{"columns":["name"],"rows":[["Pen"],["Cup"]],"orderMatters":false},"hint":"Chair is exactly 15, not under 15.","explanation":"SELECT name FROM products WHERE price < 15;"},
+  {"id":"write-e6","type":"write","topic":"ORDER BY · DESC","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",200],[3,"Cup",10]]}},"expected":{"columns":["name"],"rows":[["Desk"],["Cup"],["Pen"]],"orderMatters":true},"hint":"ORDER BY price DESC.","explanation":"SELECT name FROM products ORDER BY price DESC;"},
+  {"id":"write-e7","type":"write","topic":"WHERE · IS NULL","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Gift",null],[3,"Cup",null]]}},"expected":{"columns":["name"],"rows":[["Gift"],["Cup"]],"orderMatters":false},"hint":"WHERE price IS NULL (not = NULL).","explanation":"SELECT name FROM products WHERE price IS NULL;"},
+  {"id":"write-e8","type":"write","topic":"SELECT · WHERE","difficulty":"easy","question":"easy","schema":{"employees":{"columns":["id","name","salary"],"rows":[[1,"Ada",50000],[2,"Bo",70000],[3,"Ci",45000],[4,"Dex",65000]]}},"expected":{"columns":["name"],"rows":[["Ada"],["Bo"],["Dex"]],"orderMatters":false},"hint":"Use BETWEEN 50000 AND 70000 (inclusive).","explanation":"SELECT name FROM employees WHERE salary BETWEEN 50000 AND 70000;"},
+  {"id":"write-e9","type":"write","topic":"DISTINCT","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","category"],"rows":[[1,"Pen","Office"],[2,"Desk","Office"],[3,"Cup","Kitchen"]]}},"expected":{"columns":["category"],"rows":[["Office"],["Kitchen"]],"orderMatters":false},"hint":"SELECT DISTINCT category FROM products.","explanation":"SELECT DISTINCT category FROM products;"},
+  {"id":"write-e10","type":"write","topic":"SELECT · LIMIT","difficulty":"easy","question":"easy","schema":{"customers":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"],[3,"Ci"]]}},"expected":{"columns":["name"],"rows":[["Ada"],["Bo"]],"orderMatters":true},"hint":"LIMIT 2.","explanation":"SELECT name FROM customers LIMIT 2;"},
+  {"id":"write-e11","type":"write","topic":"SELECT · WHERE","difficulty":"easy","question":"easy","schema":{"books":{"columns":["id","title","pages"],"rows":[[1,"Rust",200],[2,"Fog",450],[3,"Halo",320],[4,"Mist",260]]}},"expected":{"columns":["title"],"rows":[["Fog"],["Halo"]],"orderMatters":false},"hint":"WHERE pages > 300.","explanation":"SELECT title FROM books WHERE pages > 300;"},
+  {"id":"write-e12","type":"write","topic":"AND · OR","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","category","price"],"rows":[[1,"Pen","Office",5],[2,"Desk","Office",200],[3,"Clip","Office",10],[4,"Cup","Kitchen",15]]}},"expected":{"columns":["name"],"rows":[["Pen"],["Clip"]],"orderMatters":false},"hint":"category = 'Office' AND price <= 20.","explanation":"SELECT name FROM products WHERE category = 'Office' AND price <= 20;"},
+  {"id":"write-e13","type":"write","topic":"LIKE","difficulty":"easy","question":"easy","schema":{"customers":{"columns":["id","name"],"rows":[[1,"Alice"],[2,"Alan"],[3,"Bo"],[4,"Alex"]]}},"expected":{"columns":["name"],"rows":[["Alice"],["Alan"],["Alex"]],"orderMatters":false},"hint":"WHERE name LIKE 'Al%'.","explanation":"SELECT name FROM customers WHERE name LIKE 'Al%';"},
+  {"id":"write-e14","type":"write","topic":"ORDER BY · ASC","difficulty":"easy","question":"easy","schema":{"cities":{"columns":["id","name"],"rows":[[1,"Delhi"],[2,"Tokyo"],[3,"Agra"]]}},"expected":{"columns":["name"],"rows":[["Agra"],["Delhi"],["Tokyo"]],"orderMatters":true},"hint":"ORDER BY name ASC.","explanation":"SELECT name FROM cities ORDER BY name ASC;"},
+  {"id":"write-e15","type":"write","topic":"SUM","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",10],[3,"Cup",25]]}},"expected":{"columns":["total"],"rows":[[40]],"orderMatters":false},"hint":"SUM(price) with alias total.","explanation":"SELECT SUM(price) AS total FROM products;"},
+  {"id":"write-e16","type":"write","topic":"AVG","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",10],[3,"Cup",15]]}},"expected":{"columns":["avg"],"rows":[[10]],"orderMatters":false},"hint":"AVG(price) with alias avg.","explanation":"SELECT AVG(price) AS avg FROM products;"},
+  {"id":"write-e17","type":"write","topic":"SELECT · WHERE","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",200],[3,"Lamp",100],[4,"Cup",90]]}},"expected":{"columns":["name","price"],"rows":[["Desk",200],["Lamp",100]],"orderMatters":false},"hint":"WHERE price >= 100.","explanation":"SELECT name, price FROM products WHERE price >= 100;"},
+  {"id":"write-e18","type":"write","topic":"MIN","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",200],[3,"Cup",10]]}},"expected":{"columns":["min"],"rows":[[5]],"orderMatters":false},"hint":"MIN(price) with alias min.","explanation":"SELECT MIN(price) AS min FROM products;"},
+  {"id":"write-e19","type":"write","topic":"MAX","difficulty":"easy","question":"easy","schema":{"employees":{"columns":["id","name","salary"],"rows":[[1,"Ada",90000],[2,"Bo",60000],[3,"Ci",75000]]}},"expected":{"columns":["max"],"rows":[[90000]],"orderMatters":false},"hint":"MAX(salary) with alias max.","explanation":"SELECT MAX(salary) AS max FROM employees;"},
+  {"id":"write-e20","type":"write","topic":"WHERE · IS NOT NULL","difficulty":"easy","question":"easy","schema":{"customers":{"columns":["id","name","phone"],"rows":[[1,"Ada","555-1"],[2,"Bo",null],[3,"Ci","555-3"]]}},"expected":{"columns":["name"],"rows":[["Ada"],["Ci"]],"orderMatters":false},"hint":"WHERE phone IS NOT NULL.","explanation":"SELECT name FROM customers WHERE phone IS NOT NULL;"},
+  {"id":"write-e21","type":"write","topic":"DISTINCT","difficulty":"easy","question":"easy","schema":{"customers":{"columns":["id","name","city"],"rows":[[1,"Ada","NY"],[2,"Bo","LA"],[3,"Ci","NY"]]}},"expected":{"columns":["city"],"rows":[["NY"],["LA"]],"orderMatters":false},"hint":"SELECT DISTINCT city FROM customers.","explanation":"SELECT DISTINCT city FROM customers;"},
+  {"id":"write-e22","type":"write","topic":"SELECT · WHERE","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Box",10],[3,"Cup",20],[4,"Desk",200]]}},"expected":{"columns":["name"],"rows":[["Box"],["Cup"]],"orderMatters":false},"hint":"BETWEEN 10 AND 20.","explanation":"SELECT name FROM products WHERE price BETWEEN 10 AND 20;"},
+  {"id":"write-e23","type":"write","topic":"LIKE","difficulty":"easy","question":"easy","schema":{"customers":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"],[3,"Mina"],[4,"Rex"]]}},"expected":{"columns":["name"],"rows":[["Ada"],["Mina"]],"orderMatters":false},"hint":"WHERE name LIKE '%a'.","explanation":"SELECT name FROM customers WHERE name LIKE '%a';"},
+  {"id":"write-e24","type":"write","topic":"AND","difficulty":"easy","question":"easy","schema":{"employees":{"columns":["id","name","dept","salary"],"rows":[[1,"Ada","Sales",50000],[2,"Bo","Sales",40000],[3,"Ci","Eng",90000]]}},"expected":{"columns":["name"],"rows":[["Ada"]],"orderMatters":false},"hint":"WHERE dept = 'Sales' AND salary > 45000.","explanation":"SELECT name FROM employees WHERE dept = 'Sales' AND salary > 45000;"},
+  {"id":"write-e25","type":"write","topic":"SELECT · WHERE","difficulty":"easy","question":"easy","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Cup",10],[3,"Desk",200]]}},"expected":{"columns":["name","price"],"rows":[["Pen",5],["Desk",200]],"orderMatters":false},"hint":"WHERE price <> 10 (or != 10).","explanation":"SELECT name, price FROM products WHERE price <> 10;"},
+  {"id":"write-h18","type":"write","topic":"CTE · JOIN · COUNT","difficulty":"hard","question":"Write a query (using WITH) which lists each buyer along with how many distinct products they have bought.","schema":{"buyers":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"],[3,"Ci"]]},"purchases":{"columns":["id","buyer_id","product_id"],"rows":[[1,1,10],[2,1,10],[3,2,20],[4,1,30],[5,3,20]]}},"expected":{"columns":["name","count"],"rows":[["Ada",3],["Bo",1],["Ci",1]],"orderMatters":false},"hint":"WITH counts AS (SELECT buyer_id, COUNT(DISTINCT product_id) c FROM purchases GROUP BY buyer_id) ... JOIN.","explanation":"WITH counts AS (SELECT buyer_id, COUNT(DISTINCT product_id) AS c FROM purchases GROUP BY buyer_id) SELECT buyers.name, counts.c AS count FROM buyers JOIN counts ON buyers.id = counts.buyer_id;"},
+  {"id":"write-h19","type":"write","topic":"LEFT JOIN · WHERE NULL","difficulty":"hard","question":"Write a query listing the names of publishers (from publishers) that have never released any book.","schema":{"publishers":{"columns":["id","name"],"rows":[[1,"OneBook"],[2,"NoBooks"],[3,"Third"]]},"books":{"columns":["id","title","publisher_id"],"rows":[[1,"X",1],[2,"Y",1],[3,"Z",3]]}},"expected":{"columns":["name"],"rows":[["NoBooks"]],"orderMatters":false},"hint":"LEFT JOIN books ... WHERE books.id IS NULL.","explanation":"SELECT publishers.name FROM publishers LEFT JOIN books ON publishers.id = books.publisher_id WHERE books.id IS NULL;"},
+  {"id":"write-h20","type":"write","topic":"GROUP BY · HAVING · COUNT","difficulty":"hard","question":"Write a query listing departments with more than 3 employees.","schema":{"departments":{"columns":["id","name"],"rows":[[1,"Eng"],[2,"Sales"],[3,"HR"]]},"employees":{"columns":["id","name","dept_id"],"rows":[[1,"A",1],[2,"B",1],[3,"C",1],[4,"D",1],[5,"E",2],[6,"F",2],[7,"G",3]]}},"expected":{"columns":["name"],"rows":[["Eng"]],"orderMatters":false},"hint":"GROUP BY ... HAVING COUNT(*) > 3.","explanation":"SELECT departments.name FROM departments JOIN employees ON departments.id = employees.dept_id GROUP BY departments.name HAVING COUNT(*) > 3;"},
+  {"id":"write-h21","type":"write","topic":"SELF JOIN","difficulty":"hard","question":"Write a query showing the name of each employee and their manager's name.","schema":{"employees":{"columns":["id","name","manager_id"],"rows":[[1,"Ada",3],[2,"Bo",3],[3,"Ci",null],[4,"Dex",1]]}},"expected":{"columns":["name","manager"],"rows":[["Ada","Ci"],["Bo","Ci"],["Dex","Ada"]],"orderMatters":false},"hint":"SELF JOIN on employees.manager_id = manager.id.","explanation":"SELECT e.name, m.name AS manager FROM employees e JOIN employees m ON e.manager_id = m.id;"},
+  {"id":"write-h22","type":"write","topic":"CASE · SUM","difficulty":"hard","question":"Write a query showing total sales as total and the portion over 100 as high.","schema":{"sales":{"columns":["id","amount"],"rows":[[1,120],[2,80],[3,200],[4,50]]}},"expected":{"columns":["total","high"],"rows":[["450","320"]],"orderMatters":false},"hint":"SUM(CASE WHEN amount > 100 THEN amount ELSE 0 END) AS high.","explanation":"SELECT SUM(amount) AS total, SUM(CASE WHEN amount > 100 THEN amount ELSE 0 END) AS high FROM sales;"},
+  {"id":"write-h23","type":"write","topic":"WITH · RANK","difficulty":"hard","question":"Write a query using a CTE with RANK to list the top salary in each department.","schema":{"employees":{"columns":["id","name","dept","salary"],"rows":[[1,"Ada","Eng",80000],[2,"Bo","Eng",90000],[3,"Ci","Sales",50000],[4,"Dex","Sales",60000]]}},"expected":{"columns":["dept","top_salary"],"rows":[["Eng",90000],["Sales",60000]],"orderMatters":false},"hint":"RANK() OVER (PARTITION BY dept ORDER BY salary DESC).","explanation":"WITH r AS (SELECT dept, salary, RANK() OVER (PARTITION BY dept ORDER BY salary DESC) rnk FROM employees) SELECT DISTINCT dept, salary AS top_salary FROM r WHERE rnk = 1;"},
+  {"id":"write-h24","type":"write","topic":"JOIN · GROUP BY","difficulty":"hard","question":"Write a query showing each publisher with the number of books they released.","schema":{"publishers":{"columns":["id","name"],"rows":[[1,"One"],[2,"Two"],[3,"Zero"]]},"books":{"columns":["id","title","publisher_id"],"rows":[[1,"A",1],[2,"B",1],[3,"C",2]]}},"expected":{"columns":["name","count"],"rows":[["One",2],["Two",1],["Zero",0]],"orderMatters":false},"hint":"LEFT JOIN + GROUP BY + COUNT(books.id).","explanation":"SELECT publishers.name, COUNT(books.id) AS count FROM publishers LEFT JOIN books ON publishers.id = books.publisher_id GROUP BY publishers.name;"},
+  {"id":"write-h25","type":"write","topic":"NOT EXISTS","difficulty":"hard","question":"Write a query listing customers who have placed no orders.","schema":{"customers":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"],[3,"Ci"]]},"orders":{"columns":["id","customer_id"],"rows":[[1,1],[2,3]]}},"expected":{"columns":["name"],"rows":[["Bo"]],"orderMatters":false},"hint":"WHERE NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = customers.id).","explanation":"SELECT name FROM customers WHERE NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = customers.id);"},
+  {"id":"write-h26","type":"write","topic":"UNION","difficulty":"hard","question":"Write a query returning a single list of all names from both customers and suppliers, with no duplicates.","schema":{"customers":{"columns":[["id","name"]],"rows":[[1,"Ada"],[2,"Bo"]]},"suppliers":{"columns":[["id","name"]],"rows":[[1,"Ci"],[2,"Bo"]]}},"expected":{"columns":["name"],"rows":[["Ada"],["Bo"],["Ci"]],"orderMatters":false},"hint":"UNION removes duplicates (Bo appears once).","explanation":"SELECT name FROM customers UNION SELECT name FROM suppliers;"},
+  {"id":"write-h27","type":"write","topic":"HAVING · COUNT","difficulty":"hard","question":"Write a query showing product categories that have 2 or more products.","schema":{"products":{"columns":["id","name","category"],"rows":[[1,"Pen","Office"],[2,"Desk","Office"],[3,"Cup","Kitchen"],[4,"Pan","Kitchen"],[5,"Bowl","Kitchen"]]}},"expected":{"columns":["category"],"rows":[["Office"],["Kitchen"]],"orderMatters":false},"hint":"GROUP BY category HAVING COUNT(*) >= 2.","explanation":"SELECT category FROM products GROUP BY category HAVING COUNT(*) >= 2;"},
+  {"id":"write-h28","type":"write","topic":"SUBQUERY · ALL","difficulty":"hard","question":"Write a query returning names of products priced higher than every office product.","schema":{"products":{"columns":["id","name","category","price"],"rows":[[1,"Pen","Office",5],[2,"Desk","Office",200],[3,"Chair","Office",100],[4,"Lamp","Home",300],[5,"Cup","Home",15]]}},"expected":{"columns":["name"],"rows":[["Lamp"]],"orderMatters":false},"hint":"WHERE price > ALL (SELECT price FROM products WHERE category = 'Office').","explanation":"SELECT name FROM products WHERE price > ALL (SELECT price FROM products WHERE category = 'Office');"},
+  {"id":"write-h29","type":"write","topic":"JOIN · HAVING","difficulty":"hard","question":"Write a query listing teams whose total score is above 150 (team names from teams, scores in results).","schema":{"teams":{"columns":[["id","name"]],"rows":[[1,"Reds"],[2,"Blues"]]},"results":{"columns":[["id","team_id","score"]],"rows":[[1,1,90],[2,1,80],[3,2,60]]}},"expected":{"columns":["name"],"rows":[["Reds"]],"orderMatters":false},"hint":"JOIN then GROUP BY teams.name HAVING SUM(results.score) > 150.","explanation":"SELECT teams.name FROM teams JOIN results ON teams.id = results.team_id GROUP BY teams.name HAVING SUM(results.score) > 150;"},
+  {"id":"write-h30","type":"write","topic":"CORRELATED · COUNT","difficulty":"hard","question":"Write a query listing authors and the number of books they wrote, using a correlated subquery (count only).","schema":{"authors":{"columns":[["id","name"]],"rows":[[1,"Ada"],[2,"Bo"],[3,"Ci"]]},"books":{"columns":[["id","author_id"]],"rows":[[1,1],[2,1],[3,3]]}},"expected":{"columns":["name","count"],"rows":[["Ada",2],["Bo",0],["Ci",1]],"orderMatters":false},"hint":"Correlate: (SELECT COUNT(*) FROM books WHERE author_id = authors.id).","explanation":"SELECT authors.name, (SELECT COUNT(*) FROM books WHERE author_id = authors.id) AS count FROM authors;"},
+  {"id":"write-h71","type":"write","topic":"WINDOW · RANK","difficulty":"hard","question":"Write a query ranking products by price (1 = most expensive) using RANK.","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",300],[3,"Cup",15],[4,"Lamp",300]]}},"expected":{"columns":["name","rn"],"rows":[["Desk",1],["Lamp",1],["Cup",3],["Pen",4]],"orderMatters":false},"hint":"RANK() OVER (ORDER BY price DESC) — for ties, next rank skips.","explanation":"SELECT name, RANK() OVER (ORDER BY price DESC) AS rn FROM products;"},
+  {"id":"write-h72","type":"write","topic":"WINDOW · SUM TOTAL","difficulty":"hard","question":"Write a query showing each product with price and the overall average price.","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",300],[3,"Cup",15],[4,"Lamp",80]]}},"expected":{"columns":["name","price","avg"],"rows":[["Pen",5,100],["Desk",300,100],["Cup",15,100],["Lamp",80,100]],"orderMatters":true},"hint":"Use AVG(price) OVER () to repeat the overall average on every row.","explanation":"SELECT name, price, AVG(price) OVER () AS avg FROM products;"},
+  {"id":"write-h73","type":"write","topic":"WITH · RECURSIVE","difficulty":"hard","question":"Write a query (using WITH RECURSIVE) producing a list of numbers 1 to 4 in a column n.","schema":{"singleton":{"columns":["dummy"],"rows":[[0]]}},"expected":{"columns":["n"],"rows":[["1"],["2"],["3"],["4"]],"orderMatters":true},"hint":"WITH RECURSIVE cnt(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM cnt WHERE n < 4).","explanation":"WITH RECURSIVE cnt(n) AS (SELECT 1 UNION ALL SELECT n + 1 FROM cnt WHERE n < 4) SELECT n FROM cnt;"},
+  {"id":"write-h74","type":"write","topic":"CTE · JOIN · WHERE NULL","difficulty":"hard","question":"Write a query listing cities with no residents.","schema":{"cities":{"columns":["id","name"],"rows":[[1,"Aha"],[2,"Bho"],[3,"Csi"]]},"residents":{"columns":["id","city_id"],"rows":[[1,1],[2,1],[3,3]]}},"expected":{"columns":["name"],"rows":[["Bho"]],"orderMatters":false},"hint":"LEFT JOIN residents ON cities.id = residents.city_id WHERE residents.id IS NULL.","explanation":"SELECT cities.name FROM cities LEFT JOIN residents ON cities.id = residents.city_id WHERE residents.id IS NULL;"},
+  {"id":"write-m1","type":"write","topic":"GROUP BY","difficulty":"medium","question":"Write a query showing how many employees are in each department.","schema":{"employees":{"columns":["id","name","dept"],"rows":[[1,"Ada","Sales"],[2,"Bo","Sales"],[3,"Ci","Eng"]]}},"expected":{"columns":["dept","count"],"rows":[["Sales",2],["Eng",1]],"orderMatters":false},"hint":"GROUP BY dept with COUNT(*).","explanation":"SELECT dept, COUNT(*) AS count FROM employees GROUP BY dept;"},
+  {"id":"write-m2","type":"write","topic":"GROUP BY · HAVING","difficulty":"medium","question":"Write a query listing departments with at least 2 employees.","schema":{"employees":{"columns":["id","name","dept"],"rows":[[1,"Ada","Sales"],[2,"Bo","Sales"],[3,"Ci","Eng"],[4,"Dex","Sales"]]}},"expected":{"columns":["dept"],"rows":[["Sales"]],"orderMatters":false},"hint":"HAVING COUNT(*) >= 2.","explanation":"SELECT dept FROM employees GROUP BY dept HAVING COUNT(*) >= 2;"},
+  {"id":"write-m3","type":"write","topic":"JOIN","difficulty":"medium","question":"Write a query pairing each product with the name of its supplier.","schema":{"products":{"columns":[["id","name","supplier_id"]],"rows":[[1,"Pen",1],[2,"Desk",2]]},"suppliers":{"columns":["id","name"],"rows":[[1,"NibCo"],[2,"WoodCo"]]}},"expected":{"columns":["name","supplier"],"rows":[["Pen","NibCo"],["Desk","WoodCo"]],"orderMatters":false},"hint":"JOIN suppliers ON products.supplier_id = suppliers.id.","explanation":"SELECT products.name, suppliers.name AS supplier FROM products JOIN suppliers ON products.supplier_id = suppliers.id;"},
+  {"id":"write-m4","type":"write","topic":"JOIN","difficulty":"medium","question":"Write a query showing order references with the customer name for each order.","schema":{"orders":{"columns":["id","ref","customer_id"],"rows":[[1,"A-1",1],[2,"B-2",2]]},"customers":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"]]}},"expected":{"columns":["ref","name"],"rows":[["A-1","Ada"],["B-2","Bo"]],"orderMatters":false},"hint":"JOIN customers ON orders.customer_id = customers.id.","explanation":"SELECT orders.ref, customers.name FROM orders JOIN customers ON orders.customer_id = customers.id;"},
+  {"id":"write-m5","type":"write","topic":"LEFT JOIN","difficulty":"medium","question":"Write a query listing every author, with the count of their books (0 if none).","schema":{"authors":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"],[3,"Ci"]]},"books":{"columns":["id","title","author_id"],"rows":[[1,"X",1],[2,"Y",1],[3,"Z",3]]}},"expected":{"columns":["name","count"],"rows":[["Ada",2],["Bo",0],["Ci",1]],"orderMatters":false},"hint":"LEFT JOIN books + GROUP BY.","explanation":"SELECT authors.name, COUNT(books.id) AS count FROM authors LEFT JOIN books ON authors.id = books.author_id GROUP BY authors.name;"},
+  {"id":"write-m6","type":"write","topic":"SUM","difficulty":"medium","question":"Write a query showing each customer's total order value.","schema":{"customers":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"]]},"orders":{"columns":["id","customer_id","amount"],"rows":[[1,1,100],[2,1,50],[3,2,75]]}},"expected":{"columns":["name","total"],"rows":[["Ada",150],["Bo",75]],"orderMatters":false},"hint":"GROUP BY + SUM(amount).","explanation":"SELECT customers.name, SUM(orders.amount) AS total FROM customers JOIN orders ON customers.id = orders.customer_id GROUP BY customers.name;"},
+  {"id":"write-m7","type":"write","topic":"ORDER BY · DESC","difficulty":"medium","question":"Write a query listing items heaviest first.","schema":{"items":{"columns":["id","name","weight"],"rows":[[1,"Pen",5],[2,"Desk",300],[3,"Cup",20]]}},"expected":{"columns":["name"],"rows":[["Desk"],["Cup"],["Pen"]],"orderMatters":true},"hint":"ORDER BY weight DESC.","explanation":"SELECT name FROM items ORDER BY weight DESC;"},
+  {"id":"write-m8","type":"write","topic":"BETWEEN","difficulty":"medium","question":"Write a query showing names of employees hired in 202 renters 2020.","schema":{"employees":{"columns":["id","name","hired"],"rows":[[1,"Ada","2020-03-01"],[2,"Bo","2021-06-01"],[3,"Ci","2020-12-01"]]}},"expected":{"columns":["name"],"rows":[["Ada"],["Ci"]],"orderMatters":false},"hint":"WHERE hired BETWEEN '2020-01-01' AND '2020-12-31'.","explanation":"SELECT name FROM employees WHERE hired BETWEEN '2020-01-01' AND '2020-12-31';"},
+  {"id":"write-m9","type":"write","topic":"WHERE · NULL","difficulty":"medium","question":"Write a query listing customers who provided no phone.","schema":{"customers":{"columns":["id","name","phone"],"rows":[[1,"Ada","555"],[2,"Bo",null],[3,"Ci",null]]}},"expected":{"columns":["name"],"rows":[["Bo"],["Ci"]],"orderMatters":false},"hint":"WHERE phone IS NULL.","explanation":"SELECT name FROM customers WHERE phone IS NULL;"},
+  {"id":"write-m10","type":"write","topic":"DISTINCT","difficulty":"medium","question":"Write a query listing every distinct category that appears in catalog.","schema":{"catalog":{"columns":["id","item","category"],"rows":[[1,"Pen","Office"],[2,"Desk","Office"],[3,"Cup","Kitchen"]]}},"expected":{"columns":["category"],"rows":[["Office"],["Kitchen"]],"orderMatters":false},"hint":"SELECT DISTINCT category.","explanation":"SELECT DISTINCT category FROM catalog;"},
+  {"id":"write-m11","type":"write","topic":"COUNT","difficulty":"medium","question":"Write a query counting how many orders exist.","schema":{"orders":{"columns":["id","ref"],"rows":[[1,"A"],[2,"B"],[3,"C"]]}},"expected":{"columns":["count"],"rows":[["3"]],"orderMatters":false},"hint":"SELECT COUNT(*).","explanation":"SELECT COUNT(*) FROM orders;"},
+  {"id":"write-m12","type":"write","topic":"MAX · MIN","difficulty":"medium","question":"Write a query showing both the max and min salary.","schema":{"employees":{"columns":["id","name","salary"],"rows":[[1,"Ada",90000],[2,"Bo",50000],[3,"Ci",70000]]}},"expected":{"columns":["max","min"],"rows":[["90000","50000"]],"orderMatters":false},"hint":"MAX(salary), MIN(salary).","explanation":"SELECT MAX(salary) AS max, MIN(salary) AS min FROM employees;"},
+  {"id":"write-m13","type":"write","topic":"WHERE · IN","difficulty":"medium","question":"Write a query returning names of products whose id is 2, 4, or 6.","schema":{"products":{"columns":["id","name"],"rows":[[1,"Pen"],[2,"Desk"],[3,"Cup"],[4,"Box"],[6,"Lamp"]]}},"expected":{"columns":["name"],"rows":[["Desk"],["Box"],["Lamp"]],"orderMatters":false},"hint":"WHERE id IN (2, 4, 6).","explanation":"SELECT name FROM products WHERE id IN (2, 4, 6);"},
+  {"id":"write-m14","type":"write","topic":"ORDER BY · DESC · LIMIT","difficulty":"medium","question":"Write a query returning the top-2 most expensive product names.","schema":{"products":{"columns":["id","name","price"],"rows":[[1,"Pen",5],[2,"Desk",300],[3,"Cup",10],[4,"Chair",90]]}},"expected":{"columns":["name"],"rows":[["Desk"],["Chair"]],"orderMatters":true},"hint":"ORDER BY price DESC LIMIT 2.","explanation":"SELECT name FROM products ORDER BY price DESC LIMIT 2;"},
+  {"id":"write-m15","type":"write","topic":"AS alias","difficulty":"medium","question":"Write a query showing salary doubled, labeled doubled.","schema":{"employees":{"columns":["id","name","salary"],"rows":[[1,"Ada",50000],[2,"Bo",80000]]}},"expected":{"columns":["name","doubled"],"rows":[["Ada","100000"],["Bo","160000"]],"orderMatters":false},"hint":"salary * 2 AS doubled.","explanation":"SELECT name, salary * 2 AS doubled FROM employees;"},
+  {"id":"write-h51","type":"write","topic":"OVER · PARTITION","difficulty":"hard","question":"Write a query listing product names with their sales and the running total of sales ordered by date.","schema":{"products":{"columns":["id","name"],"rows":[[1,"Pen"],[2,"Desk"],[3,"Cup"]]},"sales":{"columns":["id","product_id","date","qty"],"rows":[[1,1,"2024-01-01",10],[2,2,"2024-01-02",5],[3,1,"2024-01-03",7],[4,3,"2024-01-04",4]]}},"expected":{"columns":["name","date","qty","running"],"rows":[["Pen","2024-01-01",10,10],["Pen","2024-01-03",7,17],["Desk","2024-01-02",5,5],["Cup","2024-01-04",4,4]],"orderMatters":true},"hint":"Window: SUM(qty) OVER (ORDER BY date).","explanation":"SELECT products.name, sales.date, sales.qty, SUM(sales.qty) OVER (ORDER BY sales.date) AS running FROM sales JOIN products ON sales.product_id = products.id;"},
+  {"id":"write-h52","type":"write","topic":"LAG","difficulty":"hard","question":"Write a query listing each month with its sales and the sales from the previous month.","schema":{"sales":{"columns":["id","month","amount"],"rows":[[1,"Jan",100],[2,"Feb",150],[3,"Mar",120],[4,"Apr",180]]}},"expected":{"columns":["month","amount","prev"],"rows":[["Jan",100,null],["Feb",150,100],["Mar",120,150],["Apr",180,120]],"orderMatters":true},"hint":"LAG(amount) OVER (ORDER BY month).","explanation":"SELECT month, amount, LAG(amount) OVER (ORDER BY month) AS prev FROM sales;"},
+  {"id":"write-h53","type":"write","topic":"CTE · COUNT · 0","difficulty":"hard","question":"Write a query (using with) showing each customer and how many orders they have, defaulting unpaid customers to 0.","schema":{"customers":{"columns":["id","name"],"rows":[[1,"Ada"],[2,"Bo"],[3,"Ci"]]},"orders":{"columns":["id","customer_id","paid"],"rows":[[1,1,1],[2,1,1],[3,2,0]]}},"expected":{"columns":["name","count"],"rows":[["Ada",2],["Bo",0],["Ci",0]],"orderMatters":false},"hint":"LEFT JOIN + COUNT(orders.id), COALESCE for 0.","explanation":"WITH c AS (SELECT customers.name, COUNT(orders.id) AS count FROM customers LEFT JOIN orders ON customers.id = orders.customer_id GROUP BY customers.name) SELECT name, COALESCE(count, 0) AS count FROM c;"}
 ]
-
-export default writeQuery

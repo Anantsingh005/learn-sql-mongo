@@ -13,9 +13,19 @@ export const QUESTION_TYPE_LABELS = {
   bug: 'Fix the bug',
 }
 
+function normalizeTypes(types) {
+  if (Array.isArray(types)) return new Set(types)
+  const set = new Set()
+  for (const [key, enabled] of Object.entries(types ?? {})) {
+    if (enabled) set.add(key)
+  }
+  return set
+}
+
 export function selectQuestions({ types = { mc: true, write: true, bug: true }, difficulty = 'all' } = {}) {
+  const typeSet = normalizeTypes(types)
   return allSqlQuestions.filter((q) => {
-    const typeOk = types[q.type]
+    const typeOk = typeSet.has(q.type)
     const diffOk = difficulty === 'all' || q.difficulty === difficulty
     return typeOk && diffOk
   })

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { COMPLETE_THRESHOLD } from '../../firebase/progress.js'
 
 function grade(percent) {
   if (percent >= 90) return { letter: 'A', color: 'text-emerald-300', msg: 'Outstanding!' }
@@ -30,17 +31,37 @@ function saveMessage(status) {
   }
 }
 
-function ResultScreen({ snapshot, saveStatus = 'idle', onReplay }) {
+function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, progress = {} }) {
   const answers = snapshot.answers
   const correct = answers.filter((a) => a.correct).length
   const total = answers.length
   const percent = total > 0 ? Math.round((correct / total) * 100) : 0
   const g = grade(percent)
+  const completedThisRun = percent >= COMPLETE_THRESHOLD
+  const completedLevels = progress.completed ?? []
+  const hardUnlocked =
+    completedLevels.includes('easy') && completedLevels.includes('medium')
+
+  let levelMessage = null
+  if (completedThisRun) {
+    if (difficulty === 'hard') {
+      levelMessage = 'You conquered the Hard level. Legendary!'
+    } else if (hardUnlocked) {
+      levelMessage = `Nice — ${difficulty} complete! Easy and Medium are done, so Hard is now unlocked.`
+    } else {
+      levelMessage = `${difficulty} level completed above ${COMPLETE_THRESHOLD}%. Keep going to unlock Hard!`
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
         <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">Quiz complete</div>
+        {levelMessage && (
+          <div className="mt-3 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-4 py-2.5 text-sm font-medium text-emerald-200">
+            {levelMessage}
+          </div>
+        )}
         <div className="mt-2 text-6xl font-black text-white">{g.letter}</div>
         <div className={`mt-1 text-lg font-semibold ${g.color}`}>{g.msg}</div>
         <div className="mt-1 text-sm text-slate-400">{percent}% correct</div>

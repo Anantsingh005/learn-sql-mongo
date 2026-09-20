@@ -46,7 +46,12 @@ export class QuizEngine {
   }
 
   start(mix = { mc: true, write: true, bug: true }) {
-    this.sequence = this.allQuestions.filter((q) => mix[q.type])
+    const types = new Set(
+      Array.isArray(mix)
+        ? mix
+        : Object.entries(mix).filter(([, enabled]) => enabled).map(([key]) => key),
+    )
+    this.sequence = this.allQuestions.filter((q) => types.has(q.type))
     if (this.sequence.length === 0) this.sequence = [...this.allQuestions]
     this.status = STATUS.QUESTION
     this.index = 0

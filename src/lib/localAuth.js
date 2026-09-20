@@ -2,7 +2,7 @@ const USERS_KEY = 'dbquiz.users'
 const SESSION_KEY = 'dbquiz.session'
 
 export const isLocalAuthActive = () =>
-  typeof window !== 'undefined' && !localStorage.getItem('dbquiz.supabase.on')
+  typeof window !== 'undefined' && !localStorage.getItem('dbquiz.firebase.on')
 
 const uid = () =>
   `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`

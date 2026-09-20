@@ -3,7 +3,8 @@ import QueryRunner from '../engine/QueryRunner.js'
 import { QuizEngine } from '../engine/QuizEngine.js'
 import { buildCheckQuery } from '../engine/queryCheck.js'
 import { selectQuestions } from '../data/selectQuestions.js'
-import { saveScore } from '../lib/scores.js'
+import { saveScore } from '../firebase/leaderboard.js'
+import { getProgress, recordLevelResult } from '../firebase/progress.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import useQuizEngine from '../hooks/useQuizEngine.js'
 import ModeSelect from '../components/quiz/ModeSelect.jsx'
@@ -16,13 +17,23 @@ import ResultScreen from '../components/quiz/ResultScreen.jsx'
 
 function SqlQuiz() {
   const [mode, setMode] = useState(null)
-  const [questionBank, setQuestionBank] = useState([])
   const [engine, setEngine] = useState(null)
   const [selectedIndex, setSelectedIndex] = useState(null)
   const [saveResult, setSaveResult] = useState(null)
+  const [progress, setProgress] = useState({ completed: [], best: {} })
   const savedRef = useRef(null)
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const snapshot = useQuizEngine(engine)
+
+  useEffect(() => {
+    let active = true
+    getProgress('sql', user?.id).then((p) => {
+      if (active) setProgress(p ?? { completed: [], best: {} })
+    })
+    return () => {
+      active = false
+    }
+  }, [user?.id])
 
   useEffect(() => {
     return () => engine?.destroy()
@@ -35,11 +46,24 @@ function SqlQuiz() {
   useEffect(() => {
     if (!snapshot?.finished || !engine || savedRef.current === engine) return
     savedRef.current = engine
-    if (!user) return
-    saveScore({ game: 'sql', score: snapshot.score, time: snapshot.elapsedSeconds, userId: user.id })
-      .then(({ error }) => setSaveResult(error ? 'error' : 'saved'))
-      .catch(() => setSaveResult('error'))
-  }, [snapshot?.finished, snapshot?.score, snapshot?.elapsedSeconds, engine, user])
+    const correct = engine.answers.filter((a) => a.correct).length
+    const answered = engine.answers.length
+    const percent = answered > 0 ? Math.round((correct / answered) * 100) : 0
+    recordLevelResult('sql', engine.difficulty, percent, user?.id).then((next) => {
+      if (next) setProgress(next)
+    })
+    if (user) {
+      saveScore({
+        game: 'sql',
+        score: snapshot.score,
+        time: snapshot.elapsedSeconds,
+        userId: user.id,
+        username: profile?.username,
+      })
+        .then(({ error }) => setSaveResult(error ? 'error' : 'saved'))
+        .catch(() => setSaveResult('error'))
+    }
+  }, [snapshot?.finished, snapshot?.score, snapshot?.elapsedSeconds, engine, user, profile])
 
   const saveStatus = snapshot?.finished
     ? !user
@@ -52,6 +76,7 @@ function SqlQuiz() {
     if (questions.length === 0) return
     const checkQuery = buildCheckQuery(QueryRunner)
     const nextEngine = new QuizEngine(questions, { checkQuery })
+    nextEngine.difficulty = config.difficulty ?? 'all'
     setEngine((prev) => {
       prev?.destroy()
       return nextEngine
@@ -78,6 +103,7 @@ function SqlQuiz() {
       <LevelSelect
         mode={mode}
         bank={selectQuestions({ types: [mode.key] })}
+        progress={progress}
         onPick={({ difficulty }) => handleStart({ types: [mode.key], difficulty })}
         onBack={() => setMode(null)}
       />
@@ -86,7 +112,15 @@ function SqlQuiz() {
 
   if (!snapshot || snapshot.status === 'ready' || snapshot.status === 'finished') {
     if (snapshot?.status === 'finished') {
-      return <ResultScreen snapshot={snapshot} saveStatus={saveStatus} onReplay={handleReplay} />
+      return (
+        <ResultScreen
+          snapshot={snapshot}
+          saveStatus={saveStatus}
+          difficulty={engine?.difficulty}
+          progress={progress}
+          onReplay={handleReplay}
+        />
+      )
     }
     return null
   }

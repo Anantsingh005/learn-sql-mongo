@@ -6,9 +6,10 @@ const PORT = 9225
 const DEV_PORT = 5173
 
 function bootServer() {
-  return spawn('npm.cmd', ['run', 'dev', '--', '--port', String(DEV_PORT), '--strictPort', '--host', '127.0.0.1'], {
+  return spawn(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'dev', '--', '--port', String(DEV_PORT), '--strictPort', '--host', '127.0.0.1'], {
     cwd: process.cwd(),
     stdio: 'ignore',
+    shell: process.platform === 'win32',
   })
 }
 
@@ -87,7 +88,6 @@ async function setInput(ws, selector, value) {
 
 const steps = []
 const pass = (s) => { steps.push('PASS ' + s) }
-const fail = (s) => { steps.push('FAIL ' + s) }
 
 async function main() {
   const server = bootServer()

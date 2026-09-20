@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
 function Field({ label, type = 'text', value, onChange, placeholder, autoComplete }) {
@@ -66,7 +66,7 @@ function AuthPage() {
         <div className="font-mono text-2xl font-bold text-white">Sign up / Sign in</div>
         <p className="mt-4 text-sm text-slate-400">
           You're in <span className="text-indigo-300">local demo mode</span> — create an account right here,
-          no keys or email confirmation needed. It switches to real Supabase auth automatically
+          no keys or email confirmation needed. It switches to real Firebase auth automatically
           once the project keys are added.
         </p>
         <div className="mt-6 flex justify-center">

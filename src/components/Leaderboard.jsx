@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { fetchTopScores } from '../lib/scores.js'
-import { isSupabaseConfigured } from '../lib/supabase.js'
+import { fetchTopScores } from '../firebase/leaderboard.js'
+import { isFirebaseConfigured } from '../firebase/client.js'
 
 const GAMES = [
   { id: 'sql', label: 'SQL' },
@@ -38,9 +38,7 @@ export default function Leaderboard() {
 
   useEffect(() => {
     let active = true
-    if (!isSupabaseConfigured) {
-      return undefined
-    }
+    if (!isFirebaseConfigured) return undefined
     fetchTopScores(game, 10).then(({ data, error: err }) => {
       if (!active) return
       setRows(data ?? [])
@@ -52,12 +50,12 @@ export default function Leaderboard() {
     }
   }, [game])
 
-  if (!isSupabaseConfigured) {
+  if (!isFirebaseConfigured) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10 text-center">
         <h1 className="text-2xl font-bold">Leaderboard</h1>
         <p className="mt-4 text-stone-500">
-          Leaderboard is unavailable until Supabase is configured.
+          Leaderboard is unavailable until Firebase is configured.
         </p>
       </div>
     )
@@ -106,7 +104,7 @@ export default function Leaderboard() {
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={row.id ?? `${row.created_at}-${i}`} className="border-t border-stone-100">
+                <tr key={row.id ?? `${row.createdAt}-${i}`} className="border-t border-stone-100">
                   <td className="px-4 py-2">{i + 1}</td>
                   <td className="px-4 py-2">{getUserName(row)}</td>
                   <td className="px-4 py-2">{row.score}</td>

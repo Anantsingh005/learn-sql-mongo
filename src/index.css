@@ -19,3 +19,31 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@layer utilities {
+  .text-gradient {
+    background-image: linear-gradient(90deg, #a5b4fc, #67e8f9 45%, #c4b5fd 90%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gradient-pan 8s ease-in-out infinite alternate;
+  }
+
+  .text-gradient-rise {
+    background-image: linear-gradient(90deg, #34d399, #fbbf24 50%, #f43f5e);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@keyframes gradient-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
