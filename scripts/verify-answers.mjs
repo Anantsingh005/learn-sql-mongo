@@ -36,7 +36,9 @@ function buildSchema(db, schema) {
     const cols = def.columns.join(', ')
     db.run(`CREATE TABLE ${table} (${cols});`)
     for (const row of def.rows) {
-      const values = row.map((v) => (typeof v === 'number' ? v : `'${v}'`)).join(', ')
+      const values = row
+        .map((v) => (v === null ? 'NULL' : typeof v === 'number' ? v : `'${v}'`))
+        .join(', ')
       db.run(`INSERT INTO ${table} VALUES (${values});`)
     }
   }
@@ -64,7 +66,8 @@ for (const q of allSqlQuestions) {
     buildSchema(db, schema)
     const query =
       storeQueries[q.id] ||
-      reference[q.id]
+      reference[q.id] ||
+      q.fixedQuery
     if (!query) { console.log(`– ${q.id}: no reference query`); continue }
     const actual = run(db, query)
     const expected = q.type === 'mc'

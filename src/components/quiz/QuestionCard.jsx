@@ -1,3 +1,6 @@
+import HintReveal from './HintReveal.jsx'
+import SchemaPanel from './SchemaPanel.jsx'
+
 function Chip({ children, color }) {
   return (
     <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${color}`}>
@@ -91,6 +94,13 @@ function QuestionCard({ question, selectedIndex, onSelect, disabled, children })
       )}
 
       {question.type === 'bug' && <BuggyQueryView question={question} />}
+
+      {(question.type === 'write' || question.type === 'bug') && (
+        <>
+          <SchemaPanel schema={question.schema} />
+          <HintReveal hint={question.hint} />
+        </>
+      )}
 
       {children}
     </article>

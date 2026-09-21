@@ -5,6 +5,12 @@ const PROGRESS_KEY = 'dbquiz.progress'
 
 export const COMPLETE_THRESHOLD = 75
 
+export const MODES = ['mc', 'write', 'bug']
+
+export function levelKey(mode, difficulty) {
+  return `${mode}_${difficulty}`
+}
+
 function emptyAll() {
   return { sql: {}, mongo: {} }
 }
@@ -50,7 +56,7 @@ export async function getProgress(game, userId) {
   }
 }
 
-export async function recordLevelResult(game, difficulty, percent, userId) {
+export async function recordLevelResult(game, difficulty, percent, userId, mode = 'mc') {
   if (!Number.isFinite(percent)) return null
 
   if (firestore && userId) {
@@ -61,8 +67,9 @@ export async function recordLevelResult(game, difficulty, percent, userId) {
       const gamePrev = prev[game] ?? {}
       const completed = new Set(gamePrev.completed ?? [])
       const best = { ...(gamePrev.best ?? {}) }
-      if (percent >= COMPLETE_THRESHOLD) completed.add(difficulty)
-      best[difficulty] = Math.max(best[difficulty] ?? 0, Math.round(percent))
+      const key = levelKey(mode, difficulty)
+      if (percent >= COMPLETE_THRESHOLD) completed.add(key)
+      best[key] = Math.max(best[key] ?? 0, Math.round(percent))
       const nextGame = { completed: [...completed], best }
       const next = { ...prev, userId, [game]: nextGame }
       await setDoc(ref, next, { merge: true })
@@ -75,17 +82,18 @@ export async function recordLevelResult(game, difficulty, percent, userId) {
   const local = readLocal(game)
   const completed = new Set(local.completed)
   const best = { ...local.best }
-  if (percent >= COMPLETE_THRESHOLD) completed.add(difficulty)
-  best[difficulty] = Math.max(best[difficulty] ?? 0, Math.round(percent))
+  const key = levelKey(mode, difficulty)
+  if (percent >= COMPLETE_THRESHOLD) completed.add(key)
+  best[key] = Math.max(best[key] ?? 0, Math.round(percent))
   const data = { completed: [...completed], best }
   writeLocal(game, data)
   return data
 }
 
-export function isLevelUnlocked(difficulty, progress) {
+export function isLevelUnlocked(difficulty, progress, mode = 'mc') {
   if (difficulty !== 'hard') return true
   const completed = progress?.completed ?? []
-  return completed.includes('easy') && completed.includes('medium')
+  return completed.includes(levelKey(mode, 'easy')) && completed.includes(levelKey(mode, 'medium'))
 }
 
 export default {

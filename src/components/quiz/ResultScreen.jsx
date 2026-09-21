@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { COMPLETE_THRESHOLD } from '../../firebase/progress.js'
+import { COMPLETE_THRESHOLD, levelKey } from '../../firebase/progress.js'
 
 function grade(percent) {
   if (percent >= 90) return { letter: 'A', color: 'text-emerald-300', msg: 'Outstanding!' }
@@ -31,7 +31,7 @@ function saveMessage(status) {
   }
 }
 
-function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, progress = {} }) {
+function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mode, progress = {} }) {
   const answers = snapshot.answers
   const correct = answers.filter((a) => a.correct).length
   const total = answers.length
@@ -40,7 +40,7 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, pro
   const completedThisRun = percent >= COMPLETE_THRESHOLD
   const completedLevels = progress.completed ?? []
   const hardUnlocked =
-    completedLevels.includes('easy') && completedLevels.includes('medium')
+    completedLevels.includes(levelKey(mode, 'easy')) && completedLevels.includes(levelKey(mode, 'medium'))
 
   let levelMessage = null
   if (completedThisRun) {

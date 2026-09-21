@@ -49,7 +49,7 @@ function SqlQuiz() {
     const correct = engine.answers.filter((a) => a.correct).length
     const answered = engine.answers.length
     const percent = answered > 0 ? Math.round((correct / answered) * 100) : 0
-    recordLevelResult('sql', engine.difficulty, percent, user?.id).then((next) => {
+    recordLevelResult('sql', engine.difficulty, percent, user?.id, mode?.key).then((next) => {
       if (next) setProgress(next)
     })
     if (user) {
@@ -75,7 +75,10 @@ function SqlQuiz() {
     const questions = selectQuestions(config)
     if (questions.length === 0) return
     const checkQuery = buildCheckQuery(QueryRunner)
-    const nextEngine = new QuizEngine(questions, { checkQuery })
+    const nextEngine = new QuizEngine(questions, { checkQuery }, {
+      timePerQuestion: mode?.timePerQuestion,
+      extraTime: mode?.extraTime,
+    })
     nextEngine.difficulty = config.difficulty ?? 'all'
     setEngine((prev) => {
       prev?.destroy()
@@ -117,6 +120,7 @@ function SqlQuiz() {
           snapshot={snapshot}
           saveStatus={saveStatus}
           difficulty={engine?.difficulty}
+          mode={mode?.key}
           progress={progress}
           onReplay={handleReplay}
         />
@@ -145,6 +149,38 @@ function SqlQuiz() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
       <HUD snapshot={snapshot} />
+
+      {snapshot.extraTimePending && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/50 bg-amber-500/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">⏰</span>
+            <div>
+              <div className="text-sm font-bold text-amber-200">
+                Only {snapshot.timeLeft}s left!
+              </div>
+              <div className="text-xs text-amber-200/80">
+                Add {snapshot.extraTimeSeconds} more seconds to keep working on this question?
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => engine.grantExtraTime()}
+              className="rounded-lg bg-amber-500 px-4 py-1.5 text-sm font-bold text-amber-950 transition-colors hover:bg-amber-400"
+            >
+              Add {snapshot.extraTimeSeconds}s
+            </button>
+            <button
+              type="button"
+              onClick={() => engine.declineExtraTime()}
+              className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-700"
+            >
+              No thanks
+            </button>
+          </div>
+        </div>
+      )}
 
       <QuestionCard
         key={question.id}

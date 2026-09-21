@@ -10,9 +10,11 @@ export const STATUS = {
 const POINTS = { easy: 100, medium: 200, hard: 300 }
 const DEFAULT_LIVES = 3
 const DEFAULT_TIME_PER_QUESTION = 30
+const DEFAULT_EXTRA_TIME_SECONDS = 60
+const DEFAULT_EXTRA_TIME_THRESHOLD = 10
 
 export class QuizEngine {
-  constructor(questions, callbacks = {}) {
+  constructor(questions, callbacks = {}, options = {}) {
     this.allQuestions = questions
     this.callbacks = callbacks
     this.listeners = new Set()
@@ -21,7 +23,13 @@ export class QuizEngine {
     this.index = 0
     this.score = 0
     this.lives = DEFAULT_LIVES
-    this.timeLeft = DEFAULT_TIME_PER_QUESTION
+    this.timePerQuestion = options.timePerQuestion ?? DEFAULT_TIME_PER_QUESTION
+    this.timeLeft = this.timePerQuestion
+    this.extraTimeEnabled = Boolean(options.extraTime)
+    this.extraTimeSeconds = options.extraTime?.seconds ?? DEFAULT_EXTRA_TIME_SECONDS
+    this.extraTimeThreshold = options.extraTime?.threshold ?? DEFAULT_EXTRA_TIME_THRESHOLD
+    this.extraTimePending = false
+    this.extraTimeArmed = true
     this.timer = null
     this.answers = []
     this.runningAnswer = false
@@ -67,16 +75,45 @@ export class QuizEngine {
   }
 
   _startTimer() {
-    this.timeLeft = DEFAULT_TIME_PER_QUESTION
+    this.timeLeft = this.timePerQuestion
+    this.extraTimePending = false
+    this.extraTimeArmed = true
     this._stopTimer()
     this.timer = setInterval(() => {
+      if (this.extraTimePending) return
       this.timeLeft -= 1
       if (this.timeLeft <= 0) {
         this.timeLeft = 0
         this._handleTimeout()
       }
+      if (this.extraTimeEnabled && this.timeLeft >= this.extraTimeThreshold) {
+        this.extraTimeArmed = true
+      }
+      if (
+        this.extraTimeEnabled &&
+        this.extraTimeArmed &&
+        this.timeLeft > 0 &&
+        this.timeLeft < this.extraTimeThreshold
+      ) {
+        this.extraTimeArmed = false
+        this.extraTimePending = true
+      }
       this._emit()
     }, 1000)
+  }
+
+  grantExtraTime() {
+    if (!this.extraTimePending) return
+    this.timeLeft += this.extraTimeSeconds
+    this.extraTimePending = false
+    if (this.timeLeft >= this.extraTimeThreshold) this.extraTimeArmed = true
+    this._emit()
+  }
+
+  declineExtraTime() {
+    if (!this.extraTimePending) return
+    this.extraTimePending = false
+    this._emit()
   }
 
   _stopTimer() {
@@ -163,6 +200,9 @@ export class QuizEngine {
     this.index = 0
     this.score = 0
     this.lives = DEFAULT_LIVES
+    this.timeLeft = this.timePerQuestion
+    this.extraTimePending = false
+    this.extraTimeArmed = true
     this.answer = null
     this.answers = []
     this.runningAnswer = false
@@ -195,6 +235,8 @@ export class QuizEngine {
       score: this.score,
       lives: this.lives,
       timeLeft: this.timeLeft,
+      extraTimePending: this.extraTimePending,
+      extraTimeSeconds: this.extraTimeSeconds,
       current: this.current,
       runningAnswer: this.runningAnswer,
       currentError: this.currentError,

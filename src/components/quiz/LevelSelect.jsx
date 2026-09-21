@@ -1,4 +1,4 @@
-import { isLevelUnlocked, COMPLETE_THRESHOLD } from '../../firebase/progress.js'
+import { isLevelUnlocked, levelKey, COMPLETE_THRESHOLD } from '../../firebase/progress.js'
 
 const levels = [
   { key: 'easy', label: 'Easy', desc: 'Warm up', code: 'LVL-01' },
@@ -36,13 +36,13 @@ const accents = {
   },
 }
 
-function LevelCard({ lv, index, bank, progress, onPick }) {
-  const unlocked = isLevelUnlocked(lv.key, progress)
-  const isCompleted = (progress.completed ?? []).includes(lv.key)
+function LevelCard({ mode, lv, index, bank, progress, onPick }) {
+  const unlocked = isLevelUnlocked(lv.key, progress, mode.key)
+  const isCompleted = (progress.completed ?? []).includes(levelKey(mode.key, lv.key))
   const best = progress.best ?? {}
   const count = bank.filter((q) => q.difficulty === lv.key).length
   const a = accents[lv.key]
-  const pct = isCompleted ? 100 : Math.min(best[lv.key] ?? 0, 100)
+  const pct = isCompleted ? 100 : Math.min(best[levelKey(mode.key, lv.key)] ?? 0, 100)
 
   return (
     <div key={lv.key} className="group relative">
@@ -81,7 +81,7 @@ function LevelCard({ lv, index, bank, progress, onPick }) {
                 <span className="text-lg font-bold tracking-tight text-white">{lv.label}</span>
                 {isCompleted && (
                   <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.35)]">
-                    ✔ {best[lv.key] ?? 100}%
+                    ✔ {best[levelKey(mode.key, lv.key)] ?? 100}%
                   </span>
                 )}
               </div>
@@ -144,6 +144,7 @@ function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPic
         {levels.map((lv, i) => (
           <LevelCard
             key={lv.key}
+            mode={mode}
             lv={lv}
             index={i}
             bank={bank}
