@@ -1,4 +1,5 @@
 import { checkMultipleChoice } from './AnswerChecker.js'
+import { shuffleOptions } from './shuffleOptions.js'
 
 export const STATUS = {
   READY: 'ready',
@@ -61,6 +62,7 @@ export class QuizEngine {
     )
     this.sequence = this.allQuestions.filter((q) => types.has(q.type))
     if (this.sequence.length === 0) this.sequence = [...this.allQuestions]
+    this.sequence = this.sequence.map(shuffleOptions)
     this.status = STATUS.QUESTION
     this.index = 0
     this.score = 0

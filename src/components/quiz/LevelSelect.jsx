@@ -4,9 +4,19 @@ const levels = [
   { key: 'easy', label: 'Easy', desc: 'Warm up', code: 'LVL-01' },
   { key: 'medium', label: 'Medium', desc: 'Getting sharp', code: 'LVL-02' },
   { key: 'hard', label: 'Hard', desc: 'The real boss fight', code: 'LVL-03' },
+  { key: 'all', label: 'All Levels', desc: 'Every question, mixed', code: 'LVL-ALL' },
 ]
 
 const accents = {
+  all: {
+    glow: 'from-cyan-500/50 via-fuchsia-400/25 to-indigo-400/50',
+    strip: 'from-cyan-400 to-fuchsia-400',
+    tag: 'text-cyan-400/90',
+    badge: 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300',
+    bar: 'from-cyan-400 to-fuchsia-400',
+    barGlow: 'shadow-[0_0_10px_rgba(34,211,238,0.7)]',
+    btn: 'bg-cyan-500 text-cyan-950 hover:bg-cyan-400 hover:shadow-[0_0_28px_rgba(34,211,238,0.6)] shadow-[0_0_14px_rgba(34,211,238,0.35)]',
+  },
   easy: {
     glow: 'from-emerald-500/50 via-emerald-400/25 to-teal-400/50',
     strip: 'from-emerald-400 to-teal-400',
@@ -40,7 +50,7 @@ function LevelCard({ mode, lv, index, bank, progress, onPick }) {
   const unlocked = isLevelUnlocked(lv.key, progress, mode.key)
   const isCompleted = (progress.completed ?? []).includes(levelKey(mode.key, lv.key))
   const best = progress.best ?? {}
-  const count = bank.filter((q) => q.difficulty === lv.key).length
+  const count = lv.key === 'all' ? bank.length : bank.filter((q) => q.difficulty === lv.key).length
   const a = accents[lv.key]
   const pct = isCompleted ? 100 : Math.min(best[levelKey(mode.key, lv.key)] ?? 0, 100)
 
@@ -136,7 +146,8 @@ function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPic
           <span className="font-semibold text-emerald-300">Easy</span> and{' '}
           <span className="font-semibold text-amber-300">Medium</span> with at least{' '}
           <span className="font-semibold text-rose-300">{COMPLETE_THRESHOLD}%</span> to unlock{' '}
-          <span className="font-semibold text-rose-300">Hard</span>.
+          <span className="font-semibold text-rose-300">Hard</span> — then complete all three to unlock{' '}
+          <span className="font-semibold text-cyan-300">All Levels</span>.
         </p>
       </div>
 

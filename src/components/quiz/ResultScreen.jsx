@@ -44,7 +44,9 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
 
   let levelMessage = null
   if (completedThisRun) {
-    if (difficulty === 'hard') {
+    if (difficulty === 'all') {
+      levelMessage = 'You conquered every level in one run. Legendary!'
+    } else if (difficulty === 'hard') {
       levelMessage = 'You conquered the Hard level. Legendary!'
     } else if (hardUnlocked) {
       levelMessage = `Nice — ${difficulty} complete! Easy and Medium are done, so Hard is now unlocked.`

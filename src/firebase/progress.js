@@ -91,8 +91,11 @@ export async function recordLevelResult(game, difficulty, percent, userId, mode 
 }
 
 export function isLevelUnlocked(difficulty, progress, mode = 'mc') {
-  if (difficulty !== 'hard') return true
   const completed = progress?.completed ?? []
+  if (difficulty === 'all') {
+    return ['easy', 'medium', 'hard'].every((lv) => completed.includes(levelKey(mode, lv)))
+  }
+  if (difficulty !== 'hard') return true
   return completed.includes(levelKey(mode, 'easy')) && completed.includes(levelKey(mode, 'medium'))
 }
 
