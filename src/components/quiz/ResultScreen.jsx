@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { COMPLETE_THRESHOLD, levelKey } from '../../firebase/progress.js'
+import { COMPLETE_THRESHOLD, levelKey } from '../../lib/progress.js'
 
 function grade(percent) {
   if (percent >= 90) return { letter: 'A', color: 'text-emerald-300', msg: 'Outstanding!' }

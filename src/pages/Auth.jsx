@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
 function Field({ label, type = 'text', value, onChange, placeholder, autoComplete }) {
@@ -20,7 +20,8 @@ function Field({ label, type = 'text', value, onChange, placeholder, autoComplet
 
 function AuthPage() {
   const { configured, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth()
-  const [mode, setMode] = useState('signin')
+  const [params] = useSearchParams()
+  const [mode, setMode] = useState(() => (params.get('mode') === 'signup' ? 'signup' : 'signin'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
@@ -65,19 +66,10 @@ function AuthPage() {
       <div className="mx-auto max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
         <div className="font-mono text-2xl font-bold text-white">Sign up / Sign in</div>
         <p className="mt-4 text-sm text-slate-400">
-          You're in <span className="text-indigo-300">local demo mode</span> — create an account right here,
-          no keys or email confirmation needed. It switches to real Firebase auth automatically
-          once the project keys are added.
+          Supabase is not configured. Add <span className="font-mono">VITE_SUPABASE_URL</span> and{' '}
+          <span className="font-mono">VITE_SUPABASE_ANON_KEY</span> to{' '}
+          <span className="font-mono">.env</span>, then reload.
         </p>
-        <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            onClick={() => navigate('/auth?mode=signup')}
-            className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-indigo-500"
-          >
-            Create account
-          </button>
-        </div>
       </div>
     )
   }

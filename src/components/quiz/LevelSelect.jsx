@@ -1,4 +1,4 @@
-import { isLevelUnlocked, levelKey, COMPLETE_THRESHOLD } from '../../firebase/progress.js'
+import { isLevelUnlocked, levelKey, COMPLETE_THRESHOLD } from '../../lib/progress.js'
 
 const levels = [
   { key: 'easy', label: 'Easy', desc: 'Warm up', code: 'LVL-01' },

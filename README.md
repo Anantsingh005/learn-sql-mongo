@@ -1,6 +1,6 @@
 # Database Games
 
-An interactive SQL quiz game built with React + Vite. Players answer SQL questions that are executed against a real in-browser SQLite database (via [sql.js](https://sql.js.org/)), with Firebase powering authentication and a public leaderboard.
+An interactive SQL quiz game built with React + Vite. Players answer SQL questions that are executed against a real in-browser SQLite database (via [sql.js](https://sql.js.org/)), with Supabase powering authentication and a public leaderboard.
 
 ## Features
 
@@ -18,15 +18,15 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
   - `fixBug.js` — buggy-query questions (every entry includes a verified `fixedQuery`)
   - `windowCte.js` — window functions and CTEs
   - `schemas.js` — shared in-browser schemas (e.g. `store`)
-- **Auth & leaderboard** — Firebase Authentication (email/password) for sign-in; signed-in users can submit scores to a public leaderboard.
-- **Progress tracking** — per-user progress is persisted to Firestore.
+- **Auth & leaderboard** — Supabase Auth (email/password + Google) for sign-in; signed-in users submit scores to a public leaderboard.
+- **Progress tracking** — per-user progress is persisted to Postgres.
 
 ## Tech Stack
 
 - [React](https://react.dev) 19 + [Vite](https://vite.dev)
 - [react-router-dom](https://reactrouter.com) for routing
 - [sql.js](https://sql.js.org/) — SQLite compiled to WebAssembly, run in a Web Worker for query checking
-- [Firebase](https://firebase.google.com) — Auth, Firestore (leaderboard + progress)
+- [Supabase](https://supabase.com) — Auth + Postgres (leaderboard, progress, profiles)
 - [Tailwind CSS](https://tailwindcss.com) 4 for styling
 - [Oxlint](https://oxc.rs) for linting
 
@@ -42,17 +42,14 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
 npm install
 ```
 
-### Firebase setup
+### Supabase setup
 
-1. Create a Firebase project in the [Firebase Console](https://console.firebase.google.com).
-2. Enable **Email/Password** auth under *Authentication → Sign-in method*.
-3. Create a Firestore database and deploy the security rules from `firestore.rules`:
-
-```bash
-firebase deploy --only firestore:rules
-```
-
-4. Copy `.env.example` to `.env` and fill in your Firebase web app config:
+1. Create a Supabase project at [supabase.com](https://supabase.com).
+2. Enable **Email/Password** under *Authentication → Providers* (and **Google** for social sign-in).
+3. Create the schema by applying the migrations in the Supabase SQL editor:
+   - `profiles`, `scores`, `user_progress` tables with Row-Level Security and grants
+   - a `handle_new_user` trigger that auto-creates a profile on sign-up
+4. Copy `.env.example` to `.env` and fill in your project URL and publishable API key (from *Project Settings → API*):
 
 ```bash
 copy .env.example .env
@@ -88,12 +85,11 @@ src/
 ├── App.jsx                 # Route definitions
 ├── components/             # Layout, Home, Leaderboard, quiz widgets
 │   └── quiz/               # ModeSelect, QuestionCard, SchemaPanel, SqlEditor, etc.
-├── context/AuthContext.jsx # Firebase auth state
+├── context/AuthContext.jsx # Supabase auth state
 ├── data/sql/               # Question banks + shared schemas
 ├── engine/                 # QuizEngine, QueryRunner, AnswerChecker, SQL worker
-├── firebase/               # client, auth, leaderboard, progress
 ├── hooks/
-├── lib/
+├── lib/                    # supabase client, auth, leaderboard, progress
 └── pages/                  # SqlQuiz, Auth
 ```
 

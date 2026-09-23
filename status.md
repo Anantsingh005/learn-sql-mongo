@@ -1,6 +1,34 @@
 # Project Status
 
-Last updated: 2026-09-21
+Last updated: 2026-09-22
+
+## Current session: auth/data migration Firebase → Supabase
+Moved authentication and the data layer from Firebase (Auth + Firestore) to Supabase (Auth + Postgres). Supabase project ref `qyowerafreocmutjblmw`.
+
+**Database (applied via Supabase migrations):**
+- `profiles` — `id` → `auth.users(id)`, `username` (checked `^[A-Za-z0-9_.-]{1,24}$`); auto-created on signup by `handle_new_user` trigger (SECURITY DEFINER, EXECUTE revoked from anon/authenticated).
+- `scores` — public leaderboard; `game` CHECK in (`sql`,`mongo`), `score` 0–100, `time_seconds` ≥ 0, denormalized `username`; index `(game, score desc, time_seconds asc)`.
+- `user_progress` — `user_id` PK, `sql`/`mongo` jsonb buckets, `updated_at` auto via `set_updated_at` trigger.
+- RLS on all; `scores` select public, insert `auth.uid()=user_id`; `profiles`/`user_progress` owner-only. Grants tightened to least-privilege (Supabase template auto-grants ALL to anon/authenticated on new tables).
+- Advisors clean (after revoking function EXECUTE).
+
+**Client:**
+- `firebase` dep removed → `@supabase/supabase-js@2.117.0`.
+- `src/lib/supabase.js` (client), `supabase-auth.js` (signUp / signInWithPassword / Google OAuth popup / signOut / profile fetch+update, friendly error map), `progress.js` (localStorage fallback for guests; Postgres upsert for users), `leaderboard.js`.
+- `AuthContext.jsx` single Supabase path; profiles fetched from `profiles` table; username updates persist (fixes old Firebase bug where renames were session-only).
+- `Auth.jsx` reads `?mode=` from URL; sign-up shows confirm-email prompt when `signUp` returns no session.
+- Deleted `src/firebase/*`, `src/lib/localAuth.js`, `firestore.rules`.
+
+**Verified:** advisors clean · RLS blocks mismatched `user_id` insert · signup creates user + auto-profile · sign-in → home + username shown · progress upsert roundtrip · score insert + public anon read · `npm run lint/build` clean.
+
+**Dashboard toggles still needed (not scriptable):**
+- Auth → Providers → Email → turn **OFF "Confirm email"** for instant sign-in during dev (otherwise signup requires email confirmation and each signup burns the hourly email-send rate limit). Keep ON for production.
+- Auth → Providers → Google → enable + add OAuth client IDs for "Continue with Google".
+- Site URL / Redirect URLs should include `http://127.0.0.1:5173`.
+
+`scripts/browser-signup.mjs` now works against Supabase: accepts redirect-home (confirm off) or confirm-email prompt (confirm on), and reports the email rate limit clearly.
+
+## Previous session (2026-09-21):
 
 ## Objective (current session)
 Expand the SQL quiz game (React + Vite + sql.js) to scale parity and improve the gameplay experience. Completed work landed in this order:

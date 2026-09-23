@@ -107,25 +107,20 @@ async function main() {
       if (!page) throw new Error('no page target')
       const ws = await connect(page.webSocketDebuggerUrl)
       await send(ws, 'Runtime.enable')
+      await sleep(1500)
 
       await ev(ws, `location.href = 'http://127.0.0.1:${DEV_PORT}/auth?mode=signup'`)
       await waitFor(ws, `document.body.innerText.includes('Create account')`, 'signup page')
       pass('signup form rendered')
 
       const uniq = Date.now().toString(36)
-      const email = `smoke${uniq}@local.test`
+      const email = `smoke${uniq}@gmail.com`
       await setInput(ws, 'input[type="email"]', email)
       await setInput(ws, 'input[type="password"]', 'secret123')
       await sleep(300)
 
-      const exists = await ev(ws, `document.body.innerText.includes('Create account')`)
-      if (!exists) {
-        await waitFor(ws, `document.body.innerText.includes('Sign up')`, 'signup alt label')
-      }
-
       const clicked = await ev(ws, `(() => {
-        const btn = [...document.querySelectorAll('button')].find((b) =>
-          /Create account|Sign up/.test(b.textContent))
+        const btn = document.querySelector('button[type="submit"]')
         if (!btn) return false
         btn.click()
         return true
@@ -133,9 +128,25 @@ async function main() {
       if (!clicked) throw new Error('could not find create-account button')
       pass('create-account clicked')
 
-      await waitFor(ws, `location.pathname !== '/auth'`, 'redirected after signup', 20000)
-      await waitFor(ws, `document.body.innerText.includes('${email.split('@')[0]}') !== false && document.body.innerText.length > 50`, 'home content', 15000)
-      pass('signed in · redirected home')
+      // Supabase with email confirmation OFF returns a session immediately (redirect home).
+      // With confirmation ON, signUp returns no session and the UI shows a "check your inbox" prompt.
+      const t0 = Date.now()
+      let outcome = null
+      while (Date.now() - t0 < 20000) {
+        if (await ev(ws, `location.pathname !== '/auth'`)) { outcome = 'redirected home'; break }
+        if (await ev(ws, `document.body.innerText.includes('Check your inbox')`)) { outcome = 'confirm-email prompt shown'; break }
+        if (await ev(ws, `/rate limit|about an hour|over_email_send_rate_limit/i.test(document.body.innerText)`)) { outcome = 'rate limited'; break }
+        await sleep(300)
+      }
+      if (!outcome) throw new Error('signup produced neither a redirect nor a confirm-email prompt')
+      if (outcome === 'rate limited') throw new Error('Supabase email rate limit hit — wait about an hour, or disable email confirmation in the dashboard')
+
+      if (outcome === 'redirected home') {
+        await waitFor(ws, `document.body.innerText.includes('${email.split('@')[0]}') && document.body.innerText.length > 50`, 'home content', 15000)
+        pass(`signed in · redirected home as ${email.split('@')[0]}`)
+      } else {
+        pass('signup accepted · confirm-email prompt shown (email confirmation is ON in Supabase)')
+      }
     } finally {
       chrome.kill()
     }
@@ -145,7 +156,7 @@ async function main() {
 
   console.log(steps.join('\n'))
   if (steps.some((s) => s.startsWith('FAIL'))) process.exit(1)
-  console.log('\nLOCAL SIGNUP SMOKE OK')
+  console.log('\nSIGNUP SMOKE OK (Supabase)')
   process.exit(0)
 }
 

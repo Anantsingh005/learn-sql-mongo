@@ -1,5 +1,4 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { firestore } from './client.js'
+import { supabase } from './supabase.js'
 
 const PROGRESS_KEY = 'dbquiz.progress'
 
@@ -11,8 +10,12 @@ export function levelKey(mode, difficulty) {
   return `${mode}_${difficulty}`
 }
 
+function emptyGame() {
+  return { completed: [], best: {} }
+}
+
 function emptyAll() {
-  return { sql: {}, mongo: {} }
+  return { sql: emptyGame(), mongo: emptyGame() }
 }
 
 function normalize(data) {
@@ -43,13 +46,25 @@ function writeLocal(game, data) {
   localStorage.setItem(PROGRESS_KEY, JSON.stringify(all))
 }
 
+function mergeResult(base, mode, difficulty, percent) {
+  const completed = new Set(base.completed)
+  const best = { ...base.best }
+  const key = levelKey(mode, difficulty)
+  if (percent >= COMPLETE_THRESHOLD) completed.add(key)
+  best[key] = Math.max(best[key] ?? 0, Math.round(percent))
+  return { completed: [...completed], best }
+}
+
 export async function getProgress(game, userId) {
-  if (!firestore || !userId) return readLocal(game)
+  if (!supabase || !userId) return readLocal(game)
   try {
-    const ref = doc(firestore, 'user_progress', userId)
-    const snap = await getDoc(ref)
-    const data = snap.exists() ? (snap.data()?.[game] ?? {}) : {}
-    return normalize(data)
+    const { data, error } = await supabase
+      .from('user_progress')
+      .select(game)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (error) throw error
+    return normalize(data?.[game])
   } catch (err) {
     console.error('getProgress failed:', err)
     return readLocal(game)
@@ -59,35 +74,25 @@ export async function getProgress(game, userId) {
 export async function recordLevelResult(game, difficulty, percent, userId, mode = 'mc') {
   if (!Number.isFinite(percent)) return null
 
-  if (firestore && userId) {
+  if (supabase && userId) {
     try {
-      const ref = doc(firestore, 'user_progress', userId)
-      const snap = await getDoc(ref)
-      const prev = snap.exists() ? snap.data() : { userId }
-      const gamePrev = prev[game] ?? {}
-      const completed = new Set(gamePrev.completed ?? [])
-      const best = { ...(gamePrev.best ?? {}) }
-      const key = levelKey(mode, difficulty)
-      if (percent >= COMPLETE_THRESHOLD) completed.add(key)
-      best[key] = Math.max(best[key] ?? 0, Math.round(percent))
-      const nextGame = { completed: [...completed], best }
-      const next = { ...prev, userId, [game]: nextGame }
-      await setDoc(ref, next, { merge: true })
-      return normalize(nextGame)
+      const current = await getProgress(game, userId)
+      const nextGame = mergeResult(current, mode, difficulty, percent)
+      const { error } = await supabase.from('user_progress').upsert(
+        { user_id: userId, [game]: nextGame },
+        { onConflict: 'user_id' }
+      )
+      if (error) throw error
+      return nextGame
     } catch (err) {
       console.error('recordLevelResult failed:', err)
     }
   }
 
   const local = readLocal(game)
-  const completed = new Set(local.completed)
-  const best = { ...local.best }
-  const key = levelKey(mode, difficulty)
-  if (percent >= COMPLETE_THRESHOLD) completed.add(key)
-  best[key] = Math.max(best[key] ?? 0, Math.round(percent))
-  const data = { completed: [...completed], best }
-  writeLocal(game, data)
-  return data
+  const nextGame = mergeResult(local, mode, difficulty, percent)
+  writeLocal(game, nextGame)
+  return nextGame
 }
 
 export function isLevelUnlocked(difficulty, progress, mode = 'mc') {

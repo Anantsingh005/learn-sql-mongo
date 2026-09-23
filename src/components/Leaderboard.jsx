@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { fetchTopScores } from '../firebase/leaderboard.js'
-import { isFirebaseConfigured } from '../firebase/client.js'
+import { fetchTopScores } from '../lib/leaderboard.js'
+import { isSupabaseConfigured } from '../lib/supabase.js'
 
 const GAMES = [
   { id: 'sql', label: 'SQL' },
@@ -16,10 +16,7 @@ function formatTime(seconds) {
 }
 
 function getUserName(row) {
-  const p = row.profiles
-  if (!p) return 'Anonymous'
-  if (Array.isArray(p)) return p[0]?.username || 'Anonymous'
-  return p.username || 'Anonymous'
+  return row.username || 'Anonymous'
 }
 
 export default function Leaderboard() {
@@ -38,7 +35,7 @@ export default function Leaderboard() {
 
   useEffect(() => {
     let active = true
-    if (!isFirebaseConfigured) return undefined
+    if (!isSupabaseConfigured) return undefined
     fetchTopScores(game, 10).then(({ data, error: err }) => {
       if (!active) return
       setRows(data ?? [])
@@ -50,12 +47,12 @@ export default function Leaderboard() {
     }
   }, [game])
 
-  if (!isFirebaseConfigured) {
+  if (!isSupabaseConfigured) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10 text-center">
         <h1 className="text-2xl font-bold">Leaderboard</h1>
         <p className="mt-4 text-stone-500">
-          Leaderboard is unavailable until Firebase is configured.
+          Leaderboard is unavailable until Supabase is configured.
         </p>
       </div>
     )
@@ -108,7 +105,7 @@ export default function Leaderboard() {
                   <td className="px-4 py-2">{i + 1}</td>
                   <td className="px-4 py-2">{getUserName(row)}</td>
                   <td className="px-4 py-2">{row.score}</td>
-                  <td className="px-4 py-2">{formatTime(row.time)}</td>
+                  <td className="px-4 py-2">{formatTime(row.time_seconds)}</td>
                 </tr>
               ))}
             </tbody>
