@@ -220,7 +220,15 @@ function SqlQuiz() {
         </div>
       )}
 
-      {isFeedback && <Feedback snapshot={snapshot} onNext={() => engine.next()} />}
+      {isFeedback && (
+        <Feedback
+          snapshot={snapshot}
+          onNext={() => {
+            setSelectedIndex(null)
+            engine.next()
+          }}
+        />
+      )}
     </div>
   )
 }
