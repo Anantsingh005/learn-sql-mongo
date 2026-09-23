@@ -95,6 +95,11 @@ export async function recordLevelResult(game, difficulty, percent, userId, mode 
   return nextGame
 }
 
+export function clearLocalProgress() {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(PROGRESS_KEY)
+}
+
 export function isLevelUnlocked(difficulty, progress, mode = 'mc') {
   const completed = progress?.completed ?? []
   if (difficulty === 'all') {
@@ -108,5 +113,6 @@ export default {
   COMPLETE_THRESHOLD,
   getProgress,
   recordLevelResult,
+  clearLocalProgress,
   isLevelUnlocked,
 }

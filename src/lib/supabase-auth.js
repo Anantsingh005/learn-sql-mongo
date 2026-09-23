@@ -14,13 +14,16 @@ export async function supabaseGetSession() {
   return { user: data.session?.user ?? null, session: data.session ?? null }
 }
 
-export async function supabaseSignUp({ email, password }) {
+export async function supabaseSignUp({ email, password, username, name }) {
   if (!supabase) return { data: null, error: { message: 'Supabase is not configured.' } }
   try {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
-      options: { emailRedirectTo: window.location.origin },
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: { username: username?.trim() || null, full_name: name?.trim() || null },
+      },
     })
     if (error) return { data: null, error: { message: friendlyAuthError(error) } }
     const user = data.user ?? null
@@ -79,7 +82,7 @@ export async function fetchProfile(userId) {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, name')
       .eq('id', userId)
       .maybeSingle()
     if (error) throw error

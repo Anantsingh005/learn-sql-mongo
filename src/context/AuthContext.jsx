@@ -58,6 +58,7 @@ export function AuthProvider({ children }) {
       setProfile({
         id: user.id,
         username: p?.username || emailUsername(user.email) || 'player',
+        name: p?.name || '',
       })
       setLoading(false)
     })
@@ -74,8 +75,8 @@ export function AuthProvider({ children }) {
     return result
   }
 
-  const signUpWithPassword = async (email, password) => {
-    const result = await supabaseSignUp({ email, password })
+  const signUpWithPassword = async (username, name, email, password) => {
+    const result = await supabaseSignUp({ email, password, username, name })
     if (result.data?.user) {
       setUser({ id: result.data.user.id, email: result.data.user.email ?? '' })
     }

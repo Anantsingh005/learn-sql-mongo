@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { clearLocalProgress } from '../lib/progress.js'
+import { useAuth } from '../context/AuthContext.jsx'
 
 const games = [
   {
@@ -25,6 +28,15 @@ const games = [
 ]
 
 function Home() {
+  const [cleared, setCleared] = useState(false)
+  const { user } = useAuth()
+
+  const handleClearLocal = () => {
+    if (!window.confirm('Clear locally saved quiz progress on this browser?')) return
+    clearLocalProgress()
+    setCleared(true)
+  }
+
   return (
     <div className="flex flex-col items-center gap-10 py-10">
       <div className="max-w-2xl text-center">
@@ -62,6 +74,19 @@ function Home() {
             </span>
           </Link>
         ))}
+      </div>
+
+      <div className="flex items-center gap-3">
+        {cleared && <span className="text-sm text-emerald-300">Local progress cleared.</span>}
+        {!user && (
+          <button
+            type="button"
+            onClick={handleClearLocal}
+            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:border-rose-600/50 hover:bg-rose-500/10 hover:text-rose-300"
+          >
+            Clear your progress
+          </button>
+        )}
       </div>
     </div>
   )

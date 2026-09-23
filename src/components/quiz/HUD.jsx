@@ -16,6 +16,33 @@ function Lives({ lives }) {
   )
 }
 
+function ProgressDots({ snapshot }) {
+  const { index, total, answers } = snapshot
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {Array.from({ length: total }).map((_, i) => {
+        const answered = i < answers.length
+        const correct = answered && answers[i].correct
+        const isCurrent = i === index
+        const cls = answered
+          ? correct
+            ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]'
+            : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]'
+          : 'bg-slate-700'
+        return (
+          <span
+            key={i}
+            title={answered ? `Q${i + 1} — ${correct ? 'correct' : 'wrong'}` : `Q${i + 1} — unanswered`}
+            className={`inline-block h-2.5 w-2.5 rounded-sm transition-all duration-300 ${
+              isCurrent && !answered ? 'ring-2 ring-indigo-400 ring-offset-1 ring-offset-slate-900' : ''
+            } ${cls}`}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 function Timer({ timeLeft }) {
   const danger = timeLeft <= 5
   return (
@@ -62,6 +89,9 @@ function HUD({ snapshot }) {
           </span>
           <Timer timeLeft={timeLeft} />
         </div>
+      </div>
+      <div className="mt-3 border-t border-slate-800 pt-3">
+        <ProgressDots snapshot={snapshot} />
       </div>
     </div>
   )

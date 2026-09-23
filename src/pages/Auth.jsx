@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
-function Field({ label, type = 'text', value, onChange, placeholder, autoComplete }) {
+const USERNAME_RE = /^[A-Za-z0-9_.-]{1,24}$/
+
+function Field({ label, type = 'text', value, onChange, placeholder, autoComplete, hint }) {
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-semibold text-slate-400">{label}</span>
@@ -14,6 +16,7 @@ function Field({ label, type = 'text', value, onChange, placeholder, autoComplet
         autoComplete={autoComplete}
         className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-indigo-500"
       />
+      {hint && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}
     </label>
   )
 }
@@ -22,6 +25,8 @@ function AuthPage() {
   const { configured, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth()
   const [params] = useSearchParams()
   const [mode, setMode] = useState(() => (params.get('mode') === 'signup' ? 'signup' : 'signin'))
+  const [username, setUsername] = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
@@ -33,9 +38,20 @@ function AuthPage() {
     e.preventDefault()
     setError(null)
     setMessage(null)
+    if (mode === 'signup') {
+      if (!USERNAME_RE.test(username.trim())) {
+        setError('Username must be 1–24 characters using letters, numbers, _ . or -.')
+        return
+      }
+      if (!name.trim()) {
+        setError('Please enter your name.')
+        return
+      }
+    }
     setBusy(true)
     const action = mode === 'signin' ? signInWithPassword : signUpWithPassword
-    const { error: err, data } = await action(email.trim(), password)
+    const payload = mode === 'signin' ? [email.trim(), password] : [username, name, email.trim(), password]
+    const { error: err, data } = await action(...payload)
     setBusy(false)
     if (err) {
       setError(err.message)
@@ -103,13 +119,19 @@ function AuthPage() {
         </div>
 
         <form onSubmit={submit} className="mt-6 flex flex-col gap-4">
+          {mode === 'signup' && (
+            <>
+              <Field label="Username" value={username} onChange={setUsername} placeholder="player99" autoComplete="username" hint="1–24 letters, numbers, _ . -" />
+              <Field label="Name" value={name} onChange={setName} placeholder="Your full name" autoComplete="name" />
+            </>
+          )}
           <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" />
           <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} />
           {error && <p className="text-sm text-rose-400">{error}</p>}
           {message && <p className="text-sm text-emerald-400">{message}</p>}
           <button
             type="submit"
-            disabled={busy || !email || !password}
+            disabled={busy || !email || !password || (mode === 'signup' && (!username || !name))}
             className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
