@@ -1,4 +1,6 @@
 import { isLevelUnlocked, levelKey, COMPLETE_THRESHOLD } from '../../lib/progress.js'
+import { GUEST_QUESTION_LIMIT } from '../../data/selectQuestions.js'
+import GuestBanner from './GuestBanner.jsx'
 
 const levels = [
   { key: 'easy', label: 'Easy', desc: 'Warm up', code: 'LVL-01' },
@@ -46,8 +48,9 @@ const accents = {
   },
 }
 
-function LevelCard({ mode, lv, index, bank, progress, onPick }) {
-  const unlocked = isLevelUnlocked(lv.key, progress, mode.key)
+function LevelCard({ mode, lv, index, bank, progress, onPick, isGuest }) {
+  const authLocked = isGuest && lv.key !== 'easy'
+  const unlocked = !authLocked && isLevelUnlocked(lv.key, progress, mode.key)
   const isCompleted = (progress.completed ?? []).includes(levelKey(mode.key, lv.key))
   const best = progress.best ?? {}
   const count = lv.key === 'all' ? bank.length : bank.filter((q) => q.difficulty === lv.key).length
@@ -122,7 +125,7 @@ function LevelCard({ mode, lv, index, bank, progress, onPick }) {
                   : 'cursor-not-allowed border border-slate-700 bg-slate-800/60 text-slate-500'
               }`}
             >
-              {isCompleted ? 'Replay' : unlocked ? 'Play' : '🔒 Locked'}
+              {isCompleted ? 'Replay' : unlocked ? 'Play' : authLocked ? '🔒 Sign in' : '🔒 Locked'}
             </button>
           </div>
         </div>
@@ -131,7 +134,7 @@ function LevelCard({ mode, lv, index, bank, progress, onPick }) {
   )
 }
 
-function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPick, onBack }) {
+function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPick, onBack, isGuest }) {
   return (
     <div className="mx-auto max-w-3xl px-2">
       <div className="mb-8 text-center">
@@ -151,6 +154,8 @@ function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPic
         </p>
       </div>
 
+      {isGuest && <div className="mb-6"><GuestBanner limit={GUEST_QUESTION_LIMIT} /></div>}
+
       <div className="flex flex-col gap-4">
         {levels.map((lv, i) => (
           <LevelCard
@@ -160,6 +165,7 @@ function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPic
             index={i}
             bank={bank}
             progress={progress}
+            isGuest={isGuest}
             onPick={onPick}
           />
         ))}

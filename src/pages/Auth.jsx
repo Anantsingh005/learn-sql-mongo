@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { debugLog, debugError } from '../lib/debug.js'
 
 const USERNAME_RE = /^[A-Za-z0-9_.-]{1,24}$/
 
@@ -22,17 +23,71 @@ function Field({ label, type = 'text', value, onChange, placeholder, autoComplet
 }
 
 function AuthPage() {
-  const { configured, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth()
+  const { configured, user, loading, signInWithPassword, signUpWithPassword, signInWithGoogle, requestPasswordReset, updatePassword, signOut } = useAuth()
   const [params] = useSearchParams()
-  const [mode, setMode] = useState(() => (params.get('mode') === 'signup' ? 'signup' : 'signin'))
+  const [mode, setMode] = useState(() => {
+    const m = params.get('mode')
+    if (m === 'reset') return 'reset'
+    return m === 'signup' ? 'signup' : 'signin'
+  })
   const [username, setUsername] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetPassword, setResetPassword] = useState('')
   const [error, setError] = useState(null)
-  const [message, setMessage] = useState(null)
+  const [message, setMessage] = useState(() =>
+    params.get('notice') === 'password-updated' ? 'Password updated. Sign in with your new password.' : null
+  )
   const [busy, setBusy] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const m = params.get('mode')
+    setMode(m === 'signup' ? 'signup' : m === 'reset' ? 'reset' : 'signin')
+    if (params.get('notice') === 'password-updated') {
+      setMessage('Password updated. Sign in with your new password.')
+    }
+  }, [params])
+
+  const handleRequestReset = async (e) => {
+    e.preventDefault()
+    setError(null)
+    setMessage(null)
+    setBusy(true)
+    debugLog('reset request →', resetEmail.trim())
+    const { error: err } = await requestPasswordReset(resetEmail)
+    setBusy(false)
+    if (err) {
+      debugError('reset request error →', err.message)
+      setError(err.message)
+      return
+    }
+    setMessage('Check your inbox for a link to reset your password.')
+  }
+
+  const handleSetNewPassword = async (e) => {
+    e.preventDefault()
+    setError(null)
+    setMessage(null)
+    if (resetPassword.length < 6) {
+      setError('Password must be at least 6 characters long.')
+      return
+    }
+    setBusy(true)
+    debugLog('set new password →')
+    const { error: err } = await updatePassword(resetPassword)
+    setBusy(false)
+    if (err) {
+      debugError('update password error →', err.message)
+      setError(err.message)
+      return
+    }
+    debugLog('password updated → signing out')
+    await signOut()
+    navigate('/auth?notice=password-updated')
+  }
 
   const submit = async (e) => {
     e.preventDefault()
@@ -49,11 +104,13 @@ function AuthPage() {
       }
     }
     setBusy(true)
+    debugLog('submit auth →', mode, email.trim())
     const action = mode === 'signin' ? signInWithPassword : signUpWithPassword
     const payload = mode === 'signin' ? [email.trim(), password] : [username, name, email.trim(), password]
     const { error: err, data } = await action(...payload)
     setBusy(false)
     if (err) {
+      debugError('submit auth error →', err.message, { email: email.trim() })
       setError(err.message)
       return
     }
@@ -72,9 +129,13 @@ function AuthPage() {
   const google = async () => {
     setError(null)
     setBusy(true)
+    debugLog('google button clicked →')
     const { error: err } = await signInWithGoogle()
     setBusy(false)
-    if (err) setError(err.message)
+    if (err) {
+      debugError('google button error →', err.message)
+      setError(err.message)
+    }
   }
 
   if (!configured) {
@@ -86,6 +147,71 @@ function AuthPage() {
           <span className="font-mono">VITE_SUPABASE_ANON_KEY</span> to{' '}
           <span className="font-mono">.env</span>, then reload.
         </p>
+      </div>
+    )
+  }
+
+  if (mode === 'reset') {
+    return (
+      <div className="mx-auto max-w-md">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8">
+          <div className="font-mono text-2xl font-bold text-white">
+            {user ? 'Set a new password' : 'Reset your password'}
+          </div>
+
+          {loading ? (
+            <p className="mt-6 text-sm text-slate-400">Loading…</p>
+          ) : user ? (
+            <form onSubmit={handleSetNewPassword} className="mt-6 flex flex-col gap-4">
+              <Field
+                label="New password"
+                type="password"
+                value={resetPassword}
+                onChange={setResetPassword}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                hint="At least 6 characters long."
+              />
+              {error && <p className="text-sm text-rose-400">{error}</p>}
+              <button
+                type="submit"
+                disabled={busy || resetPassword.length < 6}
+                className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? 'Working…' : 'Update password'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRequestReset} className="mt-6 flex flex-col gap-4">
+              <Field
+                label="Email"
+                type="email"
+                value={resetEmail}
+                onChange={setResetEmail}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+              {error && <p className="text-sm text-rose-400">{error}</p>}
+              {message && <p className="text-sm text-emerald-400">{message}</p>}
+              <button
+                type="submit"
+                disabled={busy || !resetEmail.trim()}
+                className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? 'Working…' : 'Send reset link'}
+              </button>
+            </form>
+          )}
+
+          <div className="my-5 h-px bg-slate-800" />
+          <button
+            type="button"
+            onClick={() => navigate('/auth')}
+            className="text-sm text-slate-400 transition-colors hover:text-slate-200"
+          >
+            ← Back to sign in
+          </button>
+        </div>
       </div>
     )
   }
@@ -127,6 +253,15 @@ function AuthPage() {
           )}
           <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" autoComplete="email" />
           <Field label="Password" type="password" value={password} onChange={setPassword} placeholder="••••••••" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} />
+          {mode === 'signin' && (
+            <button
+              type="button"
+              onClick={() => navigate('/auth?mode=reset')}
+              className="-mt-1 self-end text-xs font-medium text-slate-400 transition-colors hover:text-indigo-300"
+            >
+              Forgot your password?
+            </button>
+          )}
           {error && <p className="text-sm text-rose-400">{error}</p>}
           {message && <p className="text-sm text-emerald-400">{message}</p>}
           <button

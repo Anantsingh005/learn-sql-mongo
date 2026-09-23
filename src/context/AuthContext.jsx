@@ -1,15 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { isSupabaseConfigured } from '../lib/supabase.js'
-import {
-  onAuthChange,
-  supabaseGetSession,
-  supabaseSignIn,
-  supabaseSignUp,
-  supabaseSignInWithGoogle,
-  supabaseSignOut,
-  fetchProfile,
-  updateProfileUsername,
-} from '../lib/supabase-auth.js'
+import { debugLog, debugError } from '../lib/debug.js'
+import { onAuthChange, supabaseGetSession, supabaseSignIn, supabaseSignUp, supabaseSignInWithGoogle, supabaseSignOut, fetchProfile, updateProfileUsername, supabaseResetPasswordRequest, supabaseUpdatePassword } from '../lib/supabase-auth.js'
 
 const AuthContext = createContext(null)
 
@@ -37,8 +29,9 @@ export function AuthProvider({ children }) {
       if (!u) setLoading(false)
     })
 
-    return onAuthChange((nextUser) => {
+    return onAuthChange((nextUser, event) => {
       if (!active) return
+      debugLog('auth state change →', event, nextUser?.id ?? null)
       setUser(nextUser ? { id: nextUser.id, email: nextUser.email ?? '' } : null)
       if (!nextUser) {
         setProfile(null)
@@ -68,23 +61,40 @@ export function AuthProvider({ children }) {
   }, [user?.id, user?.email])
 
   const signInWithPassword = async (email, password) => {
+    debugLog('AuthContext.signIn →', email)
     const result = await supabaseSignIn({ email, password })
     if (result.data?.user) {
       setUser({ id: result.data.user.id, email: result.data.user.email ?? '' })
+    } else if (result.error) {
+      debugError('AuthContext.signIn error →', result.error.message)
     }
     return result
   }
 
   const signUpWithPassword = async (username, name, email, password) => {
+    debugLog('AuthContext.signUp →', email)
     const result = await supabaseSignUp({ email, password, username, name })
     if (result.data?.user) {
       setUser({ id: result.data.user.id, email: result.data.user.email ?? '' })
+    } else if (result.error) {
+      debugError('AuthContext.signUp error →', result.error.message)
     }
     return result
   }
 
   const signInWithGoogle = async () => {
+    debugLog('AuthContext.google →')
     return supabaseSignInWithGoogle()
+  }
+
+  const requestPasswordReset = async (email) => {
+    debugLog('AuthContext.requestPasswordReset →', email)
+    return supabaseResetPasswordRequest(email)
+  }
+
+  const updatePassword = async (password) => {
+    debugLog('AuthContext.updatePassword →')
+    return supabaseUpdatePassword(password)
   }
 
   const updateUsername = async (username) => {
@@ -109,6 +119,8 @@ export function AuthProvider({ children }) {
     signInWithPassword,
     signUpWithPassword,
     signInWithGoogle,
+    requestPasswordReset,
+    updatePassword,
     updateUsername,
     signOut,
   }

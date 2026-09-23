@@ -76,7 +76,7 @@ function BuggyQueryView({ question }) {
   )
 }
 
-function QuestionCard({ question, selectedIndex, onSelect, disabled, children }) {
+function QuestionCard({ question, selectedIndex, onSelect, disabled, children, isGuest }) {
   return (
     <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <QuestTypeIndicator type={question.type} difficulty={question.difficulty} topic={question.topic} />
@@ -98,7 +98,7 @@ function QuestionCard({ question, selectedIndex, onSelect, disabled, children })
       {(question.type === 'write' || question.type === 'bug') && (
         <>
           <SchemaPanel schema={question.schema} />
-          <HintReveal hint={question.hint} />
+          {!isGuest && <HintReveal hint={question.hint} />}
         </>
       )}
 

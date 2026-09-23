@@ -3,6 +3,8 @@ import { multipleChoice } from '../../data/sql/multipleChoice.js'
 import { writeQuery } from '../../data/sql/writeQuery.js'
 import { fixBug } from '../../data/sql/fixBug.js'
 import { windowCte } from '../../data/sql/windowCte.js'
+import { selectQuestions, GUEST_QUESTION_LIMIT } from '../../data/selectQuestions.js'
+import GuestBanner from './GuestBanner.jsx'
 
 const modes = [
   {
@@ -51,7 +53,7 @@ const modes = [
   },
 ]
 
-function ModeSelect({ onPick }) {
+function ModeSelect({ onPick, isGuest }) {
   const { profile } = useAuth()
 
   return (
@@ -68,8 +70,14 @@ function ModeSelect({ onPick }) {
         </p>
       </div>
 
+      {isGuest && <div className="mb-6"><GuestBanner limit={GUEST_QUESTION_LIMIT} /></div>}
+
       <div className="grid gap-4 sm:grid-cols-3">
-        {modes.map((m) => (
+        {modes.map((m) => {
+          const count = isGuest
+            ? selectQuestions({ types: [m.key], limit: GUEST_QUESTION_LIMIT }).length
+            : m.bank.length
+          return (
           <button
             key={m.key}
             type="button"
@@ -92,14 +100,17 @@ function ModeSelect({ onPick }) {
               <div className="mt-4 font-mono text-lg font-bold text-white">{m.title}</div>
               <p className="mt-1 text-sm text-slate-400">{m.desc}</p>
               <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
-                <span className="font-semibold">{m.bank.length} questions</span>
+                <span className="font-semibold">
+                  {isGuest ? `${count} free / ${m.bank.length}` : `${count} questions`}
+                </span>
                 <span className={`font-bold transition-transform ${m.arrow} group-hover:translate-x-1`}>
                   Select →
                 </span>
               </div>
             </div>
           </button>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

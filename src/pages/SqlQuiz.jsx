@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import QueryRunner from '../engine/QueryRunner.js'
 import { QuizEngine } from '../engine/QuizEngine.js'
 import { buildCheckQuery } from '../engine/queryCheck.js'
-import { selectQuestions } from '../data/selectQuestions.js'
+import { selectQuestions, GUEST_QUESTION_LIMIT } from '../data/selectQuestions.js'
 import { saveScore } from '../lib/leaderboard.js'
 import { getProgress, recordLevelResult } from '../lib/progress.js'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -22,7 +22,8 @@ function SqlQuiz() {
   const [saveResult, setSaveResult] = useState(null)
   const [progress, setProgress] = useState({ completed: [], best: {} })
   const savedRef = useRef(null)
-  const { user, profile } = useAuth()
+  const { user, profile, configured } = useAuth()
+  const isGuest = configured && !user
   const snapshot = useQuizEngine(engine)
 
   useEffect(() => {
@@ -72,12 +73,12 @@ function SqlQuiz() {
     : 'idle'
 
   const handleStart = (config) => {
-    const questions = selectQuestions(config)
+    const questions = selectQuestions({ ...config, limit: isGuest ? GUEST_QUESTION_LIMIT : undefined })
     if (questions.length === 0) return
     const checkQuery = buildCheckQuery(QueryRunner)
     const nextEngine = new QuizEngine(questions, { checkQuery }, {
       timePerQuestion: mode?.timePerQuestion,
-      extraTime: mode?.extraTime,
+      extraTime: isGuest ? undefined : mode?.extraTime,
     })
     nextEngine.difficulty = config.difficulty ?? 'all'
     setEngine((prev) => {
@@ -100,13 +101,14 @@ function SqlQuiz() {
 
   if (!engine) {
     if (!mode) {
-      return <ModeSelect onPick={(m) => setMode(m)} />
+      return <ModeSelect isGuest={isGuest} onPick={(m) => setMode(m)} />
     }
     return (
       <LevelSelect
         mode={mode}
-        bank={selectQuestions({ types: [mode.key] })}
+        bank={selectQuestions({ types: [mode.key], limit: isGuest ? GUEST_QUESTION_LIMIT : undefined })}
         progress={progress}
+        isGuest={isGuest}
         onPick={({ difficulty }) => handleStart({ types: [mode.key], difficulty })}
         onBack={() => setMode(null)}
       />
@@ -188,6 +190,7 @@ function SqlQuiz() {
         selectedIndex={selectedIndex}
         onSelect={handleMcSelect}
         disabled={isFeedback || snapshot.runningAnswer}
+        isGuest={isGuest}
       >
         {(question.type === 'write' || question.type === 'bug') && !isFeedback && (
           <div className="mt-4">

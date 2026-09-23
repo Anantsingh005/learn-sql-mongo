@@ -13,6 +13,8 @@ export const QUESTION_TYPE_LABELS = {
   bug: 'Fix the bug',
 }
 
+export const GUEST_QUESTION_LIMIT = 10
+
 function normalizeTypes(types) {
   if (Array.isArray(types)) return new Set(types)
   const set = new Set()
@@ -22,13 +24,15 @@ function normalizeTypes(types) {
   return set
 }
 
-export function selectQuestions({ types = { mc: true, write: true, bug: true }, difficulty = 'all' } = {}) {
+export function selectQuestions({ types = { mc: true, write: true, bug: true }, difficulty = 'all', limit } = {}) {
   const typeSet = normalizeTypes(types)
-  return allSqlQuestions.filter((q) => {
+  const questions = allSqlQuestions.filter((q) => {
     const typeOk = typeSet.has(q.type)
     const diffOk = difficulty === 'all' || q.difficulty === difficulty
     return typeOk && diffOk
   })
+  if (Number.isFinite(limit) && limit > 0) return questions.slice(0, limit)
+  return questions
 }
 
 export function countByDifficulty(questions, difficulty) {

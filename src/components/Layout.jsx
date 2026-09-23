@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useIsAdmin } from '../hooks/useIsAdmin.js'
 
 const linkClass = ({ isActive }) =>
   `rounded-md px-3 py-2 text-sm font-medium transition-colors ${
@@ -70,6 +71,7 @@ function AuthMenu() {
 function Layout() {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
+  const { isAdmin } = useIsAdmin()
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -88,6 +90,11 @@ function Layout() {
             <NavLink to="/leaderboard" className={linkClass}>
               Leaderboard
             </NavLink>
+            {isAdmin && (
+              <NavLink to="/admin" className={linkClass}>
+                Admin
+              </NavLink>
+            )}
             <div className="ml-2">
               <AuthMenu />
             </div>
@@ -123,6 +130,11 @@ function Layout() {
               <NavLink to="/leaderboard" className={linkClass} onClick={close}>
                 Leaderboard
               </NavLink>
+              {isAdmin && (
+                <NavLink to="/admin" className={linkClass} onClick={close}>
+                  Admin
+                </NavLink>
+              )}
               <div className="border-t border-slate-800 pt-2">
                 <AuthMenu />
               </div>

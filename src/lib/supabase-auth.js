@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js'
+import { debugLog, debugError } from './debug.js'
 
 export const onAuthChange = (callback) => {
   if (!supabase) return () => {}
@@ -16,6 +17,7 @@ export async function supabaseGetSession() {
 
 export async function supabaseSignUp({ email, password, username, name }) {
   if (!supabase) return { data: null, error: { message: 'Supabase is not configured.' } }
+  debugLog('signUp →', email)
   try {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
@@ -25,44 +27,66 @@ export async function supabaseSignUp({ email, password, username, name }) {
         data: { username: username?.trim() || null, full_name: name?.trim() || null },
       },
     })
-    if (error) return { data: null, error: { message: friendlyAuthError(error) } }
+    if (error) {
+      debugError('signUp failed →', friendlyAuthError(error))
+      return { data: null, error: { message: friendlyAuthError(error) } }
+    }
     const user = data.user ?? null
+    const identities = data.identities ?? []
+    if (!error && !user && identities.length === 0) {
+      debugError('signUp blocked → email already registered')
+      return { data: null, error: { message: 'An account with this email already exists. Try signing in instead.' } }
+    }
+    debugLog('signUp ok →', user?.id, 'session:', Boolean(data.session))
     return {
       data: { user, session: data.session ?? null },
       error: null,
     }
   } catch (err) {
+    debugError('signUp threw →', err)
     return { data: null, error: { message: friendlyAuthError(err) } }
   }
 }
 
 export async function supabaseSignIn({ email, password }) {
   if (!supabase) return { data: null, error: { message: 'Supabase is not configured.' } }
+  debugLog('signIn →', email)
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     })
-    if (error) return { data: null, error: { message: friendlyAuthError(error) } }
+    if (error) {
+      debugError('signIn failed →', friendlyAuthError(error), error?.code)
+      return { data: null, error: { message: friendlyAuthError(error) } }
+    }
+    debugLog('signIn ok →', data.user?.id)
     return { data: { user: data.user, session: data.session }, error: null }
   } catch (err) {
+    debugError('signIn threw →', err)
     return { data: null, error: { message: friendlyAuthError(err) } }
   }
 }
 
 export async function supabaseSignInWithGoogle() {
   if (!supabase) return { data: null, error: { message: 'Supabase is not configured.' } }
+  debugLog('google signIn →')
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
     })
-    if (error) return { data: null, error: { message: friendlyAuthError(error) } }
+    if (error) {
+      debugError('google signIn failed →', friendlyAuthError(error))
+      return { data: null, error: { message: friendlyAuthError(error) } }
+    }
+    debugLog('google redirect →', data?.url)
     if (data?.url) {
-      window.open(data.url, 'google-oauth', 'width=520,height=620,left=200,top=120')
+      window.location.assign(data.url)
     }
     return { data: { user: null, session: null }, error: null }
   } catch (err) {
+    debugError('google signIn threw →', err)
     return { data: null, error: { message: friendlyAuthError(err) } }
   }
 }
@@ -73,6 +97,42 @@ export async function supabaseSignOut() {
     const { error } = await supabase.auth.signOut()
     return { error: error ? { message: friendlyAuthError(error) } : null }
   } catch (err) {
+    return { error: { message: friendlyAuthError(err) } }
+  }
+}
+
+export async function supabaseResetPasswordRequest(email) {
+  if (!supabase) return { error: { message: 'Supabase is not configured.' } }
+  debugLog('resetPassword request →', email)
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: `${window.location.origin}/auth?mode=reset`,
+    })
+    if (error) {
+      debugError('resetPassword request failed →', friendlyAuthError(error))
+      return { error: { message: friendlyAuthError(error) } }
+    }
+    debugLog('resetPassword email sent →', email)
+    return { error: null }
+  } catch (err) {
+    debugError('resetPassword request threw →', err)
+    return { error: { message: friendlyAuthError(err) } }
+  }
+}
+
+export async function supabaseUpdatePassword(password) {
+  if (!supabase) return { error: { message: 'Supabase is not configured.' } }
+  debugLog('updatePassword →')
+  try {
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) {
+      debugError('updatePassword failed →', friendlyAuthError(error))
+      return { error: { message: friendlyAuthError(error) } }
+    }
+    debugLog('updatePassword ok →')
+    return { error: null }
+  } catch (err) {
+    debugError('updatePassword threw →', err)
     return { error: { message: friendlyAuthError(err) } }
   }
 }
