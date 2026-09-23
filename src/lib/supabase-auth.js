@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js'
 import { debugLog, debugError } from './debug.js'
+import { authSignUp, authRequestReset, authCompleteReset } from './auth-api.js'
 
 export const onAuthChange = (callback) => {
   if (!supabase) return () => {}
@@ -18,34 +19,21 @@ export async function supabaseGetSession() {
 export async function supabaseSignUp({ email, password, username, name }) {
   if (!supabase) return { data: null, error: { message: 'Supabase is not configured.' } }
   debugLog('signUp →', email)
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { username: username?.trim() || null, full_name: name?.trim() || null },
-      },
-    })
-    if (error) {
-      debugError('signUp failed →', friendlyAuthError(error))
-      return { data: null, error: { message: friendlyAuthError(error) } }
-    }
-    const user = data.user ?? null
-    const identities = data.identities ?? []
-    if (!error && !user && identities.length === 0) {
-      debugError('signUp blocked → email already registered')
-      return { data: null, error: { message: 'An account with this email already exists. Try signing in instead.' } }
-    }
-    debugLog('signUp ok →', user?.id, 'session:', Boolean(data.session))
-    return {
-      data: { user, session: data.session ?? null },
-      error: null,
-    }
-  } catch (err) {
-    debugError('signUp threw →', err)
-    return { data: null, error: { message: friendlyAuthError(err) } }
+  const res = await authSignUp({ email, password, username, name })
+  if (res.error) {
+    debugError('signUp blocked →', res.error.message)
+    return { data: null, error: { message: res.error.message } }
   }
+  debugLog('signUp ok →', res.data?.user?.id, '— starting session')
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  })
+  if (error) {
+    debugError('signUp session failed →', friendlyAuthError(error))
+    return { data: null, error: { message: friendlyAuthError(error) } }
+  }
+  return { data: { user: data.user, session: data.session }, error: null }
 }
 
 export async function supabaseSignIn({ email, password }) {
@@ -104,20 +92,25 @@ export async function supabaseSignOut() {
 export async function supabaseResetPasswordRequest(email) {
   if (!supabase) return { error: { message: 'Supabase is not configured.' } }
   debugLog('resetPassword request →', email)
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-      redirectTo: `${window.location.origin}/auth?mode=reset`,
-    })
-    if (error) {
-      debugError('resetPassword request failed →', friendlyAuthError(error))
-      return { error: { message: friendlyAuthError(error) } }
-    }
-    debugLog('resetPassword email sent →', email)
-    return { error: null }
-  } catch (err) {
-    debugError('resetPassword request threw →', err)
-    return { error: { message: friendlyAuthError(err) } }
+  const res = await authRequestReset(email)
+  if (res.error) {
+    debugError('resetPassword request failed →', res.error.message)
+    return { error: { message: res.error.message } }
   }
+  debugLog('resetPassword code granted →', Boolean(res.data?.code))
+  return { code: res.data?.code ?? null, error: null }
+}
+
+export async function supabaseCompleteReset(email, code, password) {
+  if (!supabase) return { error: { message: 'Supabase is not configured.' } }
+  debugLog('completeReset →', email)
+  const res = await authCompleteReset({ email, code, password })
+  if (res.error) {
+    debugError('completeReset failed →', res.error.message)
+    return { error: { message: res.error.message } }
+  }
+  debugLog('completeReset ok →')
+  return { error: null }
 }
 
 export async function supabaseUpdatePassword(password) {
@@ -142,7 +135,7 @@ export async function fetchProfile(userId) {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, name')
+      .select('id, username, name, created_at')
       .eq('id', userId)
       .maybeSingle()
     if (error) throw error
@@ -187,4 +180,13 @@ function friendlyAuthError(err) {
   return code ? `${code}: ${fallback}` : fallback
 }
 
-export default { onAuthChange, supabaseSignUp, supabaseSignIn, supabaseSignInWithGoogle, supabaseSignOut, supabaseGetSession }
+export default {
+  onAuthChange,
+  supabaseSignUp,
+  supabaseSignIn,
+  supabaseSignInWithGoogle,
+  supabaseSignOut,
+  supabaseGetSession,
+  supabaseResetPasswordRequest,
+  supabaseCompleteReset,
+}

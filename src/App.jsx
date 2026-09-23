@@ -6,6 +6,7 @@ import QuizPlaceholder from './components/QuizPlaceholder.jsx'
 import SqlQuiz from './pages/SqlQuiz.jsx'
 import AuthPage from './pages/Auth.jsx'
 import AdminPage from './pages/Admin.jsx'
+import ProfilePage from './pages/Profile.jsx'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="quiz/mongo" element={<QuizPlaceholder game="mongo" comingSoon />} />
         <Route path="leaderboard" element={<Leaderboard />} />
         <Route path="auth" element={<AuthPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         <Route path="admin" element={<AdminPage />} />
       </Route>
     </Routes>

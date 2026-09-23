@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { isSupabaseConfigured } from '../lib/supabase.js'
 import { debugLog, debugError } from '../lib/debug.js'
-import { onAuthChange, supabaseGetSession, supabaseSignIn, supabaseSignUp, supabaseSignInWithGoogle, supabaseSignOut, fetchProfile, updateProfileUsername, supabaseResetPasswordRequest, supabaseUpdatePassword } from '../lib/supabase-auth.js'
+import { onAuthChange, supabaseGetSession, supabaseSignIn, supabaseSignUp, supabaseSignInWithGoogle, supabaseSignOut, fetchProfile, updateProfileUsername, supabaseResetPasswordRequest, supabaseUpdatePassword, supabaseCompleteReset } from '../lib/supabase-auth.js'
 
 const AuthContext = createContext(null)
 
@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
         id: user.id,
         username: p?.username || emailUsername(user.email) || 'player',
         name: p?.name || '',
+        created_at: p?.created_at || null,
       })
       setLoading(false)
     })
@@ -97,6 +98,11 @@ export function AuthProvider({ children }) {
     return supabaseUpdatePassword(password)
   }
 
+  const completePasswordReset = async (email, code, password) => {
+    debugLog('AuthContext.completePasswordReset →', email)
+    return supabaseCompleteReset(email, code, password)
+  }
+
   const updateUsername = async (username) => {
     if (!user) return { error: new Error('Not signed in.') }
     if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') }
@@ -121,6 +127,7 @@ export function AuthProvider({ children }) {
     signInWithGoogle,
     requestPasswordReset,
     updatePassword,
+    completePasswordReset,
     updateUsername,
     signOut,
   }
