@@ -18,7 +18,8 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
   - `fixBug.js` — buggy-query questions (every entry includes a verified `fixedQuery`)
   - `windowCte.js` — window functions and CTEs
   - `schemas.js` — shared in-browser schemas (e.g. `store`)
-- **Auth & leaderboard** — Supabase Auth (email/password + Google) for sign-in; signed-in users submit scores to a public leaderboard.
+- **Auth & leaderboard** — Supabase Auth (email/password + Google) for sign-in; signed-in users submit scores to a public leaderboard. Signup/password-reset go through a custom Edge Function (`supabase/functions/auth`) that uses the Admin API, so no confirmation emails are sent and the hosted email rate limit can't be hit.
+- **Profile page** — signed-in users get account details and a per-mode/difficulty progress matrix.
 - **Progress tracking** — per-user progress is persisted to Postgres.
 
 ## Tech Stack
@@ -49,7 +50,9 @@ npm install
 3. Create the schema by applying the migrations in the Supabase SQL editor:
    - `profiles`, `scores`, `user_progress` tables with Row-Level Security and grants
    - a `handle_new_user` trigger that auto-creates a profile on sign-up
-4. Copy `.env.example` to `.env` and fill in your project URL and publishable API key (from *Project Settings → API*):
+   - `password_resets` (single-use, hashed reset codes) with restrictive deny policies
+4. Deploy the auth control plane: `supabase functions deploy auth`, then set the `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` secrets on it (signup/reset call the Admin API).
+5. Copy `.env.example` to `.env` and fill in your project URL and publishable API key (from *Project Settings → API*):
 
 ```bash
 copy .env.example .env

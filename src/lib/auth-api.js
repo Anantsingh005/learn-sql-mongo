@@ -21,11 +21,12 @@ async function messageFrom(error) {
   return GENERIC
 }
 
-export async function callAuth(action, payload) {
+export async function callAuth(action, payload = {}, token = null) {
   if (!supabase) return { data: null, error: { message: 'Supabase is not configured.' } }
   try {
     const { data, error } = await supabase.functions.invoke('auth', {
       body: { action, ...payload },
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
     if (error) {
       const message = await messageFrom(error)
@@ -41,6 +42,14 @@ export async function authSignUp({ email, password, username, name }) {
   return callAuth('signup', { email, password, username, name })
 }
 
+export async function authUpdateEmail({ userId, email }) {
+  return callAuth('update-email', { userId, email })
+}
+
+export async function authDeleteAccount({ userId }) {
+  return callAuth('delete-account', { userId })
+}
+
 export async function authRequestReset(email) {
   return callAuth('reset', { email })
 }
@@ -49,4 +58,4 @@ export async function authCompleteReset({ email, code, password }) {
   return callAuth('complete-reset', { email, code, password })
 }
 
-export default { callAuth, authSignUp, authRequestReset, authCompleteReset }
+export default { callAuth, authSignUp, authUpdateEmail, authDeleteAccount, authRequestReset, authCompleteReset }

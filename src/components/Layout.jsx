@@ -32,9 +32,13 @@ function AuthMenu() {
       to="/profile"
       className="flex items-center gap-2 rounded-full border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-200 hover:bg-slate-800"
     >
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-[12px] font-bold text-white">
-        {(profile?.username ?? user.email ?? '?').charAt(0).toUpperCase()}
-      </span>
+      {profile?.avatar_url ? (
+        <img src={profile.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
+      ) : (
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-[12px] font-bold text-white">
+          {(profile?.username ?? user.email ?? '?').charAt(0).toUpperCase()}
+        </span>
+      )}
       <span className="max-w-28 truncate">{profile?.username ?? user.email}</span>
     </NavLink>
   )

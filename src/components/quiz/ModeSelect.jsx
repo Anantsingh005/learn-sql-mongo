@@ -6,7 +6,7 @@ import { windowCte } from '../../data/sql/windowCte.js'
 import { selectQuestions, GUEST_QUESTION_LIMIT } from '../../data/selectQuestions.js'
 import GuestBanner from './GuestBanner.jsx'
 
-const modes = [
+export const quizModes = [
   {
     key: 'mc',
     title: 'Multiple Choice',
@@ -73,7 +73,7 @@ function ModeSelect({ onPick, isGuest }) {
       {isGuest && <div className="mb-6"><GuestBanner limit={GUEST_QUESTION_LIMIT} /></div>}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {modes.map((m) => {
+        {quizModes.map((m) => {
           const count = isGuest
             ? selectQuestions({ types: [m.key], limit: GUEST_QUESTION_LIMIT }).length
             : m.bank.length

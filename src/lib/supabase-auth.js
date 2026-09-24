@@ -1,6 +1,6 @@
 import { supabase } from './supabase.js'
 import { debugLog, debugError } from './debug.js'
-import { authSignUp, authRequestReset, authCompleteReset } from './auth-api.js'
+import { authSignUp, authRequestReset, authCompleteReset, authUpdateEmail, authDeleteAccount } from './auth-api.js'
 
 export const onAuthChange = (callback) => {
   if (!supabase) return () => {}
@@ -135,7 +135,7 @@ export async function fetchProfile(userId) {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, name, created_at')
+      .select('id, username, name, avatar_url, created_at')
       .eq('id', userId)
       .maybeSingle()
     if (error) throw error
@@ -153,6 +153,87 @@ export async function updateProfileUsername(userId, username) {
     return { error: error ? { message: friendlyAuthError(error) } : null }
   } catch (err) {
     return { error: { message: friendlyAuthError(err) } }
+  }
+}
+
+export async function updateProfile(userId, fields) {
+  if (!supabase) return { error: { message: 'Supabase is not configured.' } }
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ ...fields, updated_at: new Date().toISOString() })
+      .eq('id', userId)
+    return { error: error ? { message: friendlyAuthError(error) } : null }
+  } catch (err) {
+    return { error: { message: friendlyAuthError(err) } }
+  }
+}
+
+export async function supabaseUpdateEmail(newEmail) {
+  if (!supabase) return { error: { message: 'Supabase is not configured.' } }
+  const email = String(newEmail ?? '').trim().toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: { message: 'Please enter a valid email address.' } }
+  }
+  const { data: session } = await supabase.auth.getSession()
+  const userId = session.session?.user?.id
+  const token = session.session?.access_token
+  if (!userId || !token) return { error: { message: 'Not signed in.' } }
+  debugLog('updateEmail →', email)
+  const res = await authUpdateEmail({ userId, email })
+  if (res.error) {
+    debugError('updateEmail blocked →', res.error.message)
+    return { error: { message: res.error.message } }
+  }
+  debugLog('updateEmail ok →', res.data?.email ?? email)
+  return { error: null }
+}
+
+export async function supabaseDeleteAccount() {
+  if (!supabase) return { error: { message: 'Supabase is not configured.' } }
+  const { data: session } = await supabase.auth.getSession()
+  const userId = session.session?.user?.id
+  const token = session.session?.access_token
+  if (!userId || !token) return { error: { message: 'Not signed in.' } }
+  debugLog('deleteAccount →', userId)
+  const res = await authDeleteAccount({ userId })
+  if (res.error) {
+    debugError('deleteAccount blocked →', res.error.message)
+    return { error: { message: res.error.message } }
+  }
+  await supabase.auth.signOut()
+  debugLog('deleteAccount ok')
+  return { error: null }
+}
+
+const AVATAR_MIME = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+}
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024
+
+export async function uploadAvatar(userId, file) {
+  if (!supabase) return { error: { message: 'Supabase is not configured.' } }
+  const ext = AVATAR_MIME[file?.type]
+  if (!ext) return { error: { message: 'Use a PNG, JPEG, or WebP image for your avatar.' } }
+  if (file.size > AVATAR_MAX_BYTES) return { error: { message: 'Avatar image must be under 2 MB.' } }
+  const path = `${userId}/avatar`
+  try {
+    const { error: upErr } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type })
+    if (upErr) {
+      console.error('uploadAvatar failed:', upErr)
+      return { error: { message: 'Could not upload the image. Please try again.' } }
+    }
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+    const url = data?.publicUrl ?? null
+    if (url) await supabase.from('profiles').update({ avatar_url: url, updated_at: new Date().toISOString() }).eq('id', userId)
+    return { url, error: null }
+  } catch (err) {
+    console.error('uploadAvatar threw:', err)
+    return { error: { message: err?.message ?? 'Could not upload the image.' } }
   }
 }
 
@@ -176,6 +257,8 @@ function friendlyAuthError(err) {
   if (/provider is not enabled/i.test(fallback)) {
     return 'Google sign-in is not enabled yet. Ask the project owner to enable it in the Supabase dashboard (Authentication → Providers → Google).'
   }
+  if (code === '23505') return 'This username is already taken.'
+  if (code === '23514') return 'Username must be 1–24 characters using letters, numbers, _ . or -.'
   if (map[code]) return map[code]
   return code ? `${code}: ${fallback}` : fallback
 }

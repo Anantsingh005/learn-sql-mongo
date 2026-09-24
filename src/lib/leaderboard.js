@@ -22,7 +22,7 @@ export async function fetchTopScores(game = 'sql', top = 10) {
   try {
     const { data, error } = await supabase
       .from('scores')
-      .select('id, game, score, time_seconds, username, created_at')
+      .select('id, user_id, game, score, time_seconds, username, created_at')
       .eq('game', game)
       .order('score', { ascending: false })
       .order('time_seconds', { ascending: true })
@@ -34,4 +34,39 @@ export async function fetchTopScores(game = 'sql', top = 10) {
   }
 }
 
-export default { saveScore, fetchTopScores }
+export async function fetchPlayerSnapshot(game = 'sql', userId, top = 10) {
+  if (!supabase) return { top: [], you: null, error: null }
+  try {
+    const [{ data: topRows }, bestRes] = await Promise.all([
+      fetchTopScores(game, top),
+      userId
+        ? supabase
+            .from('scores')
+            .select('score, time_seconds, username')
+            .eq('game', game)
+            .eq('user_id', userId)
+            .order('score', { ascending: false })
+            .order('time_seconds', { ascending: true })
+            .limit(1)
+        : Promise.resolve({ data: [], error: null }),
+    ])
+    if (bestRes.error) throw bestRes.error
+
+    let you = null
+    const best = bestRes?.data?.[0]
+    if (best && userId) {
+      const { count, error } = await supabase
+        .from('scores')
+        .select('id', { count: 'exact', head: true })
+        .eq('game', game)
+        .or(`score.gt.${best.score},and(score.eq.${best.score},time_seconds.lt.${best.time_seconds})`)
+      if (error) throw error
+      you = { rank: (count ?? 0) + 1, score: best.score, time_seconds: best.time_seconds, username: best.username }
+    }
+    return { top: topRows ?? [], you, error: null }
+  } catch (err) {
+    return { top: [], you: null, error: err }
+  }
+}
+
+export default { saveScore, fetchTopScores, fetchPlayerSnapshot }

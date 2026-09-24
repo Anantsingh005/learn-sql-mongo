@@ -7,6 +7,7 @@ import SqlQuiz from './pages/SqlQuiz.jsx'
 import AuthPage from './pages/Auth.jsx'
 import AdminPage from './pages/Admin.jsx'
 import ProfilePage from './pages/Profile.jsx'
+import LevelReport from './pages/LevelReport.jsx'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="leaderboard" element={<Leaderboard />} />
         <Route path="auth" element={<AuthPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile/report/:mode/:level" element={<LevelReport />} />
         <Route path="admin" element={<AdminPage />} />
       </Route>
     </Routes>

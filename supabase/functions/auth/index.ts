@@ -66,6 +66,15 @@ async function findUserIdByEmail(email) {
   return null
 }
 
+async function actorFromRequest(req) {
+  const header = req.headers.get('authorization') ?? ''
+  const token = header.startsWith('Bearer ') ? header.slice(7).trim() : ''
+  if (!token) return null
+  const { data, error } = await admin.auth.getUser(token)
+  if (error || !data?.user) return null
+  return data.user
+}
+
 function friendlyError(err) {
   const code = err?.code ?? ''
   const fallback = err?.message ?? 'Something went wrong.'
@@ -189,6 +198,47 @@ Deno.serve(async (req) => {
     if (upErr) return json(400, { error: friendlyError(upErr) })
 
     await admin.from('password_resets').update({ used_at: new Date(now()).toISOString() }).eq('id', match.id)
+    return json(200, { ok: true })
+  }
+
+  if (action === 'update-email') {
+    const notReady = needsConfig()
+    if (notReady) return notReady
+    const actor = await actorFromRequest(req)
+    const userId = String(body?.userId ?? '')
+    if (!actor || actor.id !== userId) return json(403, { error: 'Unauthorized.' })
+
+    const email = String(body?.email ?? '').trim().toLowerCase()
+    if (!EMAIL_RE.test(email)) return json(400, { error: 'Please enter a valid email address.' })
+    if (email === actor.email?.toLowerCase()) return json(200, { ok: true, email: actor.email })
+
+    const existing = await findUserIdByEmail(email)
+    if (existing && existing !== userId) {
+      return json(409, { error: 'An account with this email already exists. Try signing in instead.' })
+    }
+
+    const { data, error } = await admin.auth.admin.updateUserById(userId, { email })
+    if (error) return json(400, { error: friendlyError(error) })
+    return json(200, { ok: true, email: data.user.email })
+  }
+
+  if (action === 'delete-account') {
+    const notReady = needsConfig()
+    if (notReady) return notReady
+    const actor = await actorFromRequest(req)
+    const userId = String(body?.userId ?? '')
+    if (!actor || actor.id !== userId) return json(403, { error: 'Unauthorized.' })
+
+    try {
+      const { data: objs, error: listErr } = await admin.storage.from('avatars').list(`${userId}`, { limit: 100 })
+      if (!listErr && objs?.length) {
+        await admin.storage.from('avatars').remove(objs.map((o) => `${userId}/${o.name}`))
+      }
+    } catch {
+    }
+
+    const { error } = await admin.auth.admin.deleteUser(userId)
+    if (error) return json(400, { error: friendlyError(error) })
     return json(200, { ok: true })
   }
 

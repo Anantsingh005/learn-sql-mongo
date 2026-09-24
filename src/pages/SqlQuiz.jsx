@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import QueryRunner from '../engine/QueryRunner.js'
 import { QuizEngine } from '../engine/QuizEngine.js'
 import { buildCheckQuery } from '../engine/queryCheck.js'
 import { selectQuestions, GUEST_QUESTION_LIMIT } from '../data/selectQuestions.js'
 import { saveScore } from '../lib/leaderboard.js'
 import { getProgress, recordLevelResult } from '../lib/progress.js'
+import { saveAttempts } from '../lib/attempts.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import useQuizEngine from '../hooks/useQuizEngine.js'
-import ModeSelect from '../components/quiz/ModeSelect.jsx'
+import ModeSelect, { quizModes } from '../components/quiz/ModeSelect.jsx'
 import LevelSelect from '../components/quiz/LevelSelect.jsx'
 import QuestionCard from '../components/quiz/QuestionCard.jsx'
 import SqlEditor from '../components/quiz/SqlEditor.jsx'
 import HUD from '../components/quiz/HUD.jsx'
 import Feedback from '../components/quiz/Feedback.jsx'
 import ResultScreen from '../components/quiz/ResultScreen.jsx'
+
+const DEEP_LINK_LEVELS = new Set(['easy', 'medium', 'hard', 'all'])
 
 function SqlQuiz() {
   const [mode, setMode] = useState(null)
@@ -22,7 +26,9 @@ function SqlQuiz() {
   const [saveResult, setSaveResult] = useState(null)
   const [progress, setProgress] = useState({ completed: [], best: {} })
   const savedRef = useRef(null)
-  const { user, profile, configured } = useAuth()
+  const deepLinkRef = useRef(false)
+  const [params] = useSearchParams()
+  const { user, profile, configured, loading } = useAuth()
   const isGuest = configured && !user
   const snapshot = useQuizEngine(engine)
 
@@ -54,6 +60,10 @@ function SqlQuiz() {
       if (next) setProgress(next)
     })
     if (user) {
+      saveAttempts(user.id, { game: 'sql', mode: mode?.key, attempts: engine.answers })
+        .then(({ error }) => {
+          if (error) console.error('saveAttempts failed:', error)
+        })
       saveScore({
         game: 'sql',
         score: snapshot.score,
@@ -72,13 +82,13 @@ function SqlQuiz() {
       : saveResult ?? 'saving'
     : 'idle'
 
-  const handleStart = (config) => {
+  const handleStart = (config, modeObj = mode) => {
     const questions = selectQuestions({ ...config, limit: isGuest ? GUEST_QUESTION_LIMIT : undefined })
     if (questions.length === 0) return
     const checkQuery = buildCheckQuery(QueryRunner)
     const nextEngine = new QuizEngine(questions, { checkQuery }, {
-      timePerQuestion: mode?.timePerQuestion,
-      extraTime: isGuest ? undefined : mode?.extraTime,
+      timePerQuestion: modeObj?.timePerQuestion,
+      extraTime: isGuest ? undefined : modeObj?.extraTime,
     })
     nextEngine.difficulty = config.difficulty ?? 'all'
     setEngine((prev) => {
@@ -88,6 +98,20 @@ function SqlQuiz() {
     setSelectedIndex(null)
     nextEngine.start(config.types)
   }
+
+  useEffect(() => {
+    if (loading || deepLinkRef.current) return undefined
+    const level = params.get('level')
+    const key = params.get('mode')
+    if (!DEEP_LINK_LEVELS.has(level) || !key) return undefined
+    const modeObj = quizModes.find((m) => m.key === key)
+    if (!modeObj) return undefined
+    if (isGuest && level !== 'easy') return undefined
+    deepLinkRef.current = true
+    setMode(modeObj)
+    handleStart({ types: [modeObj.key], difficulty: level }, modeObj)
+    return undefined
+  }, [loading, isGuest, params])
 
   const handleReplay = () => {
     setEngine((prev) => {

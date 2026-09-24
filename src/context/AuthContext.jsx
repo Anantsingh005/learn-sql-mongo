@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { isSupabaseConfigured } from '../lib/supabase.js'
 import { debugLog, debugError } from '../lib/debug.js'
-import { onAuthChange, supabaseGetSession, supabaseSignIn, supabaseSignUp, supabaseSignInWithGoogle, supabaseSignOut, fetchProfile, updateProfileUsername, supabaseResetPasswordRequest, supabaseUpdatePassword, supabaseCompleteReset } from '../lib/supabase-auth.js'
+import { onAuthChange, supabaseGetSession, supabaseSignIn, supabaseSignUp, supabaseSignInWithGoogle, supabaseSignOut, fetchProfile, updateProfileUsername, updateProfile, supabaseUpdateEmail, supabaseDeleteAccount, uploadAvatar, supabaseResetPasswordRequest, supabaseUpdatePassword, supabaseCompleteReset } from '../lib/supabase-auth.js'
 
 const AuthContext = createContext(null)
 
@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
         id: user.id,
         username: p?.username || emailUsername(user.email) || 'player',
         name: p?.name || '',
+        avatar_url: p?.avatar_url || '',
         created_at: p?.created_at || null,
       })
       setLoading(false)
@@ -111,6 +112,36 @@ export function AuthProvider({ children }) {
     return { error }
   }
 
+  const updateProfileFields = async (fields) => {
+    if (!user) return { error: new Error('Not signed in.') }
+    if (!isSupabaseConfigured) return { error: new Error('Supabase is not configured.') }
+    const { error } = await updateProfile(user.id, fields)
+    if (!error) setProfile((p) => (p ? { ...p, ...fields } : p))
+    return { error }
+  }
+
+  const changeEmail = async (email) => {
+    const { error } = await supabaseUpdateEmail(email)
+    if (!error) setUser((u) => (u ? { ...u, email: String(email).trim().toLowerCase() } : u))
+    return { error }
+  }
+
+  const deleteAccount = async () => {
+    const { error } = await supabaseDeleteAccount()
+    if (!error) {
+      setUser(null)
+      setProfile(null)
+    }
+    return { error }
+  }
+
+  const changeAvatar = async (file) => {
+    if (!user) return { error: new Error('Not signed in.') }
+    const { url, error } = await uploadAvatar(user.id, file)
+    if (!error && url) setProfile((p) => (p ? { ...p, avatar_url: url } : p))
+    return { url, error }
+  }
+
   const signOut = async () => {
     await supabaseSignOut()
     setUser(null)
@@ -129,6 +160,10 @@ export function AuthProvider({ children }) {
     updatePassword,
     completePasswordReset,
     updateUsername,
+    updateProfileFields,
+    changeEmail,
+    deleteAccount,
+    changeAvatar,
     signOut,
   }
 
