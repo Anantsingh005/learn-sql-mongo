@@ -5,7 +5,7 @@ import { QuizEngine } from '../engine/QuizEngine.js'
 import { buildCheckQuery } from '../engine/queryCheck.js'
 import { selectQuestions, GUEST_QUESTION_LIMIT } from '../data/selectQuestions.js'
 import { saveScore } from '../lib/leaderboard.js'
-import { getProgress, recordLevelResult } from '../lib/progress.js'
+import { getProgress, recordLevelResult, isLevelUnlocked } from '../lib/progress.js'
 import { saveAttempts } from '../lib/attempts.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import useQuizEngine from '../hooks/useQuizEngine.js'
@@ -112,11 +112,12 @@ function SqlQuiz() {
     const modeObj = quizModes.find((m) => m.key === key)
     if (!modeObj) return undefined
     if (isGuest && level !== 'easy') return undefined
+    if (!isLevelUnlocked(level, progress, modeObj.key)) return undefined
     deepLinkRef.current = true
     setMode(modeObj)
     handleStart({ types: [modeObj.key], difficulty: level }, modeObj)
     return undefined
-  }, [loading, isGuest, params])
+  }, [loading, isGuest, params, progress])
 
   const handleReplay = () => {
     setEngine((prev) => {

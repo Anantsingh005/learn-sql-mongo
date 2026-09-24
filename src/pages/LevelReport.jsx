@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getProgress, levelKey, COMPLETE_THRESHOLD } from '../lib/progress.js'
+import { getProgress, levelKey, COMPLETE_THRESHOLD, isLevelUnlocked } from '../lib/progress.js'
 import { fetchAttempts } from '../lib/attempts.js'
 import { selectQuestions } from '../data/selectQuestions.js'
 
@@ -38,6 +38,15 @@ const LEVELS = {
     bar: 'from-rose-400 to-pink-400',
     glow: 'shadow-[0_0_18px_rgba(244,63,94,0.25)]',
     btn: 'bg-rose-500 text-rose-950 hover:bg-rose-400 hover:shadow-[0_0_28px_rgba(244,63,94,0.5)]',
+  },
+  all: {
+    label: 'All Levels',
+    desc: 'Every question, mixed',
+    chip: 'bg-cyan-500/15 text-cyan-300',
+    ring: 'border-cyan-500/50',
+    bar: 'from-cyan-400 to-fuchsia-400',
+    glow: 'shadow-[0_0_18px_rgba(34,211,238,0.25)]',
+    btn: 'bg-cyan-500 text-cyan-950 hover:bg-cyan-400 hover:shadow-[0_0_28px_rgba(34,211,238,0.5)]',
   },
 }
 
@@ -137,15 +146,27 @@ export default function LevelReport() {
   const mastered = questions.filter((q) => byQuestion.get(q.id)?.lastCorrect).length
 
   const unlockHint =
-    level === 'hard'
+    level === 'all'
       ? isCompleted
-        ? 'Hard complete — all levels cleared!'
-        : `Complete Easy and Medium with at least ${COMPLETE_THRESHOLD}% to unlock Hard.`
-      : level === 'medium'
-        ? 'Score at least 75% here to help unlock Hard.'
-        : level === 'easy'
-          ? 'Score at least 75% to complete Easy and move up.'
-          : ''
+        ? 'All Levels complete — every question cleared!'
+        : `Complete Easy, Medium and Hard with at least ${COMPLETE_THRESHOLD}% to unlock All Levels.`
+      : level === 'hard'
+        ? isCompleted
+          ? 'Hard complete — all levels cleared!'
+          : `Complete Easy and Medium with at least ${COMPLETE_THRESHOLD}% to unlock Hard.`
+        : level === 'medium'
+          ? 'Score at least 75% here to help unlock Hard.'
+          : level === 'easy'
+            ? 'Score at least 75% to complete Easy and move up.'
+            : ''
+
+  const ruleDescription =
+    level === 'hard'
+      ? `Complete Easy and Medium with at least ${COMPLETE_THRESHOLD}% to unlock Hard.`
+      : level === 'all'
+        ? `Complete Easy, Medium and Hard with at least ${COMPLETE_THRESHOLD}% to unlock All Levels.`
+        : ''
+  const unlocked = user ? isLevelUnlocked(level, progress, mode) : false
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -190,13 +211,17 @@ export default function LevelReport() {
               <Link to="/auth" className="inline-block rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
                 Sign in to track per-question results
               </Link>
-            ) : (
+            ) : unlocked ? (
               <Link
                 to={`/quiz/sql?mode=${mode}&level=${level}`}
                 className={`inline-block rounded-full px-5 py-2 text-sm font-bold transition-all ${levelMeta.btn}`}
               >
                 ▶ Play this level
               </Link>
+            ) : (
+              <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800/60 px-5 py-2 text-sm font-semibold text-slate-500">
+                🔒 Locked — {ruleDescription || 'complete earlier levels first'}
+              </span>
             )}
           </div>
         </div>

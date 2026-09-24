@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getProgress } from '../lib/progress.js'
+import { getProgress, isLevelUnlocked } from '../lib/progress.js'
 import { fetchUserScores } from '../lib/profile.js'
 import { fetchPlayerSnapshot } from '../lib/leaderboard.js'
 import { isSupabaseConfigured } from '../lib/supabase.js'
@@ -24,10 +24,16 @@ const MODE_TITLE = { mc: 'Multiple Choice', write: 'Write a Query', bug: 'Fix th
 const LEVEL_TITLE = { easy: 'Easy', medium: 'Medium', hard: 'Hard', all: 'All Levels' }
 
 const LEVELS = [
-  { key: 'easy', label: 'Easy', ring: 'border-emerald-500/50', chip: 'bg-emerald-500/15 text-emerald-300', glow: 'shadow-[0_0_18px_rgba(16,185,129,0.25)]' },
-  { key: 'medium', label: 'Medium', ring: 'border-amber-500/50', chip: 'bg-amber-500/15 text-amber-300', glow: 'shadow-[0_0_18px_rgba(245,158,11,0.25)]' },
-  { key: 'hard', label: 'Hard', ring: 'border-rose-500/50', chip: 'bg-rose-500/15 text-rose-300', glow: 'shadow-[0_0_18px_rgba(244,63,94,0.25)]' },
+  { key: 'easy', label: 'Easy', desc: 'Warm up', short: 'E', bar: 'from-emerald-400 to-teal-400', tag: 'text-emerald-300', ring: 'border-emerald-500/50', chip: 'bg-emerald-500/15 text-emerald-300', glow: 'shadow-[0_0_18px_rgba(16,185,129,0.25)]' },
+  { key: 'medium', label: 'Medium', desc: 'Getting sharp', short: 'M', bar: 'from-amber-400 to-orange-400', tag: 'text-amber-300', ring: 'border-amber-500/50', chip: 'bg-amber-500/15 text-amber-300', glow: 'shadow-[0_0_18px_rgba(245,158,11,0.25)]' },
+  { key: 'hard', label: 'Hard', desc: 'The real boss fight', short: 'H', bar: 'from-rose-400 to-pink-400', tag: 'text-rose-300', ring: 'border-rose-500/50', chip: 'bg-rose-500/15 text-rose-300', glow: 'shadow-[0_0_18px_rgba(244,63,94,0.25)]' },
+  { key: 'all', label: 'All Levels', desc: 'Every question, mixed', short: 'A', bar: 'from-cyan-400 to-fuchsia-400', tag: 'text-cyan-300', ring: 'border-cyan-500/40', chip: 'bg-cyan-500/15 text-cyan-300', glow: 'shadow-[0_0_18px_rgba(34,211,238,0.25)]' },
 ]
+
+const LOCK_HINTS = {
+  hard: '75% on Easy+Medium',
+  all: '75% on all three',
+}
 
 const levelFilter = [
   { key: 'easy', label: 'Easy' },
@@ -597,47 +603,77 @@ export default function Profile() {
       )}
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">SQL game progress</h2>
+        <div className="mb-3 flex items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">SQL game progress</h2>
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">3 modes · 4 levels</span>
+        </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          {MODES.map((mode) => (
-            <div key={mode.key} className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">{mode.label}</div>
-              <div className="grid grid-cols-1 gap-2">
-                {LEVELS.map((lv) => {
-                  const pct = sqlProgress.best[`${mode.key}_${lv.key}`] ?? 0
-                  const done = (sqlProgress.completed ?? []).includes(`${mode.key}_${lv.key}`)
-                  const active = pct > 0
-                  return (
-                    <Link
-                      key={lv.key}
-                      to={`/profile/report/${mode.key}/${lv.key}`}
-                      title={`View ${mode.label} · ${lv.label} report`}
-                      className="group flex items-center justify-between gap-2 rounded-lg px-1.5 py-0.5 transition-colors hover:bg-slate-800/60"
-                    >
-                      <div className="flex items-center gap-2">
+          {MODES.map((mode) => {
+            const a = MODE_ACCENTS[mode.key]
+            return (
+              <div key={mode.key} className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4">
+                <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${a.strip} opacity-80`} />
+                <div className="mb-3 flex items-center gap-2">
+                  <span className={`rounded-lg border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wider ${a.chip}`}>
+                    {mode.key.toUpperCase()}
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">{mode.label}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {LEVELS.map((lv) => {
+                    const key = `${mode.key}_${lv.key}`
+                    const pct = sqlProgress.best[key] ?? 0
+                    const done = (sqlProgress.completed ?? []).includes(key)
+                    const active = pct > 0
+                    const unlocked = isLevelUnlocked(lv.key, sqlProgress, mode.key)
+                    return (
+                      <Link
+                        key={lv.key}
+                        to={`/profile/report/${mode.key}/${lv.key}`}
+                        title={`View ${mode.label} · ${lv.label} report`}
+                        className="group flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/60 px-2.5 py-2 transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-800/60"
+                      >
                         <div
-                          className={`flex h-8 w-8 items-center justify-center rounded-full border text-[10px] font-black ${
-                            active ? `${lv.ring} ${lv.chip}` : 'border-slate-700 bg-slate-800 text-slate-600'
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border font-mono text-xs font-black transition-transform duration-300 group-hover:scale-105 ${
+                            unlocked && active
+                              ? `${lv.ring} ${lv.chip}`
+                              : unlocked
+                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                                : 'border-slate-700 bg-slate-800/70 text-slate-500'
                           }`}
                         >
-                          {pct}%
+                          {unlocked ? (done ? '✔' : lv.short) : '🔒'}
                         </div>
-                        <span className="group-hover:text-white">{lv.label}</span>
-                      </div>
-                      {done ? (
-                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300">✔ done</span>
-                      ) : active ? (
-                        <span className="text-[10px] text-slate-500">in progress</span>
-                      ) : (
-                        <span className="text-[10px] text-slate-600">—</span>
-                      )}
-                      <span className="text-[10px] text-slate-600 transition-transform group-hover:translate-x-0.5" aria-hidden="true">›</span>
-                    </Link>
-                  )
-                })}
+                        <div className="min-w-0 flex-1">
+                          <div className={`truncate text-sm font-semibold ${unlocked ? 'text-white' : 'text-slate-400'}`}>{lv.label}</div>
+                          <div className="truncate text-[10px] text-slate-500">{unlocked ? lv.desc : LOCK_HINTS[lv.key] ?? 'locked'}</div>
+                        </div>
+                        {unlocked ? (
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <div className="h-1 w-14 overflow-hidden rounded-full bg-slate-800">
+                                <div
+                                  className={`h-full rounded-full bg-gradient-to-r ${lv.bar} transition-all duration-500`}
+                                  style={{ width: `${Math.min(pct, 100)}%` }}
+                                />
+                              </div>
+                              <span className={`w-7 text-right font-mono text-[10px] font-bold ${active ? lv.tag : 'text-slate-600'}`}>{pct}%</span>
+                            </div>
+                            <span className={`text-[10px] ${done ? 'font-semibold text-emerald-300' : active ? 'text-slate-500' : 'text-slate-600'}`}>
+                              {done ? '✔ completed' : active ? 'in progress' : 'not started'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="shrink-0 rounded-full border border-slate-700 bg-slate-800/60 px-2 py-0.5 text-[10px] font-semibold text-slate-500">locked</span>
+                        )}
+                        <span className="text-[10px] text-slate-600 transition-transform group-hover:translate-x-0.5" aria-hidden="true">›</span>
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
         {(mongoProgress.completed ?? []).length > 0 || Object.keys(mongoProgress.best ?? {}).length > 0 ? (
           <p className="mt-3 text-xs text-slate-500">
