@@ -17,6 +17,7 @@ export async function fetchUserScores(userId) {
       .from('scores')
       .select('id, game, mode, level, score, time_seconds, created_at, correct_count, total_questions, lives_left')
       .eq('user_id', userId)
+      .is('reset_at', null)
       .order('created_at', { ascending: false })
       .limit(200)
     if (error) throw error
@@ -54,4 +55,17 @@ export async function fetchUserScores(userId) {
   }
 }
 
-export default { fetchUserScores }
+export async function resetUserProgress(includeScores) {
+  if (!supabase) return { error: { message: 'Supabase not available' } }
+  try {
+    const { data, error } = await supabase.rpc('reset_user_progress', {
+      p_include_scores: Boolean(includeScores),
+    })
+    if (error) return { error }
+    return { data, error: null }
+  } catch (err) {
+    return { error: err }
+  }
+}
+
+export default { fetchUserScores, resetUserProgress }

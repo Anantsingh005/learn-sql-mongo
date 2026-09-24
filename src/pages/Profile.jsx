@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getProgress, isLevelUnlocked } from '../lib/progress.js'
-import { fetchUserScores } from '../lib/profile.js'
+import { getProgress, isLevelUnlocked, clearLocalProgress } from '../lib/progress.js'
+import { fetchUserScores, resetUserProgress } from '../lib/profile.js'
 import { fetchPlayerSnapshot } from '../lib/leaderboard.js'
 import { isSupabaseConfigured } from '../lib/supabase.js'
 
@@ -185,13 +185,12 @@ function avatarPreviewUrl(profile) {
 }
 
 export default function Profile() {
-  const { user, profile, signOut, updateProfileFields, changeEmail, deleteAccount, changeAvatar, updatePassword } = useAuth()
+  const { user, profile, signOut, updateProfileFields, changeEmail, changeAvatar, updatePassword } = useAuth()
   const [progress, setProgress] = useState(null)
   const [scores, setScores] = useState(null)
   const [leaderboard, setLeaderboard] = useState(null)
   const [boardTab, setBoardTab] = useState(null)
   const [boardLevel, setBoardLevel] = useState('easy')
-  const navigate = useNavigate()
 
   const [showEdit, setShowEdit] = useState(false)
 
@@ -212,9 +211,12 @@ export default function Profile() {
   const [passwordError, setPasswordError] = useState(null)
   const [passwordMessage, setPasswordMessage] = useState(null)
 
-  const [deleteText, setDeleteText] = useState('')
-  const [deleteBusy, setDeleteBusy] = useState(false)
-  const [deleteError, setDeleteError] = useState(null)
+  const [resetStep, setResetStep] = useState(0)
+  const [pendingScores, setPendingScores] = useState(false)
+  const [resetBusy, setResetBusy] = useState(false)
+  const [resetError, setResetError] = useState(null)
+  const [resetMessage, setResetMessage] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState('')
@@ -251,7 +253,7 @@ export default function Profile() {
     return () => {
       active = false
     }
-  }, [user?.id])
+  }, [user?.id, refreshKey])
 
   useEffect(() => {
     let active = true
@@ -417,17 +419,20 @@ export default function Profile() {
     setConfirmPassword('')
   }
 
-  const handleDeleteAccount = async () => {
-    if (deleteText.trim() !== 'DELETE') return
-    setDeleteBusy(true)
-    setDeleteError(null)
-    const { error } = await deleteAccount()
-    if (error) {
-      setDeleteBusy(false)
-      setDeleteError(error.message ?? 'Could not delete the account.')
+  const handleResetLevels = async (includeScores) => {
+    setResetBusy(true)
+    setResetError(null)
+    setResetMessage(null)
+    const res = await resetUserProgress(includeScores)
+    setResetBusy(false)
+    if (res.error) {
+      setResetError(res.error.message ?? 'Could not reset progress.')
       return
     }
-    navigate('/')
+    clearLocalProgress()
+    setRefreshKey((k) => k + 1)
+    setResetStep(0)
+    setResetMessage(includeScores ? 'Progress and session history reset.' : 'Level progress reset.')
   }
 
   return (
@@ -576,28 +581,126 @@ export default function Profile() {
             </form>
           </Section>
 
-          <Section title="Danger zone" danger>
-            <p className="mb-4 text-sm text-slate-400">
-              Deleting your account removes your profile, scores, and progress permanently. This cannot be undone.
+          <Section title="Reset progress" danger>
+            <p className="mb-2 text-sm text-slate-400">
+              Reset your SQL and Mongo level progress back to zero — locked levels, best scores, and completed markers are cleared.
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <input
-                type="text"
-                value={deleteText}
-                onChange={(e) => setDeleteText(e.target.value)}
-                placeholder="Type DELETE to confirm"
-                className="flex-1 rounded-xl border border-rose-800/70 bg-slate-950 px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-rose-500"
-              />
+            <p className="mb-4 text-sm text-slate-500">
+              Your leaderboard scores stay on the public board.
+            </p>
+            {resetStep === 0 ? (
               <button
                 type="button"
-                disabled={deleteBusy || deleteText.trim() !== 'DELETE'}
-                onClick={handleDeleteAccount}
-                className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={() => {
+                  setResetError(null)
+                  setResetMessage(null)
+                  setResetStep(1)
+                }}
+                className="rounded-full border border-rose-700/60 px-5 py-2 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/10"
               >
-                {deleteBusy ? 'Deleting…' : 'Delete my account'}
+                Reset progress
               </button>
-            </div>
-            <div className="mt-2"><Feedback error={deleteError} /></div>
+            ) : null}
+            {resetStep === 1 ? (
+              <div className="rounded-xl border border-rose-800/60 bg-rose-950/30 p-4">
+                <p className="mb-3 text-sm text-slate-300">
+                  This resets <span className="font-semibold text-white">SQL and Mongo level progress to zero</span> — locked levels, best scores and completed markers are cleared.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={() => setResetStep(2)}
+                    className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Yes, reset progress
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={() => setResetStep(0)}
+                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            {resetStep === 2 ? (
+              <div className="rounded-xl border border-rose-800/60 bg-rose-950/30 p-4">
+                <p className="mb-3 text-sm text-slate-300">
+                  Do you also want to clear your <span className="font-semibold text-white">Practice &amp; sessions and Recent sessions</span>? Your score and attempt history will be archived.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={() => {
+                      setPendingScores(true)
+                      setResetStep(3)
+                    }}
+                    className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Yes, reset everything
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={() => {
+                      setPendingScores(false)
+                      setResetStep(3)
+                    }}
+                    className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    No, just level progress
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={() => setResetStep(0)}
+                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            {resetStep === 3 ? (
+              <div className="rounded-xl border border-rose-800/60 bg-rose-950/30 p-4">
+                <p className="mb-3 text-sm text-slate-300">
+                  Are you absolutely sure? This{' '}
+                  <span className="font-semibold text-white">{pendingScores ? 'clears your level progress and archives your session history' : 'clears your level progress'}</span>
+                  — it cannot be undone.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={() => handleResetLevels(pendingScores)}
+                    className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {resetBusy ? 'Resetting…' : 'Yes, I’m sure — reset'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={() => setResetStep(2)}
+                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    disabled={resetBusy}
+                    onClick={() => setResetStep(0)}
+                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            <div className="mt-2"><Feedback error={resetError} message={resetMessage} /></div>
           </Section>
         </div>
       )}
