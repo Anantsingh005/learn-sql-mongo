@@ -66,8 +66,13 @@ function SqlQuiz() {
         })
       saveScore({
         game: 'sql',
+        mode: mode?.key,
+        level: engine.difficulty,
         score: snapshot.score,
         time: snapshot.elapsedSeconds,
+        correctCount: engine.answers.filter((a) => a.correct).length,
+        totalQuestions: engine.answers.length,
+        livesLeft: snapshot.lives,
         userId: user.id,
         username: profile?.username,
       })

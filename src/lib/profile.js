@@ -5,12 +5,17 @@ function formatTime(seconds) {
   return seconds
 }
 
+function rowPercent(row) {
+  if (!row?.total_questions) return null
+  return Math.round((row.correct_count / row.total_questions) * 100)
+}
+
 export async function fetchUserScores(userId) {
   if (!supabase || !userId) return { rows: [], stats: null }
   try {
     const { data, error } = await supabase
       .from('scores')
-      .select('id, game, score, time_seconds, created_at')
+      .select('id, game, mode, level, score, time_seconds, created_at, correct_count, total_questions, lives_left')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(200)
@@ -19,13 +24,18 @@ export async function fetchUserScores(userId) {
     const rows = data ?? []
     let totalTime = 0
     let best = null
-    let sumScore = 0
+    let sumPct = 0
+    let countPct = 0
     const byGame = { sql: 0, mongo: 0 }
 
     for (const row of rows) {
       totalTime += formatTime(row.time_seconds)
-      sumScore += row.score
-      if (best === null || row.score > best.score) best = row
+      const pct = rowPercent(row)
+      if (pct !== null) {
+        sumPct += pct
+        countPct += 1
+        if (best === null || pct > rowPercent(best)) best = row
+      }
       if (row.game === 'sql' || row.game === 'mongo') byGame[row.game] += 1
     }
 
@@ -34,7 +44,7 @@ export async function fetchUserScores(userId) {
       stats: {
         sessions: rows.length,
         totalSeconds: totalTime,
-        averageScore: rows.length ? Math.round(sumScore / rows.length) : null,
+        averageScore: countPct ? Math.round(sumPct / countPct) : null,
         best,
         byGame,
       },

@@ -15,11 +15,76 @@ const MODES = [
   { key: 'bug', label: 'Fix the Bug', short: 'Bug' },
 ]
 
+const BOARD_MODES = [
+  ...MODES.map(({ key, short }) => ({ key, label: short })),
+  { key: 'global', label: 'Global' },
+]
+
+const MODE_TITLE = { mc: 'Multiple Choice', write: 'Write a Query', bug: 'Fix the Bug' }
+const LEVEL_TITLE = { easy: 'Easy', medium: 'Medium', hard: 'Hard', all: 'All Levels' }
+
 const LEVELS = [
   { key: 'easy', label: 'Easy', ring: 'border-emerald-500/50', chip: 'bg-emerald-500/15 text-emerald-300', glow: 'shadow-[0_0_18px_rgba(16,185,129,0.25)]' },
   { key: 'medium', label: 'Medium', ring: 'border-amber-500/50', chip: 'bg-amber-500/15 text-amber-300', glow: 'shadow-[0_0_18px_rgba(245,158,11,0.25)]' },
   { key: 'hard', label: 'Hard', ring: 'border-rose-500/50', chip: 'bg-rose-500/15 text-rose-300', glow: 'shadow-[0_0_18px_rgba(244,63,94,0.25)]' },
 ]
+
+const levelFilter = [
+  { key: 'easy', label: 'Easy' },
+  { key: 'medium', label: 'Medium' },
+  { key: 'hard', label: 'Hard' },
+  { key: 'all', label: 'All Levels' },
+]
+
+const MODE_ACCENTS = {
+  mc: {
+    strip: 'from-indigo-400 to-cyan-400',
+    chip: 'border-indigo-500/40 bg-indigo-500/15 text-indigo-300',
+    glow: 'shadow-[0_0_14px_rgba(129,140,248,0.35)]',
+    tag: 'text-indigo-300',
+  },
+  write: {
+    strip: 'from-emerald-400 to-teal-400',
+    chip: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
+    glow: 'shadow-[0_0_14px_rgba(52,211,153,0.35)]',
+    tag: 'text-emerald-300',
+  },
+  bug: {
+    strip: 'from-rose-400 to-orange-400',
+    chip: 'border-rose-500/40 bg-rose-500/15 text-rose-300',
+    glow: 'shadow-[0_0_14px_rgba(251,113,133,0.35)]',
+    tag: 'text-rose-300',
+  },
+  global: {
+    strip: 'from-cyan-400 to-fuchsia-400',
+    chip: 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300',
+    glow: 'shadow-[0_0_14px_rgba(34,211,238,0.35)]',
+    tag: 'text-cyan-300',
+  },
+}
+
+const LEVEL_ACCENTS = {
+  easy: {
+    chip: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
+    glow: 'shadow-[0_0_12px_rgba(16,185,129,0.35)]',
+  },
+  medium: {
+    chip: 'border-amber-500/40 bg-amber-500/15 text-amber-300',
+    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.35)]',
+  },
+  hard: {
+    chip: 'border-rose-500/40 bg-rose-500/15 text-rose-300',
+    glow: 'shadow-[0_0_12px_rgba(244,63,94,0.35)]',
+  },
+  all: {
+    chip: 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300',
+    glow: 'shadow-[0_0_12px_rgba(34,211,238,0.3)]',
+  },
+}
+
+function modeShort(mode) {
+  return MODES.find((m) => m.key === mode)?.short ?? '—'
+}
 
 function formatDuration(totalSeconds) {
   if (!totalSeconds || totalSeconds <= 0) return '—'
@@ -46,19 +111,29 @@ function initialFor({ profile, user }) {
   return (profile?.username ?? user?.email ?? '?').charAt(0).toUpperCase()
 }
 
+function rowPercent(row) {
+  if (!row?.total_questions) return null
+  return Math.round((row.correct_count / row.total_questions) * 100)
+}
+
 function gameStats(rows, game) {
   const filtered = (rows ?? []).filter((r) => r?.game === game)
-  if (filtered.length === 0) return { sessions: 0, totalSeconds: 0, averageScore: null, best: null }
+  if (filtered.length === 0) return { sessions: 0, totalSeconds: 0, averageScore: null, bestPct: null }
   let totalSeconds = 0
-  let best = null
-  let sumScore = 0
+  let sumPct = 0
+  let countPct = 0
+  let bestPct = null
   for (const r of filtered) {
     const t = Number.isFinite(r.time_seconds) && r.time_seconds > 0 ? r.time_seconds : 0
     totalSeconds += t
-    sumScore += r.score
-    if (best === null || r.score > best.score) best = r
+    const p = rowPercent(r)
+    if (p !== null) {
+      sumPct += p
+      countPct += 1
+      if (bestPct === null || p > bestPct) bestPct = p
+    }
   }
-  return { sessions: filtered.length, totalSeconds, averageScore: Math.round(sumScore / filtered.length), best }
+  return { sessions: filtered.length, totalSeconds, averageScore: countPct ? Math.round(sumPct / countPct) : null, bestPct }
 }
 
 function rankStyle(rank) {
@@ -108,6 +183,8 @@ export default function Profile() {
   const [progress, setProgress] = useState(null)
   const [scores, setScores] = useState(null)
   const [leaderboard, setLeaderboard] = useState(null)
+  const [boardTab, setBoardTab] = useState(null)
+  const [boardLevel, setBoardLevel] = useState('easy')
   const navigate = useNavigate()
 
   const [showEdit, setShowEdit] = useState(false)
@@ -155,9 +232,29 @@ export default function Profile() {
     fetchUserScores(user.id).then((res) => {
       if (!active) return
       setScores(res)
+      const first = res?.rows?.[0]
+      setBoardTab((prev) => {
+        if (prev) return prev
+        return first?.mode && ['mc', 'write', 'bug'].includes(first.mode) ? first.mode : 'mc'
+      })
+      setBoardLevel((prev) => {
+        if (prev && ['easy', 'medium', 'hard', 'all'].includes(prev)) return prev
+        return first?.level && ['easy', 'medium', 'hard', 'all'].includes(first.level) ? first.level : 'easy'
+      })
     })
+    return () => {
+      active = false
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    let active = true
+    if (!user?.id || !boardTab) return undefined
+    setLeaderboard(null)
     if (isSupabaseConfigured) {
-      fetchPlayerSnapshot('sql', user.id, 10).then((res) => {
+      const scopedMode = boardTab === 'global' ? null : boardTab
+      const scopedLevel = boardTab === 'global' ? null : boardLevel
+      fetchPlayerSnapshot({ game: 'sql', mode: scopedMode, level: scopedLevel, userId: user.id, top: 10 }).then((res) => {
         if (!active) return
         setLeaderboard(res)
       })
@@ -165,7 +262,7 @@ export default function Profile() {
     return () => {
       active = false
     }
-  }, [user?.id])
+  }, [user?.id, boardTab, boardLevel])
 
   useEffect(() => {
     setUsername(profile?.username ?? '')
@@ -551,20 +648,79 @@ export default function Profile() {
 
       <div>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">Leaderboard</h2>
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">SQL</span>
-            <Link to="/leaderboard" className="text-xs font-medium text-indigo-300 transition-colors hover:text-indigo-200">
+        <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5">
+          <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${(MODE_ACCENTS[boardTab] ?? MODE_ACCENTS.mc).strip} opacity-80`} />
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <span className={`font-mono text-[10px] font-bold uppercase tracking-[0.2em] ${(MODE_ACCENTS[boardTab] ?? MODE_ACCENTS.mc).tag}`}>
+              SQL · {MODE_TITLE[boardTab] ?? 'Global'}
+              {boardTab !== 'global' ? ` · ${LEVEL_TITLE[boardLevel] ?? 'All'}` : ''}
+            </span>
+            <Link
+              to={`/leaderboard?game=sql&mode=${boardTab ?? 'mc'}&level=${boardLevel ?? 'easy'}`}
+              className="text-xs font-medium text-indigo-300 transition-colors hover:text-indigo-200"
+            >
               View all →
             </Link>
           </div>
+
+          {boardTab && (
+            <>
+              <div className="mb-2 flex flex-wrap gap-1.5">
+                {BOARD_MODES.map((m) => {
+                  const active = boardTab === m.key
+                  const a = MODE_ACCENTS[m.key]
+                  return (
+                    <button
+                      key={m.key}
+                      type="button"
+                      onClick={() => setBoardTab(m.key)}
+                      className={
+                        'rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ' +
+                        (active
+                          ? `${a.chip} ${a.glow}`
+                          : 'bg-slate-800/70 text-slate-500 hover:bg-slate-700 hover:text-slate-300')
+                      }
+                    >
+                      {m.label}
+                    </button>
+                  )
+                })}
+              </div>
+              {boardTab !== 'global' && (
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {levelFilter.map((lv) => {
+                    const active = boardLevel === lv.key
+                    const a = LEVEL_ACCENTS[lv.key]
+                    return (
+                      <button
+                        key={lv.key}
+                        type="button"
+                        onClick={() => setBoardLevel(lv.key)}
+                        className={
+                          'rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ' +
+                          (active
+                            ? `${a.chip} ${a.glow}`
+                            : 'bg-slate-800/50 text-slate-500 hover:bg-slate-800 hover:text-slate-300')
+                        }
+                      >
+                        {lv.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </>
+          )}
 
           {!leaderboard ? (
             <p className="py-4 text-center text-sm text-slate-500">Loading…</p>
           ) : leaderboard.error ? (
             <p className="py-4 text-center text-sm text-rose-400">{leaderboard.error.message}</p>
-          ) : leaderboard.top.length === 0 ? (
-            <p className="py-4 text-center text-sm text-slate-500">No scores yet — finish a quiz to land on the board!</p>
+          ) : leaderboard.top.length === 0 && !leaderboard.you ? (
+            <p className="py-4 text-center text-sm text-slate-500">
+              No scores yet for {MODE_TITLE[boardTab] ?? 'this category'}
+              {boardTab !== 'global' ? ` · ${LEVEL_TITLE[boardLevel]}` : ''} — sign in and finish a quiz to land on the board!
+            </p>
           ) : (
             <ul className="divide-y divide-slate-800/60">
               {leaderboard.top.map((row, idx) => {
@@ -582,8 +738,17 @@ export default function Profile() {
                       {row.username || 'Anonymous'}
                       {isYou ? <span className="ml-2 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-300">you</span> : null}
                     </span>
-                    <span className="text-sm font-bold text-emerald-300">{row.score}</span>
-                    <span className="w-12 text-right text-xs tabular-nums text-slate-500">{formatTime(row.time_seconds)}</span>
+                    <span className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
+                      <span className="font-bold text-emerald-300">
+                        {row.score}
+                        <span className="ml-0.5 font-medium text-slate-500">pts</span>
+                      </span>
+                      <span className="text-slate-400">
+                        {row.correct_count ?? 0}/{row.total_questions ?? 0}
+                      </span>
+                      <span className={row.lives_left > 0 ? 'text-emerald-300/80' : 'text-slate-600'}>♥{row.lives_left ?? 0}</span>
+                      <span className="w-10 text-right text-slate-500">{formatTime(row.time_seconds)}</span>
+                    </span>
                   </li>
                 )
               })}
@@ -596,8 +761,17 @@ export default function Profile() {
                     {leaderboard.you.username || 'You'}
                     <span className="ml-2 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-300">you</span>
                   </span>
-                  <span className="text-sm font-bold text-emerald-300">{leaderboard.you.score}</span>
-                  <span className="w-12 text-right text-xs tabular-nums text-slate-500">{formatTime(leaderboard.you.time_seconds)}</span>
+                  <span className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
+                    <span className="font-bold text-emerald-300">
+                      {leaderboard.you.score}
+                      <span className="ml-0.5 font-medium text-slate-500">pts</span>
+                    </span>
+                    <span className="text-slate-400">
+                      {leaderboard.you.correct_count ?? 0}/{leaderboard.you.total_questions ?? 0}
+                    </span>
+                    <span className={leaderboard.you.lives_left > 0 ? 'text-emerald-300/80' : 'text-slate-600'}>♥{leaderboard.you.lives_left ?? 0}</span>
+                    <span className="w-10 text-right text-slate-500">{formatTime(leaderboard.you.time_seconds)}</span>
+                  </span>
                 </li>
               ) : null}
             </ul>
@@ -629,7 +803,7 @@ export default function Profile() {
                   </div>
                   <div>
                     <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Best score</div>
-                    <div className="mt-1 text-lg font-bold text-white">{scores ? (g.best ? `${g.best.score}%` : '—') : '…'}</div>
+                    <div className="mt-1 text-lg font-bold text-white">{scores ? (g.bestPct === null ? '—' : `${g.bestPct}%`) : '…'}</div>
                   </div>
                 </div>
               </div>
@@ -652,10 +826,16 @@ export default function Profile() {
                     <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-400">
                       {row.game}
                     </span>
+                    {row.mode ? (
+                      <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-400">
+                        {modeShort(row.mode)} · {LEVEL_TITLE[row.level] ?? row.level}
+                      </span>
+                    ) : null}
                     <span className="text-slate-500">{formatDate(row.created_at)}</span>
                   </span>
                   <span className="text-slate-300">
-                    <span className="font-semibold text-white">{row.score}%</span> · {formatDuration(row.time_seconds)}
+                    <span className="font-semibold text-white">{row.score}<span className="ml-0.5 font-medium text-slate-500">pts</span></span>
+                    {' '}· {formatDuration(row.time_seconds)}
                   </span>
                 </li>
               ))}

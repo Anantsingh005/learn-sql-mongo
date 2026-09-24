@@ -19,8 +19,10 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
   - `windowCte.js` — window functions and CTEs
   - `schemas.js` — shared in-browser schemas (e.g. `store`)
 - **Auth & leaderboard** — Supabase Auth (email/password + Google) for sign-in; signed-in users submit scores to a public leaderboard. Signup/password-reset go through a custom Edge Function (`supabase/functions/auth`) that uses the Admin API, so no confirmation emails are sent and the hosted email rate limit can't be hit.
-- **Profile page** — signed-in users get account details and a per-mode/difficulty progress matrix.
-- **Progress tracking** — per-user progress is persisted to Postgres.
+- **Categorized leaderboards** — boards scoped by mode (**MC / Write / Fix Bug / Global**) and difficulty (**Easy / Medium / Hard / All Levels**), on both the standalone `/leaderboard` page and a Profile card that defaults to your most recent category. Rows are ranked by **points → lives left → fastest time**, and signed-in players see their exact rank in the active category even when they're outside the top 10.
+- **Profile page** — signed-in users get account details, a per-mode/difficulty progress matrix, session/play-time stats, and the leaderboard card.
+- **Per-level progress reports** — every answered question is recorded; each mode+level's report shows best %, a per-question breakdown (✓/✗/○, tries, accuracy), mastered count, and unlock hints.
+- **Progress tracking** — per-user progress is persisted to Postgres (per-question attempts, completed levels, and best scores).
 
 ## Tech Stack
 
@@ -92,8 +94,8 @@ src/
 ├── data/sql/               # Question banks + shared schemas
 ├── engine/                 # QuizEngine, QueryRunner, AnswerChecker, SQL worker
 ├── hooks/
-├── lib/                    # supabase client, auth, leaderboard, progress
-└── pages/                  # SqlQuiz, Auth
+├── lib/                    # supabase client, auth, leaderboard, attempts, progress
+└── pages/                  # SqlQuiz, Auth, Profile, LevelReport
 ```
 
 ### How query checking works
