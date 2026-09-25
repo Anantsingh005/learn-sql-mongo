@@ -1,8 +1,60 @@
 # Project Status
 
-Last updated: 2026-09-24
+Last updated: 2026-09-26
 
-## Current session: per-level SQL progress reports + profile leaderboard
+## Not deployed yet — Academy (/learn) lesson pages + Learn-this-topic links
+
+> **Status:** built and verified locally, but **intentionally excluded** from the 2026-09-26 shipped commit/deploy (see the Current session below). Files are still in the working tree (untracked/new) so they can be committed and deployed as a follow-up.
+
+**Lesson content (new data):**
+- `src/data/learn/lessons.js` — 3 lessons (`table-query`, `joins`, `aggregation`), each with `slug`, `title`, `accent` (hex color), `summary`, `sections[]` (heading + body + `examples[]` of {code, note}), and `commonMistakes[]`. Pure static content, no DB.
+
+**/learn overview grid (new):**
+- `src/pages/Learn.jsx` — route `/learn`, styled like the SQL ModeSelect cards: glowing color-coded cards built from each topic's `accent` hex via **inline styles** (Tailwind can't JIT arbitrary values from runtime data). Top gradient strip, icon badge (`{ }` / `JO` / `Σ`), title, summary, "N sections · M mistakes", accent "Learn →". `text-gradient` kicker + gradient h1 header.
+
+**/learn/:topicSlug lesson page (new):**
+- `src/pages/Lesson.jsx` — back link, accent-glow title, summary, numbered sections with body + syntax-highlighted SQL blocks, and a "Common mistakes" list (rose card, ✗ items). Unknown slugs render a "Lesson not found" state. Ends with an accent **"Practice this topic →"** button linking to `` /practice?topic=<slug> ``.
+- `src/components/quiz/SqlHighlight.jsx` (NEW) — dependency-free SQL tokenizer/colorizer (keywords sky, functions cyan, strings emerald, numbers amber, comments slate-italic); no syntax library was added to the project.
+
+**Practice pre-filter by topic:**
+- `src/pages/Practice.jsx` reads `?topic=` from the URL (validated against `PRACTICE_TOPICS`); when present it skips the game select and opens the SQL picker with that topic pre-selected.
+
+**Learn-this-topic links on question screens:**
+- `src/data/learn/lessonFor.js` (NEW) — `lessonSlugForQuestion(q)`: practice questions map directly (`q.topic` is already a lesson slug); quiz topics are classified by keyword over the label (joins words → `joins`, group/having/sum/count/rank/window/with/case/etc → `aggregation`, else → `table-query`). Topics outside the lessons (INSERT/UPDATE/DELETE/transactions/index/schema/comments/table-creation) → `null` (no link).
+- `src/components/quiz/QuestionCard.jsx` and the practice `QuestionView` in `Practice.jsx` show a small **"📖 Learn this topic"** pill in the question's meta row linking to the matching lesson.
+
+**Nav + routes:**
+- `src/components/Layout.jsx` — **"Learn" renamed to "Academy"** in the main nav (desktop + mobile), between SQL Quiz and More Practice.
+- `src/App.jsx` — routes `learn` and `learn/:topicSlug`.
+
+**Academy picker landing:**
+- `/learn` now opens on a **SQL / MongoDB game select** (same glowing-card style as the Practice hub): SQL ("Choose →") and MongoDB ("Coming soon", same as Practice's Mongo card). The SQL topic grid moved behind `/learn?game=sql` (query-param driven, so it stays shareable); the grid's header has a `← SQL / MongoDB` back link and the Mongo page a Coming-soon card with Back. Lesson pages' "← All lessons" now returns to `/learn?game=sql`.
+
+**Verified:** `npx oxlint src` → only pre-existing warnings · `npm run build` → success (chunk-size warning only) · mapping checked over all 196 quiz questions (94 table-query · 69 aggregation · 26 joins · 7 intentionally no-link).
+
+## Current session (2026-09-26 — committed & deployed): More Practice expansion + MC tables + skip/results + circular progress
+
+**More Practice hub (new):**
+- Nav renamed **"Practice" → "More Practice"** (`src/components/Layout.jsx`, desktop + mobile).
+- `src/pages/Practice.jsx` — new `GameSelect` landing with **SQL** (works) and **MongoDB** cards; Mongo renders `MongoComingSoon` (`game` state `null|'sql'|'mongo'`). The SQL picker heading reads "More Practice · SQL" with a `← SQL / MongoDB` back link.
+
+**Tables on every Multiple-Choice practice question (new):**
+- More Practice MC questions now **always** show the tables panel — all topics (**table-query / joins / aggregation**) and all levels (**easy / medium / hard**), on top of the 60 quiz-bank MCs that already used `schema: 'store'`.
+- The 450 generated legacy practice MCs previously carried no schema. Their datasets were **reverse-engineered from the encoded answers**: fictional `employees`, `movies`, `products`, `books`, `students` (8 rows each) + join lookups `dept_lookup` / `genre_lookup` / `category_lookup` / `grade_lookup`. A sql.js constraint verifier replays every legacy MC's SQL against the reconstructed data and asserts the derived answer equals `correctAnswer` — **450/450 pass**.
+- A one-off embed step attached an inline `schema` object to each legacy MC in `src/data/practice/practice-questions.json`: the referenced base table(s) plus the lookup minus the "except 'X'" value named in the question text, so JOIN/LEFT JOIN counts stay consistent with the wording. `resolveSchema` (`src/engine/queryCheck.js`) already accepts inline objects — no engine change. Re-verified **450/450** after embedding; bank totals unchanged (**646 questions**: mc 510, write 66, bug 70).
+
+**Skip + practice results (new):**
+- `src/pages/Practice.jsx` — a **Skip button now shows for all question types** (MC keeps Skip + Submit; Write/Bug get their own footer with a Skip button). `PracticeEngine.skip()` already recorded `skipped: true` answers, so no engine skip change was needed.
+- `src/engine/PracticeEngine.js` snapshot adds **`wrong`** and **`graded`** (`correct + wrong`); `answered` still counts every question seen (incl. skipped).
+- Live `PracticeHUD` now shows `X/Y correct · Z wrong · N practiced` beside the score.
+- Final `Results` screen shows **"You practiced N questions"**, a percentage computed only over attempted (graded) questions, and a **Correct / Wrong / Skipped** breakdown — skips count in the practiced total but are excluded from the %.
+
+**Profile · SQL game progress → circular rings (new):**
+- `src/pages/Profile.jsx` — replaced the square level tiles + horizontal bars in the SQL game progress grid with a new SVG **`ProgressRing`** component: the ring fills to the level's best percentage (color-matched per level via a new `hex` field on `LEVELS`), and the center shows the level short letter (E/M/H/A) when in progress, ✔ in emerald when completed, 🔒 when locked. Each row still links to the level report.
+
+**Verified:** `npm run lint` → only pre-existing warnings (`wdata/*.mjs` junk + baseline `src` warnings) · `npm run build` → success (chunk-size warning only). **Deployed:** committed (practice hub, MC tables, skip/results, Profile rings) and pushed to `origin/main` → Vercel production rebuilt. The Academy lesson pages were intentionally left out of this commit/deploy.
+
+## Previous session (2026-09-24): per-level SQL progress reports + profile leaderboard
 
 **Per-level progress reports (SQL game):**
 - **DB (migration `create_question_attempts`):** `public.question_attempts` — per-question result log: `user_id → auth.users` (ON DELETE CASCADE), `game` (default `'sql'`), `mode` CHECK (`mc`/`write`/`bug`), `difficulty` CHECK (`easy`/`medium`/`hard`), `question_id`, `correct bool`, `created_at`. Index `(user_id, game, mode, difficulty, question_id, created_at desc)`. RLS: owners insert/select/delete own rows; admins select/delete (`private.is_admin()`). Grants tightened to anon/authenticated/service_role + sequence usage.
@@ -144,7 +196,9 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 ## Work State
 
 ### Completed (fully verified)
-- Level progress reports + leaderboard card (see Current session): `question_attempts` table + RLS, `attempts.js`, `LevelReport.jsx`, deep-link quiz start, Profile matrix links, top-10 leaderboard with your overall rank.
+- Academy lesson pages (see "Not deployed yet" section): built + lint/build-clean, but **intentionally NOT committed/deployed** — files remain local-only for a follow-up commit.
+- More Practice hub + MC tables + skip/results + circular progress rings (see Current session — committed & deployed): `GameSelect`/`MongoComingSoon` in `Practice.jsx`, nav rename, inline datasets embedded for all 450 generated MC practice questions (450/450 answer-verified), Skip for all question types, `wrong`/`graded` snapshot metrics, practiced/correct/wrong/skipped results + HUD, and `ProgressRing` on the Profile SQL progress grid.
+- Level progress reports + leaderboard card (see previous 2026-09-24 session): `question_attempts` table + RLS, `attempts.js`, `LevelReport.jsx`, deep-link quiz start, Profile matrix links, top-10 leaderboard with your overall rank.
 - Profile screen + custom auth control plane + password-resets table (see previous 2026-09-24 session): function `auth` v6, client `auth-api.js`, two-step reset UI; live E2E signup → reset → complete-reset → sign-in verified on a throwaway user (cleaned up; DB back to 2 users, 0 resets).
 - Guest gating + progress dots + reset flow + debug logging + admin dashboard (see previous session section).
 - `src/data/sql/fixBug.js`: 68 questions (33 easy / 16 medium / 21 hard + 2 windowCte). Every question has `buggyQuery`, `fixedQuery`, inline schema, `expected`, `hint`, `explanation`.
@@ -174,7 +228,7 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 
 ## Known Deviations / To-Dos
 - `wdata/*.mjs` are leftover scratch files with syntax errors — ignore them.
-- `storeSchema` rows used by MC questions referencing schema `'store'`; MC cards intentionally don't show the schema panel.
+- `storeSchema` rows used by MC questions referencing schema `'store'`. In **More Practice** MC cards show the tables panel: quiz-bank MCs use `schema: 'store'`, while the 450 generated legacy MCs carry inline `schema` objects (fictional `employees`/`movies`/`products`/`books`/`students` + lookup tables) embedded in `src/data/practice/practice-questions.json`. The main quiz (`SqlQuiz.jsx`) MC cards intentionally still don't show the schema panel.
 - `StartScreen.jsx` is dead code (not imported anywhere).
 - Timer validated with a simulated-clock test; no automated test file exists.
 - Password reset currently returns a dev 6-digit code shown on screen (no email; no SMTP configured). Accounts are therefore not actually email-verified until a mailer (e.g. Resend) is wired to email the code + confirm-email on signup.

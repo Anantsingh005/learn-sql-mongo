@@ -24,10 +24,10 @@ const MODE_TITLE = { mc: 'Multiple Choice', write: 'Write a Query', bug: 'Fix th
 const LEVEL_TITLE = { easy: 'Easy', medium: 'Medium', hard: 'Hard', all: 'All Levels' }
 
 const LEVELS = [
-  { key: 'easy', label: 'Easy', desc: 'Warm up', short: 'E', bar: 'from-emerald-400 to-teal-400', tag: 'text-emerald-300', ring: 'border-emerald-500/50', chip: 'bg-emerald-500/15 text-emerald-300', glow: 'shadow-[0_0_18px_rgba(16,185,129,0.25)]' },
-  { key: 'medium', label: 'Medium', desc: 'Getting sharp', short: 'M', bar: 'from-amber-400 to-orange-400', tag: 'text-amber-300', ring: 'border-amber-500/50', chip: 'bg-amber-500/15 text-amber-300', glow: 'shadow-[0_0_18px_rgba(245,158,11,0.25)]' },
-  { key: 'hard', label: 'Hard', desc: 'The real boss fight', short: 'H', bar: 'from-rose-400 to-pink-400', tag: 'text-rose-300', ring: 'border-rose-500/50', chip: 'bg-rose-500/15 text-rose-300', glow: 'shadow-[0_0_18px_rgba(244,63,94,0.25)]' },
-  { key: 'all', label: 'All Levels', desc: 'Every question, mixed', short: 'A', bar: 'from-cyan-400 to-fuchsia-400', tag: 'text-cyan-300', ring: 'border-cyan-500/40', chip: 'bg-cyan-500/15 text-cyan-300', glow: 'shadow-[0_0_18px_rgba(34,211,238,0.25)]' },
+  { key: 'easy', label: 'Easy', desc: 'Warm up', short: 'E', bar: 'from-emerald-400 to-teal-400', tag: 'text-emerald-300', ring: 'border-emerald-500/50', chip: 'bg-emerald-500/15 text-emerald-300', glow: 'shadow-[0_0_18px_rgba(16,185,129,0.25)]', hex: '#34d399' },
+  { key: 'medium', label: 'Medium', desc: 'Getting sharp', short: 'M', bar: 'from-amber-400 to-orange-400', tag: 'text-amber-300', ring: 'border-amber-500/50', chip: 'bg-amber-500/15 text-amber-300', glow: 'shadow-[0_0_18px_rgba(245,158,11,0.25)]', hex: '#fbbf24' },
+  { key: 'hard', label: 'Hard', desc: 'The real boss fight', short: 'H', bar: 'from-rose-400 to-pink-400', tag: 'text-rose-300', ring: 'border-rose-500/50', chip: 'bg-rose-500/15 text-rose-300', glow: 'shadow-[0_0_18px_rgba(244,63,94,0.25)]', hex: '#fb7185' },
+  { key: 'all', label: 'All Levels', desc: 'Every question, mixed', short: 'A', bar: 'from-cyan-400 to-fuchsia-400', tag: 'text-cyan-300', ring: 'border-cyan-500/40', chip: 'bg-cyan-500/15 text-cyan-300', glow: 'shadow-[0_0_18px_rgba(34,211,238,0.25)]', hex: '#22d3ee' },
 ]
 
 const LOCK_HINTS = {
@@ -147,6 +147,43 @@ function rankStyle(rank) {
   if (rank === 2) return 'border-slate-300/50 bg-slate-200/15 text-slate-200'
   if (rank === 3) return 'border-amber-700/70 bg-amber-700/20 text-amber-500'
   return 'border-slate-700 bg-slate-800 text-slate-400'
+}
+
+function ProgressRing({ pct = 0, color = '#818cf8', locked = false, done = false, short = '', active = false, size = 52, stroke = 5 }) {
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const clamped = Math.max(0, Math.min(100, pct))
+  const offset = circumference * (1 - clamped / 100)
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(148,163,184,0.14)" strokeWidth={stroke} />
+        {!locked && clamped > 0 && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+          />
+        )}
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        {locked ? (
+          <span className="text-sm">🔒</span>
+        ) : done ? (
+          <span className="text-sm font-black text-emerald-300">✔</span>
+        ) : (
+          <span className={`text-xs font-black ${active ? 'text-white' : 'text-slate-500'}`}>{short}</span>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function Field({ label, type = 'text', value, onChange, placeholder, autoComplete, disabled }) {
@@ -734,41 +771,31 @@ export default function Profile() {
                         key={lv.key}
                         to={`/profile/report/${mode.key}/${lv.key}`}
                         title={`View ${mode.label} · ${lv.label} report`}
-                        className="group flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/60 px-2.5 py-2 transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-800/60"
+                        className="group flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2.5 transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-800/60"
                       >
-                        <div
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border font-mono text-xs font-black transition-transform duration-300 group-hover:scale-105 ${
-                            unlocked && active
-                              ? `${lv.ring} ${lv.chip}`
-                              : unlocked
-                                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                                : 'border-slate-700 bg-slate-800/70 text-slate-500'
-                          }`}
-                        >
-                          {unlocked ? (done ? '✔' : lv.short) : '🔒'}
-                        </div>
+                        <ProgressRing
+                          pct={pct}
+                          color={lv.hex}
+                          locked={!unlocked}
+                          done={done}
+                          short={lv.short}
+                          active={unlocked && active}
+                        />
                         <div className="min-w-0 flex-1">
                           <div className={`truncate text-sm font-semibold ${unlocked ? 'text-white' : 'text-slate-400'}`}>{lv.label}</div>
                           <div className="truncate text-[10px] text-slate-500">{unlocked ? lv.desc : LOCK_HINTS[lv.key] ?? 'locked'}</div>
-                        </div>
-                        {unlocked ? (
-                          <div className="flex shrink-0 flex-col items-end gap-1">
-                            <div className="flex items-center gap-1.5">
-                              <div className="h-1 w-14 overflow-hidden rounded-full bg-slate-800">
-                                <div
-                                  className={`h-full rounded-full bg-gradient-to-r ${lv.bar} transition-all duration-500`}
-                                  style={{ width: `${Math.min(pct, 100)}%` }}
-                                />
-                              </div>
-                              <span className={`w-7 text-right font-mono text-[10px] font-bold ${active ? lv.tag : 'text-slate-600'}`}>{pct}%</span>
-                            </div>
-                            <span className={`text-[10px] ${done ? 'font-semibold text-emerald-300' : active ? 'text-slate-500' : 'text-slate-600'}`}>
-                              {done ? '✔ completed' : active ? 'in progress' : 'not started'}
-                            </span>
+                          <div className="mt-1 text-[10px]">
+                            {done ? (
+                              <span className="font-semibold text-emerald-300">✔ completed</span>
+                            ) : active ? (
+                              <span className={`font-mono font-bold ${lv.tag}`}>{pct}%</span>
+                            ) : unlocked ? (
+                              <span className="text-slate-600">not started</span>
+                            ) : (
+                              <span className="rounded-full border border-slate-700 bg-slate-800/60 px-1.5 py-px font-semibold text-slate-500">locked</span>
+                            )}
                           </div>
-                        ) : (
-                          <span className="shrink-0 rounded-full border border-slate-700 bg-slate-800/60 px-2 py-0.5 text-[10px] font-semibold text-slate-500">locked</span>
-                        )}
+                        </div>
                         <span className="text-[10px] text-slate-600 transition-transform group-hover:translate-x-0.5" aria-hidden="true">›</span>
                       </Link>
                     )
