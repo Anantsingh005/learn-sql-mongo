@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   PRACTICE_TOPICS,
   PRACTICE_DIFFICULTIES,
   PRACTICE_TYPES,
 } from '../data/practice/practiceQuestions.js'
 import { loadPracticeQuestions, countPracticeQuestions } from '../data/practice/practiceQuestions.js'
+import { chapterSlugForQuestion } from '../data/academy/lessonFor.js'
+import { CHAPTERS } from '../data/academy/book.js'
 import { PracticeEngine, PRACTICE_STATUS } from '../engine/PracticeEngine.js'
 import { buildCheckQuery } from '../engine/queryCheck.js'
 import QueryRunner from '../engine/QueryRunner.js'
@@ -15,6 +17,7 @@ import SchemaPanel from '../components/quiz/SchemaPanel.jsx'
 import HintReveal from '../components/quiz/HintReveal.jsx'
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D']
+const CHAPTER_BY_SLUG = new Map(CHAPTERS.map((c) => [c.slug, c]))
 const TYPE_LABELS = { mc: 'Multiple choice', write: 'Write a query', bug: 'Fix the bug' }
 const TYPE_COLORS = {
   mc: 'bg-sky-500/15 text-sky-300',
@@ -95,9 +98,9 @@ function PracticeButton({ option, label, selected, onSelect, disabled }) {
       type="button"
       onClick={onSelect}
       disabled={disabled}
-      className={`group flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed ${
+      className={`group relative flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed ${
         selected
-          ? 'border-indigo-500 bg-indigo-500/15 text-indigo-100'
+          ? 'pop-on pop-on-indigo border-indigo-500 bg-indigo-500/15 text-indigo-100'
           : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
       }`}
     >
@@ -120,6 +123,7 @@ function QuestionView({ question, selected, onSelect, isFeedback }) {
       : question.difficulty === 'medium'
         ? 'bg-indigo-500/15 text-indigo-300'
         : 'bg-rose-500/15 text-rose-300'
+  const chapter = CHAPTER_BY_SLUG.get(chapterSlugForQuestion(question))
   return (
     <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
       <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -128,6 +132,14 @@ function QuestionView({ question, selected, onSelect, isFeedback }) {
         </Chip>
         <Chip className={diffColor}>{question.difficulty}</Chip>
         <span className="text-slate-500">{question.subtopic}</span>
+        {chapter && (
+          <Link
+            to={`/academy/sql/${chapter.slug}`}
+            className="rounded-full border border-slate-700 px-2.5 py-0.5 text-slate-300 transition-colors hover:border-indigo-500/60 hover:bg-indigo-500/10 hover:text-indigo-200"
+          >
+            📖 Ch {chapter.number} · {chapter.title}
+          </Link>
+        )}
       </div>
 
       <h2 className="mt-3 whitespace-pre-wrap font-mono text-lg font-medium leading-relaxed text-slate-100">
@@ -247,9 +259,9 @@ function ChoiceGroup({ label, options, value, onSelect }) {
             key={key}
             type="button"
             onClick={() => onSelect(key)}
-            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+            className={`relative rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
               value === key
-                ? 'border-indigo-500 bg-indigo-500/15 text-indigo-100'
+                ? 'pop-on pop-on-indigo border-indigo-500 bg-indigo-500/15 text-indigo-100'
                 : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
             }`}
           >
@@ -436,10 +448,15 @@ function Results({ snapshot, onReplay, onChangeSettings }) {
 }
 
 function Practice() {
+  const [params] = useSearchParams()
+  const topicParam = params.get('topic')
+  const prefilled =
+    topicParam && Object.prototype.hasOwnProperty.call(PRACTICE_TOPICS, topicParam) ? topicParam : null
+
   const [bank, setBank] = useState(null)
   const [loadError, setLoadError] = useState(false)
-  const [game, setGame] = useState(null)
-  const [topic, setTopic] = useState('all')
+  const [game, setGame] = useState(() => (prefilled ? 'sql' : null))
+  const [topic, setTopic] = useState(prefilled ?? 'all')
   const [difficulty, setDifficulty] = useState('all')
   const [types, setTypes] = useState('all')
   const [engine, setEngine] = useState(null)

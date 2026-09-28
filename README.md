@@ -24,6 +24,8 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
 - **Profile page** — signed-in users get account details, a per-mode/difficulty progress matrix rendered as **circular progress rings** (level initial / ✔ completed / 🔒 locked, color-coded by level) with level unlocks, session/play-time stats, the leaderboard card, and a **reset-progress** control (a three-step confirmation that clears level progress back to zero, with an option to also archive your score/attempt history).
 - **Per-level progress reports** — every answered question is recorded; each mode+level's report shows best %, a per-question breakdown (✓/✗/○, tries, accuracy), mastered count, and unlock hints. Levels unlock per mode: **Easy** and **Medium** are always available, **Hard** unlocks once both reach 75%, and **All Levels** (the full per-mode bank mixed) unlocks after all three hit 75% — locks are also surfaced on the Profile progress matrix.
 - **Progress tracking** — per-user progress is persisted to Postgres (per-question attempts, completed levels, and best scores).
+- **SQL Learning book** — `/academy` is a path-based reader for a written SQL course: `/academy` picks a language, `/academy/sql` shows the contents, and `/academy/sql/:chapterSlug` opens a chapter. Eight chapters, forty written sections, all about one small shop schema (`customers` / `products` / `orders` / `reviews`), so every example runs against the same database the reader is already looking at. Chapters render on warm "paper" with theory prose, dark SQL consoles, result tables, flow and join diagrams, a per-chapter mistakes list, and a cheatsheet.
+- **Section quizzes** — every one of the 40 sections ends with a "Check yourself" multiple-choice set (87 questions in total). Answers are persisted per question id in a third progress bucket, so a returning reader skips what they have already proved, and a wrong answer always reveals the correct one rather than dead-ending. Questions with a chapter link also get a **Ch N · Title** pill in the quiz and practice cards, and the chapter footer deep-links to the matching practice topic.
 
 ## Tech Stack
 
@@ -83,6 +85,9 @@ npm run dev
 | `node scripts/verify-answers.mjs`     | Verify every bug question's `fixedQuery` produces its `expected` output |
 | `node scripts/verify-engine.mjs`      | Exercise the quiz engine (timers, extra time) |
 | `node scripts/verify-schemas.mjs`     | Validate question schemas                     |
+| `node scripts/verify-lessons.mjs`     | Run every book example and quiz answer key against sql.js |
+
+`verify-lessons.mjs` is the book check. It runs each chapter's SQL on a fresh database per block, asserts the expected rows, confirms documented failures really fail, and verifies the section quizzes: every answer key, every option listed in `distractorIndices` (which must error), and the requirement that **all 40 sections have questions**. Run it from the repo root so it can resolve `sql.js` and the ESM source.
 
 ## Project Structure
 
@@ -90,13 +95,17 @@ npm run dev
 src/
 ├── App.jsx                 # Route definitions
 ├── components/             # Layout, Home, Leaderboard, quiz widgets
+│   ├── academy/            # Book reader: BookGate, Chapter bits, SectionQuiz, Cheatsheet
 │   └── quiz/               # ModeSelect, QuestionCard, SchemaPanel, SqlEditor, etc.
 ├── context/AuthContext.jsx # Supabase auth state
+├── data/academy/           # Book data: chapter prose, shared schema, section quizzes
+│   ├── chapters/           # ch01-reading-data.js … ch08-ctes-windows.js
+│   └── questions/          # ch01-questions.js … ch08-questions.js
 ├── data/sql/               # Question banks + shared schemas
 ├── engine/                 # QuizEngine, QueryRunner, AnswerChecker, SQL worker
 ├── hooks/
 ├── lib/                    # supabase client, auth, leaderboard, attempts, progress
-└── pages/                  # SqlQuiz, Auth, Profile, LevelReport
+└── pages/                  # SqlQuiz, Auth, Profile, LevelReport, Academy, Chapter
 ```
 
 ### How query checking works
@@ -106,4 +115,6 @@ src/
 ## Notes
 
 - Question bank metadata lives in `src/data/sql/index.js`; the current default schema is `store`.
-- `QA` and `wdata/` contain scratch/QA material — not part of the app.
+- The book's quizzes are plain data keyed by section id, so chapter files stay prose. A question may carry a `check` (proved by the verifier, never rendered) and `distractorIndices` (options that must fail to run). Both are machine-checked, so an answer key or a trap that stops being true fails the build rather than teaching a falsehood.
+- Book progress is local-only under `dbquiz:academy-progress`; section keys are namespaced as `${chapterSlug}--${sectionId}`.
+- `QA` and `wdata/` contain scratch/QA material — not part of the app. `wdata/*.mjs` have syntax errors and will make a repo-wide lint fail; lint `src` and `scripts` instead.

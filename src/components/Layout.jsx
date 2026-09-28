@@ -63,6 +63,9 @@ function Layout() {
             <NavLink to="/quiz/sql" className={linkClass}>
               SQL Quiz
             </NavLink>
+            <NavLink to="/academy" className={linkClass}>
+              Academy
+            </NavLink>
             <NavLink to="/practice" className={linkClass}>
               More Practice
             </NavLink>
@@ -105,6 +108,9 @@ function Layout() {
               </NavLink>
               <NavLink to="/quiz/sql" className={linkClass} onClick={close}>
                 SQL Quiz
+              </NavLink>
+              <NavLink to="/academy" className={linkClass} onClick={close}>
+                Academy
               </NavLink>
               <NavLink to="/practice" className={linkClass} onClick={close}>
                 More Practice

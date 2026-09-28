@@ -3,6 +3,12 @@
 @theme {
   --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, Consolas, "Courier New", monospace;
+  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
+    "Times New Roman", serif;
+
+  /* One curve for every lift, flip and depth push in the 3D quiz arena, so the
+     scene settles at a single rhythm instead of each piece picking its own. */
+  --ease-3d: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 html,
@@ -37,6 +43,60 @@ body {
     background-clip: text;
     color: transparent;
   }
+
+  /* Selection punch. The ring rides on ::after so it never clobbers the
+     shadow-[...] glow utilities used on the leaderboard chips, and it
+     inherits currentColor so each chip flashes its own accent for free.
+
+     `.pop-on` is meant to be applied only while an option *is* selected: taking
+     it off is what stops the animation, and putting it back on replays it. That
+     is what keeps a re-click on an already-selected option from popping again.
+
+     The peak is a deliberate 1.045 rather than an overshoot, so this reads as a
+     punch instead of a bounce and settles on --ease-3d like the rest of the
+     app's motion. Do not add it to anything that also transforms on hover — the
+     keyframe's `transform` wins for the length of the animation. */
+  .pop-on::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 2px currentColor;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .pop-on.pop-on-indigo::after {
+    box-shadow: 0 0 0 2px rgb(129 140 248 / 0.95);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pop-on {
+    animation: pop-scale 320ms var(--ease-3d);
+  }
+
+  .pop-on::after {
+    animation: pop-ring 320ms ease-out;
+  }
+
+  /* A hidden multiple-choice option unmasking. Deliberately its own class
+     rather than a reuse of .pop-on: that one is documented as belonging to the
+     selected state, and stacking both on one element would mean whichever fired
+     first wins the element and the other animation silently never plays. */
+  .reveal-on {
+    animation: reveal-option 300ms var(--ease-3d);
+  }
+}
+
+/* The level filter arriving under a tapped mode, on a phone only. The
+   `width < 40rem` half matters: at sm and up the level row is always present
+   from the first render, so animating it there would just replay a flourish on
+   every page load. Pinned below sm, it only ever runs in response to a tap. */
+@media (width < 40rem) and (prefers-reduced-motion: no-preference) {
+  .reveal-levels {
+    animation: reveal-in 260ms var(--ease-3d) both;
+  }
 }
 
 @keyframes gradient-pan {
@@ -45,5 +105,69 @@ body {
   }
   100% {
     background-position: 100% 50%;
+  }
+}
+
+@keyframes pop-scale {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.045);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pop-ring {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.99);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.07);
+  }
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A hidden multiple-choice option unmasking. The small overshoot at 60% is what
+   makes it read as a "pop up" rather than a fade. */
+@keyframes reveal-option {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  60% {
+    transform: translateY(-1px) scale(1.008);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The end-of-deck panel tipping up off the floor of the arena. Applied as an
+   animation rather than a transition because the panel mounts fresh, so there
+   is no previous transform to transition away from. */
+@keyframes arena-in {
+  from {
+    transform: rotateX(-64deg) translateZ(-48px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
   }
 }

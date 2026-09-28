@@ -2,37 +2,86 @@
 
 Last updated: 2026-09-26
 
-## Not deployed yet — Academy (/learn) lesson pages + Learn-this-topic links
+## Current session (2026-09-26 - committed): Academy rebuild (SQL book reader)
 
-> **Status:** built and verified locally, but **intentionally excluded** from the 2026-09-26 shipped commit/deploy (see the Current session below). Files are still in the working tree (untracked/new) so they can be committed and deployed as a follow-up.
+**Old learning system removed:**
+- Deleted `src/pages/Learn.jsx`, `src/pages/Lesson.jsx`, `src/pages/Course.jsx`, `src/components/learn/`, `src/data/learn/`, and `src/components/quiz/SqlHighlight.jsx`.
+- Reverted the learning-only edits in `App.jsx`, `Layout.jsx`, `quiz/QuestionCard.jsx`, `Practice.jsx`. Lint + build passed after the deletion.
 
-**Lesson content (new data):**
-- `src/data/learn/lessons.js` — 3 lessons (`table-query`, `joins`, `aggregation`), each with `slug`, `title`, `accent` (hex color), `summary`, `sections[]` (heading + body + `examples[]` of {code, note}), and `commonMistakes[]`. Pure static content, no DB.
+**Academy landing (`/academy`):**
+- `src/pages/Academy.jsx` + `src/components/academy/BookGate.jsx` - language picker with **SQL Learning** (live) and **MongoDB Learning** (Coming soon).
+- Selection is **path-based**: `/academy` = gate, `/academy/sql` = book, `/academy/sql/:chapterSlug` = chapter. (Was query-based `?game=sql`, which made the SQL card loop back to the gate.)
 
-**/learn overview grid (new):**
-- `src/pages/Learn.jsx` — route `/learn`, styled like the SQL ModeSelect cards: glowing color-coded cards built from each topic's `accent` hex via **inline styles** (Tailwind can't JIT arbitrary values from runtime data). Top gradient strip, icon badge (`{ }` / `JO` / `Σ`), title, summary, "N sections · M mistakes", accent "Learn →". `text-gradient` kicker + gradient h1 header.
+**SQL book (8 chapters, 40 written sections — Part One complete):**
+- Data in `src/data/academy/`: `book.js` (metadata, parts, `LEARNING_GAMES`), `bookSchema.js`, `progress.js`, `lessonFor.js`, plus `chapters/ch01-reading-data.js` … `ch08-ctes-windows.js`.
+- All eight chapters are written: 1 Reading Data, 2 Filtering, 3 Sorting & Limiting, 4 Joins, 5 Subqueries & Set Operations, 6 Aggregation & GROUP BY, 7 Modifying Data, 8 CTEs & Window Functions. `UPCOMING_CHAPTERS` is now empty and `SqlBook` hides the "Coming next" block when it is.
+- The book is grouped into **two** parts: Part One "Reading, filtering, ordering and combining" (ch 1–5) and Part Two "Analysing, changing, and stepping back" (ch 6–8). The old three-part split was removed — note that `SqlBook.jsx` builds its contents grid *from* `PARTS`, so dropping a part entry without reassigning its chapters would have made chapters 4 and 5 vanish from the book page.
+- `BOOK.edition` was `'Edition 1 · Part One'`, a leftover from when the book was three chapters; it is now just `'Edition 1'`.
+- `bookSchema.js` reuses `storeSchema` from `src/data/sql/schemas.js` unchanged and adds a `reviews` table with real `NULL` ratings for the Chapter 2 NULL section. It also carries a real `FOREIGN KEY (product_id) REFERENCES products(id)` and `CHECK (rating IS NULL OR rating BETWEEN 1 AND 5)` so Chapter 7 can print violations the reader can reproduce.
+- `src/pages/Chapter.jsx` renders sections on warm "paper" (`PaperSheet`) with theory prose, dark `SqlCode` consoles, `ResultTable` insets, `FlowDiagram` row-flow, `SyntaxMap` clause-order and `JoinMap` join-type visuals, notes, a per-chapter mistakes list, and a cheatsheet.
+- Author credit "Written by Anant Singh" (`Byline.jsx`) is now **cover only** (`SqlBook.jsx`). The byline and `BOOK.edition` were removed from the per-chapter header in `Chapter.jsx` — repeated on all eight chapter pages it was noise, and the running `Ch N · Title — SQL Foundations` document title already says which chapter you are in. `BOOK.edition` is still used, but only in that title string.
+- The chapter footer (`ChapterFooter`) and the prev/next strip below it (`ChapterNav`) sit **inside** `PaperSheet`, i.e. on warm near-white `bg-[#faf7f0]`, but both were still written with dark-theme slate values — `text-slate-300` "Mark chapter as read" was effectively invisible on cream, and `ChapterNav`'s `bg-slate-900/60` chips were dark boxes floating on paper. Both now use the light convention already established by `Objectives` and `Mistakes` (`border-slate-900/15`, `bg-white`, `text-slate-600` → `text-slate-900` on hover), with `chapter.accent` still the one fill.
+- The footer gained a fourth button, **Next chapter →**, driven by `neighbour(chapter.slug, 1)` and filled with `chapter.accent`. On chapter 8, where there is no next chapter, the slot becomes an outlined **← Back to contents** link to `/academy/sql` so the row never changes width.
+- The old **All practice** link to `/practice` was removed from the footer: "Practise this chapter" already drills into a single topic, and the full `/practice` index is one click away from the nav, so the third button was redundant. The row is now two actions plus the next-chapter slot.
+- The "Contents" rail (`ChapterOutline.jsx`) is now pinned at **every** breakpoint, not just `lg`. Two things make it work: `self-start` (as a grid item the nav used to stretch to the full row height, so `sticky` had no travel and the rail scrolled away), and an internal scroll area capped to the viewport (`max-h-[38vh] sm:max-h-[45vh] lg:max-h-[calc(100vh-3rem)]`) so a fully expanded chapter can never grow taller than the screen. The "Contents" heading stays put; the chapter list scrolls inside the rail.
+- Progress is local-only under `dbquiz:academy-progress`; section keys are `${chapterSlug}--${sectionId}`. A section auto-marks read once 70% visible, and the chapter is marked read only when all its sections are.
 
-**/learn/:topicSlug lesson page (new):**
-- `src/pages/Lesson.jsx` — back link, accent-glow title, summary, numbered sections with body + syntax-highlighted SQL blocks, and a "Common mistakes" list (rose card, ✗ items). Unknown slugs render a "Lesson not found" state. Ends with an accent **"Practice this topic →"** button linking to `` /practice?topic=<slug> ``.
-- `src/components/quiz/SqlHighlight.jsx` (NEW) — dependency-free SQL tokenizer/colorizer (keywords sky, functions cyan, strings emerald, numbers amber, comments slate-italic); no syntax library was added to the project.
+**Section quizzes ("Check yourself"):**
+- `src/components/academy/SectionQuiz.jsx` renders one multiple-choice question at a time at the foot of every section (`Chapter.jsx`, after the section's blocks). Pick an option → **Check answer** → the right answer and an explanation are revealed → **Next question →**. A wrong answer is never a dead end: the correct option is highlighted and Next stays enabled, because a book that traps its reader is worse than one they can skim. A dot per question shows each outcome, and the set ends on an `n / n correct` panel with a Retry.
+- Questions are plain data in `src/data/academy/questions/ch01-questions.js` … `ch08-questions.js`, keyed by section id so the chapter files stay prose. `questions/index.js` maps chapter slug → file and exposes `questionsForSection`, `allQuestions`, `sectionsWithoutQuestions`. A chapter with no entry simply renders no quiz, so the book is being written chapter by chapter.
+- Every question is written against `academySchema` (`customers`/`products`/`orders`/`reviews`) rather than reusing the quiz or practice banks. Neither was usable: all 646 practice questions carry their own inline ad-hoc schema (`employees`, `movies`, `dept_lookup`…), which would break the book's promise that every example runs against the same database the reader has been looking at. The two banks also disagreed on answer shape (`answerIndex` vs a `correctAnswer` string); the new files use `answerIndex`.
+- Each question may carry a `check` — `{ code, columns, rows }` that **never renders**. It exists so `verify-lessons.mjs` can prove the answer key against real SQLite, the same discipline the book's `expect` blocks already get. A question may also carry `distractorIndices` — the options that are *supposed* to fail. The pass enforces 1-5 questions per section, at least 3 options, no duplicate options, an in-range `answerIndex`, a prompt, an explanation, and ids unique book-wide, and **every section in the book must have questions — a gap is a hard failure, not a note.**
+- Quiz answers are persisted in a **third** bucket on the progress object, `correct`, holding the ids of questions answered right. It is deliberately separate from `read`: a section is still marked read by scrolling to it, so the 40/40 counter and chapter auto-complete are untouched. A missing `correct` key in an older saved object defaults to `[]`, so existing readers need no migration. Persisting only correct answers is what lets a returning reader skip what they have already proved.
+- **Bug fixed while in there:** `syncChapterRead` and `chapterReadCount` in `progress.js` compared against the bare `s.id`, but every write stores the namespaced `sectionKey(chapter.slug, s.id)`. Neither could ever match, so chapters never auto-completed and the per-chapter read count was always 0. Both now use `sectionKey`. This is why the chapter tick marks in the outline were not updating on their own.
+- **Coverage: all 40 of 40 sections, 87 questions, complete.** The book can no longer grow a section without also growing a quiz.
 
-**Practice pre-filter by topic:**
-- `src/pages/Practice.jsx` reads `?topic=` from the URL (validated against `PRACTICE_TOPICS`); when present it skips the game select and opens the SQL picker with that topic pre-selected.
+**Chapter 3 questions (`ch03-questions.js`):**
+- Ten questions at **two per section** (the verifier allows 1-5), matching ch01/ch02's density. The agreed rate is two per section for all thirty remaining sections, because the schema is small — 6 customers, 7 products, 9 orders, 5 reviews — and a third question would be padding.
+- Seven of the ten carry a `check`; the three that do not are the genuinely conceptual ones, where the answer is a claim about the language rather than a result set. That is a ~70% rate against ch01/ch02's 60%.
+- **Every `check` is produced by running the query, never hand-written.** Same discipline as the lesson examples, and the reason a real bug got caught: the first draft of `q3.5.2` had a distractor `ORDER BY price DESC WHERE price > 50 LIMIT 3` and an explanation claiming it "runs, which is the trap". It does not — `WHERE` after `ORDER BY` is a syntax error, so the explanation would have taught a falsehood. The distractor was replaced with `WHERE price > 50 ORDER BY price DESC LIMIT 3`, which *does* run and returns the three most expensive rows, so the trap is now the sort direction rather than a fourth copy of the clause-order mistake.
+- **The verifier used to ignore distractors** — it only ever ran the `check` attached to the question, which is the *correct* answer, so "which of these four runs" questions could silently have a second option that also runs. Every SQL option in the ch03 slate was run by hand. **Fixed:** see the distractor pass below.
+- `q3.5.1` also confirmed a nice detail: `SELECT FROM products ...` fails with `near "FROM"`, not a vaguer error.
 
-**Learn-this-topic links on question screens:**
-- `src/data/learn/lessonFor.js` (NEW) — `lessonSlugForQuestion(q)`: practice questions map directly (`q.topic` is already a lesson slug); quiz topics are classified by keyword over the label (joins words → `joins`, group/having/sum/count/rank/window/with/case/etc → `aggregation`, else → `table-query`). Topics outside the lessons (INSERT/UPDATE/DELETE/transactions/index/schema/comments/table-creation) → `null` (no link).
-- `src/components/quiz/QuestionCard.jsx` and the practice `QuestionView` in `Practice.jsx` show a small **"📖 Learn this topic"** pill in the question's meta row linking to the matching lesson.
+**Distractor verification (`distractorIndices`):**
+- A question lists the option indexes that *ought* to fail. The verifier extracts SQL from each one — either a backticked span or a bare option starting with `SELECT` / `INSERT` / `UPDATE` / `DELETE` / `WITH` / `PRAGMA` — runs it on a **fresh database**, and requires an error. An option that runs cleanly fails the question.
+- This is the reason the field exists rather than a comment: a distractor that quietly runs is a question with two correct answers, and the explanation then teaches a falsehood. The ch03 `q3.5.2` bug above is exactly that failure mode.
+- Constraint-refusal and syntax-error options belong here, never in the `check` — a `check` can only prove that something *succeeded*. So Ch 7's "this is refused" and "this is a syntax error" questions mark their bad options instead of asserting a result.
+- **6 distractors refused** across the book: `q4.2.1` (ambiguous `name`), `q6.4.1` (`WHERE` after `GROUP BY`, plus `HAVING` on a bare aggregate), `q8.1.1` (alias in `WHERE`), `q8.5.1` (`misuse of window function RANK()`).
 
-**Nav + routes:**
-- `src/components/Layout.jsx` — **"Learn" renamed to "Academy"** in the main nav (desktop + mobile), between SQL Quiz and More Practice.
-- `src/App.jsx` — routes `learn` and `learn/:topicSlug`.
+**Chapters 4–8 questions (`ch04`–`ch08-questions.js`):**
+- Fifty questions at two per section, closing the book at **87 questions / 40 of 40 sections**. Registered in `questions/index.js`.
+- **Ch 7 questions had to be write-then-select.** `INSERT`/`UPDATE`/`DELETE` return no rows, so a `check` on them is meaningless; every Ch 7 question runs the DML and then a `SELECT` in the same check block, on the fresh per-check database. Transactions work the same way — `BEGIN; UPDATE; …; ROLLBACK; SELECT` proves the rollback, `COMMIT` proves the other one.
+- **Ch 8 leans on two questions that are *about* wrong answers**, so they are the one place `distractorIndices` is doing real work: `q8.5.1` (you cannot filter on a window function) and `q8.1.1` (an alias *is* usable in `WHERE` when it belongs to a subquery). Both pair with the matching `q6.4` question, because both are the same rule seen from two sides — which is why `q8.1.1`'s explanation leans on the 6.4 trap.
+- `q8.5.2` documents the nastiest case honestly: `GROUP BY` **plus** a window function runs without complaint and returns three nonsense rows. It cannot be a `distractorIndices` question, because it does not fail — so it is a `check` asserting the wrong-looking output, with the explanation carrying the point.
 
-**Academy picker landing:**
-- `/learn` now opens on a **SQL / MongoDB game select** (same glowing-card style as the Practice hub): SQL ("Choose →") and MongoDB ("Coming soon", same as Practice's Mongo card). The SQL topic grid moved behind `/learn?game=sql` (query-param driven, so it stays shareable); the grid's header has a `← SQL / MongoDB` back link and the Mongo page a Coming-soon card with Back. Lesson pages' "← All lessons" now returns to `/learn?game=sql`.
+**Chapter 7 — writing data without a live sandbox:**
+- New `dml` block type, rendered by `src/components/academy/DmlBlock.jsx`. `INSERT`/`UPDATE`/`DELETE` return no rows, so a `dml` block carries an `after.query` whose result is asserted by the verifier — the reader sees the actual consequence of the statement rather than a promise about it. Every example is a static, machine-checked before/after; there is no editable sandbox.
+- Chapter 7 leans on the two real constraints in `reviews`: a foreign key refusing an orphan review and a product delete, a `CHECK` refusing `rating = 9`, and a `NULL` foreign key being legal on purpose. It also documents the SQLite-specific traps honestly — a missing `id` becoming `NULL`, `comment = comment + 1` silently overwriting prose with `1`, and `last_insert_rowid()` disagreeing with a supplied `id`.
 
-**Verified:** `npx oxlint src` → only pre-existing warnings · `npm run build` → success (chunk-size warning only) · mapping checked over all 196 quiz questions (94 table-query · 69 aggregation · 26 joins · 7 intentionally no-link).
+**Cross-links into the existing game:**
+- `src/data/academy/lessonFor.js` maps a question to a chapter by keyword, first match wins, and returns `null` unless that chapter is actually written — so the pill never points at an unwritten page.
+- Rules are ordered most-specific-first: a `ctes-windows` rule sits **above** `aggregation` so `RANK`/`LAG`/`PARTITION` labels are not stolen by the `sum`/`count` tokens in the aggregation list.
+- `src/components/quiz/QuestionCard.jsx` and `src/pages/Practice.jsx` show a "Ch N - Title" pill on questions that map to a written chapter.
+- `Chapter.jsx` "Practise this" CTA deep-links to `/practice?topic=…` (chapters map to `table-query`, `joins` or `aggregation`, all valid `PRACTICE_TOPICS` keys); `Practice.jsx` reads that param and skips the game picker with the topic preselected.
+- **Coverage: 976 of 978 questions across the quiz bank, the write/fix/window banks and the practice bank now resolve to a chapter.** The 2 that do not are labelled "Index concept", which no chapter teaches, so no link is the honest answer.
 
-## Current session (2026-09-26 — committed & deployed): More Practice expansion + MC tables + skip/results + circular progress
+**UI fixes applied across the book:**
+- `SqlBook.jsx` per-chapter read counts used `progress.sections.includes(s.id)` — the bare section id, which never matches the namespaced `${chapterSlug}--${sectionId}` key, so every card showed 0 read until the whole chapter was done. Now uses `sectionKey(c.slug, s.id)`.
+- The Start/Continue button was gated behind `read > 0`, so a brand-new reader was never offered a way in, while the `read === 0 ? 'Start reading' : 'Continue'` label inside it was dead code. It now always renders, and points at the first chapter with an *unread section* rather than the first unfinished chapter.
+- Literal backticks leaked in 31 places. `Prose.jsx` now exports `Inline`, the fragment-only version of its two-mark renderer, and `Note.jsx` and the Chapter "Common mistakes" list use it — a `<p>` cannot legally contain another `<p>`, so the marks are rendered inside the caller's own paragraph with tone-appropriate colours.
+- `Cheatsheet.jsx` strips a *surrounding* backtick pair from cheat-sheet cells. The sheet renders in a dark console where the whole SQL column is already monospace, so the marks were printing as literal characters. Inner pairs are left alone.
+- Narrow `focus-visible` rings on the book CTAs so keyboard focus is visible without changing the hover design.
+
+**Verifier (`scripts/verify-lessons.mjs`):**
+- Executes **every** `code` and `dml` block against `academySchema` in sql.js, in a **fresh database per block** (so a write in Ch 7 can never leak into the next example) with `PRAGMA foreign_keys = ON`. `expect` and `dml.after` results are compared row-by-row and column-name-by-column-name, `expectError` blocks must genuinely fail, remaining blocks must at least parse. Also shape-checks flow/result table widths and rejects a `dml` block with no after-state, since such a block asserts nothing.
+- **`reviews` constraints are exercised for real:** bad ratings blocked, bad foreign keys blocked, duplicate ids blocked, `NULL` product allowed, and deleting a referenced product blocked.
+- Coverage is now a **hard failure** (`FAIL coverage`, exit 1) naming every section with no questions. Verified by temporarily unregistering ch08: the run dropped to 35/40, listed all five missing sections and exited 1, then passed again once restored. A new chapter, or a section added to an existing one, can no longer ship without a quiz.
+- **Currently 123 lesson queries checked, 30 tables shape-checked, plus the quiz pass — 72 answer keys verified · 6 distractors refused · 87 questions across 40/40 sections — ALL LESSON EXAMPLES AND QUIZES VERIFIED.**
+- It caught real content bugs, each fixed by writing the truth rather than the intent: `SELECT name city FROM customers` is **not** a syntax error in SQLite (`city` becomes an alias for `name`); `SELECT` from a CTE offers only the columns named inside it; and mixing `GROUP BY` with a window function runs and returns nonsense rather than erroring.
+
+**Verified:** `node scripts/verify-lessons.mjs` → ALL LESSON EXAMPLES AND QUIZES VERIFIED (72 answer keys · 6 distractors refused · 87 questions across 40/40 sections; coverage proven to fail on 35/40) · `node scripts/verify-answers.mjs` → 71 match / 0 mismatch · `node scripts/verify-schemas.mjs` → ALL SCHEMAS VALID · `npx oxlint src scripts` → zero warnings from Academy code (remaining `set-state-in-effect` warnings are pre-existing in `Profile.jsx`, `Auth.jsx`, `SqlQuiz.jsx`, `AuthContext.jsx`) · `npm run build` → success, 152 modules (chunk-size warning only, pre-existing). `node scripts/verify-engine.mjs` reports 79 passed / 117 failed, all pre-existing and unrelated: the failing `write-*` cases are "no correct answer defined", and `src/engine`, `src/data/sql` and `src/data/practice` are untouched by this session.
+
+## Previous session (2026-09-26 - committed & deployed): More Practice expansion + MC tables + skip/results + circular progress
 
 **More Practice hub (new):**
 - Nav renamed **"Practice" → "More Practice"** (`src/components/Layout.jsx`, desktop + mobile).
@@ -196,7 +245,7 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 ## Work State
 
 ### Completed (fully verified)
-- Academy lesson pages (see "Not deployed yet" section): built + lint/build-clean, but **intentionally NOT committed/deployed** — files remain local-only for a follow-up commit.
+- Academy SQL book reader (see Current session): **8 chapters / 40 sections**, `/academy` gate + `/academy/sql` book + `/academy/sql/:slug` chapter, localStorage progress, **section quizzes on all 40 sections (87 questions, every answer key and 6 distractors machine-verified against sql.js, coverage a hard failure)**, quiz/practice cross-links (976/978 questions), static verified DML after-state, and `scripts/verify-lessons.mjs` (123 queries, 30 tables, 40 sections pass). **Committed.**
 - More Practice hub + MC tables + skip/results + circular progress rings (see Current session — committed & deployed): `GameSelect`/`MongoComingSoon` in `Practice.jsx`, nav rename, inline datasets embedded for all 450 generated MC practice questions (450/450 answer-verified), Skip for all question types, `wrong`/`graded` snapshot metrics, practiced/correct/wrong/skipped results + HUD, and `ProgressRing` on the Profile SQL progress grid.
 - Level progress reports + leaderboard card (see previous 2026-09-24 session): `question_attempts` table + RLS, `attempts.js`, `LevelReport.jsx`, deep-link quiz start, Profile matrix links, top-10 leaderboard with your overall rank.
 - Profile screen + custom auth control plane + password-resets table (see previous 2026-09-24 session): function `auth` v6, client `auth-api.js`, two-step reset UI; live E2E signup → reset → complete-reset → sign-in verified on a throwaway user (cleaned up; DB back to 2 users, 0 resets).
@@ -212,6 +261,10 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 - `npx oxlint src` → no new errors from this session (pre-existing warnings + unrelated `wdata/*.mjs` junk only).
 
 ## Key Technical Facts
+- **SQLite silently accepts a missing comma as an alias:** `SELECT name city FROM customers` returns a column *named* `city` containing the names, with no error. Don't assume a typo in the select list will fail loudly.
+- `db.exec()` in sql.js returns an **empty array for a zero-row result**, so there is no result object to read column names from. Any verifier comparing column names must skip that check when `rows.length === 0`.
+- Academy routing is path-based (`/academy`, `/academy/sql`, `/academy/sql/:slug`). `Academy.jsx` branches on `useLocation().pathname`, not a query param.
+- `chapterSlugForQuestion` deliberately returns `null` for unwritten chapters, so the cross-link pill is absent rather than pointing at a stub.
 - SQLite (sql.js) does NOT support `> ALL (subquery)` — use `> (SELECT MAX(...) ...)`.
 - `checkAnswer` compares column COUNT (names ignored), so aliases are not required.
 - `resolveSchema(schema)` in `src/engine/queryCheck.js` maps `'store'` → `storeSchema`, object → as-is.
@@ -238,4 +291,4 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 
 ## Bash/QoL Notes
 - This env is Windows PowerShell 5.1; use `;` or `if ($?)` (no `&&`). `rg` is NOT installed — use the Grep tool.
-- Lint: `npx oxlint`; Build: `npm run build`; Data validation: `node scripts/verify-answers.mjs`.
+- Lint: `npx oxlint src scripts`; Build: `npm run build`; Data validation: `node scripts/verify-answers.mjs`; Academy examples: `node scripts/verify-lessons.mjs` (must be run from the repo root so it can resolve `sql.js` and the ESM source).
