@@ -106,9 +106,14 @@ export default function SectionQuiz({ questions, accent = '#38bdf8' }) {
 
   function optionClass(i) {
     if (!checked) {
+      // Pre-submit states are the app-wide ones from QuestionCard.jsx and
+      // Practice.jsx, so picking an answer looks the same wherever it happens:
+      // indigo fill plus the one-shot .pop-on ring. The graded branches below
+      // stay the book's own, because a book wants the verdict to read as a
+      // verdict rather than as a selection.
       return picked === i
-        ? 'border-slate-500 bg-slate-800 text-slate-100'
-        : 'border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-600 hover:bg-slate-800'
+        ? 'pop-on pop-on-indigo border-indigo-500 bg-indigo-500/15 text-indigo-100'
+        : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
     }
     if (i === question.answerIndex) {
       return 'border-emerald-500/70 bg-emerald-500/10 text-emerald-200'
@@ -283,7 +288,7 @@ export default function SectionQuiz({ questions, accent = '#38bdf8' }) {
                           onClick={() => !checked && setPicked(i)}
                           disabled={checked}
                           aria-pressed={picked === i}
-                          className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2 text-left text-[13px] leading-relaxed transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 ease-3d disabled:cursor-default ${optionClass(i)} ${lift}`}
+                          className={`relative flex w-full items-start gap-3 rounded-lg border px-3 py-2 text-left text-[13px] leading-relaxed transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 ease-3d disabled:cursor-default ${optionClass(i)} ${lift}`}
                           style={{ transform: optionTransform(i), opacity: !checked || i === question.answerIndex || i === picked ? 1 : 0.5 }}
                         >
                           <span
@@ -294,8 +299,8 @@ export default function SectionQuiz({ questions, accent = '#38bdf8' }) {
                                 : checked && i === picked
                                   ? { background: '#e11d48', color: '#fff' }
                                   : picked === i
-                                    ? { background: accent, color: '#0f172a' }
-                                    : { background: '#1e293b', color: '#64748b' }
+                                    ? { background: '#6366f1', color: '#fff' }
+                                    : { background: '#334155', color: '#94a3b8' }
                             }
                           >
                             {checked && i === question.answerIndex

@@ -22,7 +22,11 @@ function Feedback({ snapshot, onNext }) {
 
       {answer.timedOut && <p className="mb-3 text-sm text-rose-300">Time ran out.</p>}
 
-      {question.type === 'mc' && (
+      {/* Only on a timeout. The engine's reason already names the right option
+          for an answered question ('You chose "X". The correct answer is "Y".'),
+          and on a correct one there is nothing to reveal — but a timeout records
+          no answer, so this box is the only place the right option is stated. */}
+      {question.type === 'mc' && answer.timedOut && (
         <div className="mb-4">
           <div className="text-sm font-medium text-slate-400">Correct answer:</div>
           <code className="mt-1 block rounded-lg bg-slate-800 px-3 py-2 font-mono text-sm text-emerald-200">

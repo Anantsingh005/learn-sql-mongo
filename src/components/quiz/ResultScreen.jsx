@@ -63,7 +63,8 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
   const boardLabel = modeTitle ? `${modeTitle}${difficulty ? ` · ${difficulty}` : ''}` : null
 
   let levelMessage = null
-  if (completedThisRun) {    if (difficulty === 'all') {
+  if (completedThisRun) {
+    if (difficulty === 'all') {
       levelMessage = 'You conquered every level in one run. Legendary!'
     } else if (difficulty === 'hard') {
       levelMessage = 'You conquered the Hard level. Legendary!'
@@ -93,8 +94,8 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
             {snapshot.lives}/{3} lives
           </span>
           <span className="font-sans text-xs">
-          {snapshot.elapsedSeconds}s · {saveMessage(saveStatus, { modeLabel: boardLabel, username })}
-        </span>
+            {snapshot.elapsedSeconds}s · {saveMessage(saveStatus, { modeLabel: boardLabel, username })}
+          </span>
         </div>
 
         <div className="mt-6 flex items-center justify-center gap-3">

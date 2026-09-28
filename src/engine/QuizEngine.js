@@ -14,11 +14,6 @@ const DEFAULT_TIME_PER_QUESTION = 30
 const DEFAULT_EXTRA_TIME_SECONDS = 60
 const DEFAULT_EXTRA_TIME_THRESHOLD = 10
 
-// Seconds charged to unmask one hidden multiple-choice option. Exported because
-// the option row shows it in its "tap to reveal" cue — the number the player is
-// shown and the number actually deducted must come from one place.
-export const REVEAL_COST = 10
-
 export class QuizEngine {
   constructor(questions, callbacks = {}, options = {}) {
     this.allQuestions = questions
@@ -121,30 +116,6 @@ export class QuizEngine {
     if (!this.extraTimePending) return
     this.extraTimePending = false
     this._emit()
-  }
-
-  /**
-   * Charge the player `seconds` off the current question's clock, in exchange
-   * for something they chose to unlock (today: revealing a hidden MC option).
-   * Returns whether the charge went through, so the caller can refuse the
-   * unlock instead of granting something unpaid.
-   *
-   * The `timeLeft <= seconds` guard is load-bearing, not defensive padding. The
-   * timer only tests for expiry on its 1s tick, so spending more time than
-   * remains would not fail here — it would drop `timeLeft` below zero, and the
-   * very next tick would call _handleTimeout(), marking the question wrong for
-   * something the player did on purpose. Refusing is the only fair outcome.
-   *
-   * Deliberately leaves extraTimeArmed/extraTimePending alone: those only apply
-   * when extraTimeEnabled, which is set for the write and bug modes but never for
-   * multiple choice.
-   */
-  spendTime(seconds) {
-    if (this.status !== STATUS.QUESTION) return false
-    if (this.timeLeft <= seconds) return false
-    this.timeLeft -= seconds
-    this._emit()
-    return true
   }
 
   _stopTimer() {

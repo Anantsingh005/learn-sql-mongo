@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import QueryRunner from '../engine/QueryRunner.js'
-import { QuizEngine, REVEAL_COST } from '../engine/QuizEngine.js'
+import { QuizEngine } from '../engine/QuizEngine.js'
 import { buildCheckQuery } from '../engine/queryCheck.js'
 import { selectQuestions, GUEST_QUESTION_LIMIT } from '../data/selectQuestions.js'
 import { saveScore } from '../lib/leaderboard.js'
@@ -222,16 +222,6 @@ function SqlQuiz() {
         onSelect={handleMcSelect}
         disabled={isFeedback || snapshot.runningAnswer}
         isGuest={isGuest}
-        // Multiple-choice options start masked and cost clock to reveal. The card
-        // only applies this to question.type === 'mc', so a mixed 'all' quiz
-        // leaves its write and bug questions alone.
-        hideOptions
-        // Everything is unmasked once the answer is in — the player has to be
-        // able to read the correct option to learn from the feedback.
-        revealAll={isFeedback}
-        onReveal={() => engine.spendTime(REVEAL_COST)}
-        timeLeft={snapshot.timeLeft}
-        revealCost={REVEAL_COST}
       >
         {(question.type === 'write' || question.type === 'bug') && !isFeedback && (
           <div className="mt-4">

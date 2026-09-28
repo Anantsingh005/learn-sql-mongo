@@ -79,14 +79,6 @@ body {
   .pop-on::after {
     animation: pop-ring 320ms ease-out;
   }
-
-  /* A hidden multiple-choice option unmasking. Deliberately its own class
-     rather than a reuse of .pop-on: that one is documented as belonging to the
-     selected state, and stacking both on one element would mean whichever fired
-     first wins the element and the other animation silently never plays. */
-  .reveal-on {
-    animation: reveal-option 300ms var(--ease-3d);
-  }
 }
 
 /* The level filter arriving under a tapped mode, on a phone only. The
@@ -137,22 +129,6 @@ body {
     transform: translateY(-6px);
   }
   to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* A hidden multiple-choice option unmasking. The small overshoot at 60% is what
-   makes it read as a "pop up" rather than a fade. */
-@keyframes reveal-option {
-  0% {
-    opacity: 0;
-    transform: translateY(6px) scale(0.97);
-  }
-  60% {
-    transform: translateY(-1px) scale(1.008);
-  }
-  100% {
     opacity: 1;
     transform: none;
   }

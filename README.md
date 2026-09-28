@@ -19,8 +19,8 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
   - `fixBug.js` — buggy-query questions (every entry includes a verified `fixedQuery`)
   - `windowCte.js` — window functions and CTEs
   - `schemas.js` — shared in-browser schemas (e.g. `store`)
-- **Auth & leaderboard** — Supabase Auth (email/password + Google) for sign-in; signed-in users submit scores to a public leaderboard. Signup/password-reset go through a custom Edge Function (`supabase/functions/auth`) that uses the Admin API, so no confirmation emails are sent and the hosted email rate limit can't be hit.
-- **Categorized leaderboards** — boards scoped by mode (**MC / Write / Fix Bug / Global**) and difficulty (**Easy / Medium / Hard / All Levels**), on both the standalone `/leaderboard` page and a Profile card that defaults to your most recent category. Rows are ranked by **points → lives left → fastest time**, and signed-in players see their exact rank in the active category even when they're outside the top 10.
+- **Auth & leaderboard** — Supabase Auth (email/password + Google) for sign-in; signed-in users submit scores to a public leaderboard. Signup/password-reset go through a custom Edge Function (`supabase/functions/auth`) that uses the Admin API, so no confirmation emails are sent and the hosted email rate limit can't be hit. The name on a score is set by a database trigger, not by the browser, so a run that finishes before the profile has loaded still records under the right name.
+- **Categorized leaderboards** — boards scoped by mode (**MC / Write / Fix Bug / Global**) and difficulty (**Easy / Medium / Hard / All Levels**), on both the standalone `/leaderboard` page and a Profile card that defaults to your most recent category. Rows are ranked by **points → lives left → fastest time**, and signed-in players see their exact rank in the active category even when they're outside the top 10. A signed-in player with no score on the board yet gets a short callout with a link to play, rather than an empty table. On phones the board opens with no mode picked and asks which one instead of guessing, and the level row is hidden until a mode is chosen.
 - **Profile page** — signed-in users get account details, a per-mode/difficulty progress matrix rendered as **circular progress rings** (level initial / ✔ completed / 🔒 locked, color-coded by level) with level unlocks, session/play-time stats, the leaderboard card, and a **reset-progress** control (a three-step confirmation that clears level progress back to zero, with an option to also archive your score/attempt history).
 - **Per-level progress reports** — every answered question is recorded; each mode+level's report shows best %, a per-question breakdown (✓/✗/○, tries, accuracy), mastered count, and unlock hints. Levels unlock per mode: **Easy** and **Medium** are always available, **Hard** unlocks once both reach 75%, and **All Levels** (the full per-mode bank mixed) unlocks after all three hit 75% — locks are also surfaced on the Profile progress matrix.
 - **Progress tracking** — per-user progress is persisted to Postgres (per-question attempts, completed levels, and best scores).
@@ -55,6 +55,7 @@ npm install
 3. Create the schema by applying the migrations in the Supabase SQL editor:
    - `profiles`, `scores`, `user_progress` tables with Row-Level Security and grants
    - a `handle_new_user` trigger that auto-creates a profile on sign-up
+   - a `scores_set_username` trigger that fills `scores.username` from the profile, so a score never lands as `Anonymous`
    - `password_resets` (single-use, hashed reset codes) with restrictive deny policies
 4. Deploy the auth control plane: `supabase functions deploy auth`, then set the `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` secrets on it (signup/reset call the Admin API).
 5. Copy `.env.example` to `.env` and fill in your project URL and publishable API key (from *Project Settings → API*):
@@ -86,8 +87,23 @@ npm run dev
 | `node scripts/verify-engine.mjs`      | Exercise the quiz engine (timers, extra time) |
 | `node scripts/verify-schemas.mjs`     | Validate question schemas                     |
 | `node scripts/verify-lessons.mjs`     | Run every book example and quiz answer key against sql.js |
+| `node scripts/browser-quiz.mjs`      | Run a full quiz loop in headless Chrome |
+| `node scripts/browser-sql-flow.mjs`  | Check the SQL quiz start flow (mode and level cards) |
+| `node scripts/browser-routes.mjs`     | Check every route loads without a console error |
+| `node scripts/browser-signup.mjs`     | Check the signup flow in headless Chrome |
+
+The `browser-*.mjs` scripts start their own dev server and drive Chrome over the DevTools protocol. They expect Chrome at the default Windows path and port 5173 to be free, so adjust the constants at the top before running them elsewhere.
 
 `verify-lessons.mjs` is the book check. It runs each chapter's SQL on a fresh database per block, asserts the expected rows, confirms documented failures really fail, and verifies the section quizzes: every answer key, every option listed in `distractorIndices` (which must error), and the requirement that **all 40 sections have questions**. Run it from the repo root so it can resolve `sql.js` and the ESM source.
+
+## Deploy
+
+Hosted on Vercel. `vercel.json` sets the build command, the output directory, and a catch-all rewrite to `index.html` so client-side routes work on a hard refresh.
+
+```bash
+npx vercel          # preview deployment
+npx vercel --prod   # production deployment
+```
 
 ## Project Structure
 
