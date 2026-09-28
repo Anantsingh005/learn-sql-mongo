@@ -149,6 +149,45 @@ function rankStyle(rank) {
   return 'border-slate-700 bg-slate-800 text-slate-400'
 }
 
+/**
+ * A board row's numbers.
+ *
+ * The four stats do not fit beside the name on a phone: the group alone runs
+ * about 158px, which leaves under 90px for the name on a 375px screen and forces
+ * it to truncate to a couple of letters. So `dense` moves correct/lives/time to
+ * a second line under the name and leaves only the score beside it. The score is
+ * the one number that never moves — dropping it would be dropping the point of a
+ * leaderboard.
+ *
+ * Lives keeps its green tint only when there are any left, so an empty heart
+ * reads as spent at both sizes.
+ */
+function BoardStats({ row, dense = false, className = '' }) {
+  const correct = `${row.correct_count ?? 0}/${row.total_questions ?? 0}`
+  const lives = `♥${row.lives_left ?? 0}`
+  const time = formatTime(row.time_seconds)
+
+  if (dense) {
+    return (
+      <span className={`block truncate text-[11px] tabular-nums text-slate-500 ${className}`}>
+        {correct} · {lives} · {time}
+      </span>
+    )
+  }
+
+  return (
+    <>
+      <span className="shrink-0 font-bold text-emerald-300">
+        {row.score}
+        <span className="ml-0.5 font-medium text-slate-500">pts</span>
+      </span>
+      <span className="hidden shrink-0 text-slate-400 sm:inline">{correct}</span>
+      <span className={`hidden shrink-0 sm:inline ${row.lives_left > 0 ? 'text-emerald-300/80' : 'text-slate-600'}`}>{lives}</span>
+      <span className="hidden w-10 shrink-0 text-right text-slate-500 sm:inline">{time}</span>
+    </>
+  )
+}
+
 function ProgressRing({ pct = 0, color = '#818cf8', locked = false, done = false, short = '', active = false, size = 52, stroke = 5 }) {
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
@@ -228,6 +267,12 @@ export default function Profile() {
   const [leaderboard, setLeaderboard] = useState(null)
   const [boardTab, setBoardTab] = useState(null)
   const [boardLevel, setBoardLevel] = useState('easy')
+  // Unlike the standalone board, the mode here is auto-picked from your best
+  // score, so it is never null and cannot double as "has this been revealed".
+  // On a phone the level row waits for a real tap even though a mode is already
+  // highlighted; at sm and up it shows regardless, via the `sm:` pair on the
+  // container's className.
+  const [levelsRevealed, setLevelsRevealed] = useState(false)
 
   const [showEdit, setShowEdit] = useState(false)
 
@@ -831,7 +876,7 @@ export default function Profile() {
 
           {boardTab && (
             <>
-              <div className="mb-2 flex flex-wrap gap-1.5">
+              <div className="mb-2 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
                 {BOARD_MODES.map((m) => {
                   const active = boardTab === m.key
                   const a = MODE_ACCENTS[m.key]
@@ -839,11 +884,14 @@ export default function Profile() {
                     <button
                       key={m.key}
                       type="button"
-                      onClick={() => setBoardTab(m.key)}
+                      onClick={() => {
+                        setBoardTab(m.key)
+                        setLevelsRevealed(true)
+                      }}
                       className={
-                        'rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ' +
+                        'relative flex min-h-11 w-full items-center justify-center rounded-lg px-2.5 py-2.5 text-[11px] font-semibold transition-all sm:min-h-0 sm:w-auto sm:py-1 ' +
                         (active
-                          ? `${a.chip} ${a.glow}`
+                          ? `pop-on ${a.chip} ${a.glow}`
                           : 'bg-slate-800/70 text-slate-500 hover:bg-slate-700 hover:text-slate-300')
                       }
                     >
@@ -853,7 +901,19 @@ export default function Profile() {
                 })}
               </div>
               {boardTab !== 'global' && (
-                <div className="mb-3 flex flex-wrap gap-1.5">
+                <div
+                  // Both branches are identical from sm up — the not-revealed one
+                  // is only `hidden` below it — so this is invisible on desktop
+                  // and costs a phone a tap before the levels appear.
+                  className={
+                    levelsRevealed
+                      ? 'reveal-levels mb-1.5 grid grid-cols-2 gap-1.5 sm:mb-3 sm:flex sm:flex-wrap'
+                      : 'mb-3 hidden gap-1.5 sm:flex sm:flex-wrap'
+                  }
+                >
+                  <div className="col-span-full mb-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 sm:hidden">
+                    Level
+                  </div>
                   {levelFilter.map((lv) => {
                     const active = boardLevel === lv.key
                     const a = LEVEL_ACCENTS[lv.key]
@@ -863,9 +923,9 @@ export default function Profile() {
                         type="button"
                         onClick={() => setBoardLevel(lv.key)}
                         className={
-                          'rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ' +
+                          'relative flex min-h-11 w-full items-center justify-center rounded-lg px-2.5 py-2.5 text-[11px] font-semibold transition-all sm:min-h-0 sm:w-auto sm:py-1 ' +
                           (active
-                            ? `${a.chip} ${a.glow}`
+                            ? `pop-on ${a.chip} ${a.glow}`
                             : 'bg-slate-800/50 text-slate-500 hover:bg-slate-800 hover:text-slate-300')
                         }
                       >
@@ -883,10 +943,24 @@ export default function Profile() {
           ) : leaderboard.error ? (
             <p className="py-4 text-center text-sm text-rose-400">{leaderboard.error.message}</p>
           ) : leaderboard.top.length === 0 && !leaderboard.you ? (
-            <p className="py-4 text-center text-sm text-slate-500">
-              No scores yet for {MODE_TITLE[boardTab] ?? 'this category'}
-              {boardTab !== 'global' ? ` · ${LEVEL_TITLE[boardLevel]}` : ''} — sign in and finish a quiz to land on the board!
-            </p>
+            <div className="py-4 text-center">
+              <p className="text-sm text-slate-500">
+                {/* This card is only ever reachable signed in, so the old copy
+                    telling the reader to "sign in" was addressed to someone who
+                    already had. */}
+                {user
+                  ? `No scores yet for ${MODE_TITLE[boardTab] ?? 'this category'}${boardTab !== 'global' ? ` · ${LEVEL_TITLE[boardLevel]}` : ''} — finish a quiz to claim the top spot!`
+                  : 'Sign in and finish a quiz to land on the board!'}
+              </p>
+              {user && (
+                <Link
+                  to={boardTab && boardTab !== 'global' ? `/quiz/sql?mode=${boardTab}&level=easy` : '/quiz/sql'}
+                  className="mt-3 inline-block rounded-lg bg-indigo-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-400"
+                >
+                  Play a quiz
+                </Link>
+              )}
+            </div>
           ) : (
             <ul className="divide-y divide-slate-800/60">
               {leaderboard.top.map((row, idx) => {
@@ -900,20 +974,15 @@ export default function Profile() {
                     <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-black ${rankStyle(rank)}`}>
                       {rank}
                     </span>
-                    <span className={`min-w-0 flex-1 truncate text-sm ${isYou ? 'font-semibold text-white' : 'text-slate-300'}`}>
-                      {row.username || 'Anonymous'}
-                      {isYou ? <span className="ml-2 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-300">you</span> : null}
+                    <span className="min-w-0 flex-1">
+                      <span className={`block truncate text-sm ${isYou ? 'font-semibold text-white' : 'text-slate-300'}`}>
+                        {row.username || 'Anonymous'}
+                        {isYou ? <span className="ml-2 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-300">you</span> : null}
+                      </span>
+                      <BoardStats row={row} dense className="mt-0.5 sm:hidden" />
                     </span>
                     <span className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
-                      <span className="font-bold text-emerald-300">
-                        {row.score}
-                        <span className="ml-0.5 font-medium text-slate-500">pts</span>
-                      </span>
-                      <span className="text-slate-400">
-                        {row.correct_count ?? 0}/{row.total_questions ?? 0}
-                      </span>
-                      <span className={row.lives_left > 0 ? 'text-emerald-300/80' : 'text-slate-600'}>♥{row.lives_left ?? 0}</span>
-                      <span className="w-10 text-right text-slate-500">{formatTime(row.time_seconds)}</span>
+                      <BoardStats row={row} />
                     </span>
                   </li>
                 )
@@ -923,20 +992,15 @@ export default function Profile() {
                   <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-black ${rankStyle(leaderboard.you.rank)}`}>
                     {leaderboard.you.rank}
                   </span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
-                    {leaderboard.you.username || 'You'}
-                    <span className="ml-2 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-300">you</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-white">
+                      {leaderboard.you.username || 'You'}
+                      <span className="ml-2 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-300">you</span>
+                    </span>
+                    <BoardStats row={leaderboard.you} dense className="mt-0.5 sm:hidden" />
                   </span>
                   <span className="flex shrink-0 items-center gap-3 text-xs tabular-nums">
-                    <span className="font-bold text-emerald-300">
-                      {leaderboard.you.score}
-                      <span className="ml-0.5 font-medium text-slate-500">pts</span>
-                    </span>
-                    <span className="text-slate-400">
-                      {leaderboard.you.correct_count ?? 0}/{leaderboard.you.total_questions ?? 0}
-                    </span>
-                    <span className={leaderboard.you.lives_left > 0 ? 'text-emerald-300/80' : 'text-slate-600'}>♥{leaderboard.you.lives_left ?? 0}</span>
-                    <span className="w-10 text-right text-slate-500">{formatTime(leaderboard.you.time_seconds)}</span>
+                    <BoardStats row={leaderboard.you} />
                   </span>
                 </li>
               ) : null}

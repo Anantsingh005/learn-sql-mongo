@@ -23,8 +23,8 @@ const TABLE_TABS = [
 ]
 
 function tabClass(active) {
-  return `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-    active ? 'bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+  return `relative rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+    active ? 'pop-on pop-on-indigo bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
   }`
 }
 
