@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { COMPLETE_THRESHOLD, levelKey } from '../../lib/progress.js'
+import { quizModes } from './ModeSelect.jsx'
 
 function grade(percent) {
   if (percent >= 90) return { letter: 'A', color: 'text-emerald-300', msg: 'Outstanding!' }
@@ -9,12 +10,26 @@ function grade(percent) {
   return { letter: 'F', color: 'text-rose-300', msg: 'Review the explanations below.' }
 }
 
-function saveMessage(status) {
+function saveMessage(status, { modeLabel, username } = {}) {
   switch (status) {
     case 'saving':
       return <span className="text-slate-400">Saving score…</span>
     case 'saved':
-      return <span className="text-emerald-400">Score saved to leaderboard.</span>
+      // A brand-new player has never seen themselves on the board, so "Score
+      // saved" alone leaves the most important part unsaid: which board, and
+      // under what name. This is the one moment we can tell them.
+      return (
+        <span className="text-emerald-400">
+          Saved — you&apos;re on the {modeLabel ?? 'leaderboard'}
+          {username ? (
+            <>
+              {' '}
+              as <span className="font-semibold">{username}</span>
+            </>
+          ) : null}
+          .
+        </span>
+      )
     case 'error':
       return <span className="text-rose-400">Couldn’t save score. Try again later.</span>
     case 'guest':
@@ -31,7 +46,7 @@ function saveMessage(status) {
   }
 }
 
-function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mode, progress = {} }) {
+function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mode, progress = {}, username }) {
   const answers = snapshot.answers
   const correct = answers.filter((a) => a.correct).length
   const total = answers.length
@@ -42,9 +57,13 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
   const hardUnlocked =
     completedLevels.includes(levelKey(mode, 'easy')) && completedLevels.includes(levelKey(mode, 'medium'))
 
+  // The board a finished run lands on, phrased the way the leaderboard phrases
+  // it, so the confirmation and the board the player visits agree.
+  const modeTitle = quizModes.find((m) => m.key === mode)?.title
+  const boardLabel = modeTitle ? `${modeTitle}${difficulty ? ` · ${difficulty}` : ''}` : null
+
   let levelMessage = null
-  if (completedThisRun) {
-    if (difficulty === 'all') {
+  if (completedThisRun) {    if (difficulty === 'all') {
       levelMessage = 'You conquered every level in one run. Legendary!'
     } else if (difficulty === 'hard') {
       levelMessage = 'You conquered the Hard level. Legendary!'
@@ -73,7 +92,9 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
           <span className={snapshot.lives <= 0 ? 'text-rose-300' : ''}>
             {snapshot.lives}/{3} lives
           </span>
-          <span className="font-sans text-xs">{snapshot.elapsedSeconds}s · {saveMessage(saveStatus)}</span>
+          <span className="font-sans text-xs">
+          {snapshot.elapsedSeconds}s · {saveMessage(saveStatus, { modeLabel: boardLabel, username })}
+        </span>
         </div>
 
         <div className="mt-6 flex items-center justify-center gap-3">
