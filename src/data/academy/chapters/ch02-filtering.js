@@ -3,7 +3,8 @@ export default {
   number: 2,
   title: 'Filtering',
   subtitle: 'WHERE, AND/OR/NOT, NULL, IN, BETWEEN, LIKE',
-  accent: '#34d399',
+  accent: '#3d7f55',
+  accentInk: '#316644',
   icon: '⌕',
   practiceTopic: 'table-query',
   objectives: [

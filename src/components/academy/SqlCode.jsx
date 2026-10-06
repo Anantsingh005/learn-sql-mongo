@@ -32,14 +32,14 @@ const RULES = [
 ]
 
 const CLASSES = {
-  keyword: 'text-sky-300',
-  function: 'text-cyan-300',
-  string: 'text-emerald-300',
-  number: 'text-amber-300',
-  comment: 'text-slate-500 italic',
-  punct: 'text-slate-400',
-  name: 'text-slate-100',
-  text: 'text-slate-200',
+  keyword: 'text-brand-700',
+  function: 'text-brand-700',
+  string: 'text-leaf-700',
+  number: 'text-amber-700',
+  comment: 'text-muted italic',
+  punct: 'text-muted',
+  name: 'text-body',
+  text: 'text-body',
 }
 
 function tokenize(code) {
@@ -78,8 +78,6 @@ function tokenize(code) {
   return out
 }
 
-/** A syntax-highlighted SQL listing. No highlighting library is installed, so
- *  this is a small hand-rolled tokenizer scoped to the keywords the book uses. */
 export default function SqlCode({ code }) {
   return (
     <code className="block">

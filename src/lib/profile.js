@@ -67,5 +67,3 @@ export async function resetUserProgress(includeScores) {
     return { error: err }
   }
 }
-
-export default { fetchUserScores, resetUserProgress }

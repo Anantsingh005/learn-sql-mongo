@@ -1,4 +1,4 @@
-export function shuffleOptions(question) {
+﻿export function shuffleOptions(question) {
   if (question.type !== 'mc' || !Array.isArray(question.options) || question.options.length === 0) {
     return question
   }
@@ -14,4 +14,3 @@ export function shuffleOptions(question) {
   }
 }
 
-export default shuffleOptions

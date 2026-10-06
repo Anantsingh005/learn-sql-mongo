@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   BOOK,
   CHAPTERS,
-  UPCOMING_CHAPTERS,
   getChapter,
   neighbour,
   sectionKey,
@@ -26,20 +25,20 @@ import { questionsForSection } from '../data/academy/questions/index.js'
 
 const CHAPTER_DONE = '__chapter__'
 
-function Objectives({ items, accent }) {
+function Objectives({ items, accent, ink = accent }) {
   if (!items?.length) return null
   return (
     <div
-      className="mb-8 rounded-xl border border-slate-900/10 bg-slate-900/[0.04] p-4"
+      className="mb-8 rounded-xl border border-line bg-mist p-4"
       style={{ borderLeft: `3px solid ${accent}` }}
     >
-      <div className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+      <div className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-muted">
         In this chapter
       </div>
       <ul className="mt-2 space-y-1.5">
         {items.map((o, i) => (
-          <li key={i} className="flex gap-2 text-[13px] leading-snug text-slate-700">
-            <span className="font-mono text-[11px]" style={{ color: accent }}>
+          <li key={i} className="flex gap-2 text-[13px] leading-snug text-body">
+            <span className="font-mono text-[11px]" style={{ color: ink }}>
               ▸
             </span>
             <span>{o}</span>
@@ -54,23 +53,23 @@ function Mistakes({ items }) {
   if (!items?.length) return null
   return (
     <section className="mt-9">
-      <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-rose-600">
+      <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-danger-700">
         Common mistakes
       </div>
-      <h3 className="font-serif text-xl font-semibold tracking-tight text-slate-900">
+      <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
         What trips people up
       </h3>
       <ul className="mt-3 space-y-2">
         {items.map((m, i) => (
           <li
             key={i}
-            className="flex gap-2.5 rounded-lg border border-rose-300/70 bg-rose-50/70 px-3.5 py-2.5 text-[13px] leading-relaxed text-rose-900/85"
+            className="flex gap-2.5 rounded-lg border border-danger-200 bg-danger-100 px-3.5 py-2.5 text-[13px] leading-relaxed text-danger-700/85"
           >
-            <span className="font-mono text-[12px] font-black text-rose-500">✗</span>
+            <span className="font-mono text-[12px] font-black text-danger-600">✗</span>
             <Inline
               text={m}
-              codeClass="rounded bg-rose-900/[0.08] px-1.5 py-0.5 font-mono text-[0.82em] text-rose-900 ring-1 ring-rose-900/10"
-              strongClass="font-semibold text-rose-900"
+              codeClass="rounded bg-mist px-1.5 py-0.5 font-mono text-[0.82em] text-danger-700 ring-1 ring-brand-200"
+              strongClass="font-semibold text-danger-700"
             />
           </li>
         ))}
@@ -87,12 +86,12 @@ function ChapterNav({ chapter }) {
     target ? (
       <Link
         to={`/academy/sql/${target.slug}`}
-        className="group flex-1 rounded-xl border border-slate-900/10 bg-white/70 px-4 py-3 transition-colors hover:border-slate-900/25 hover:bg-white"
+        className="group flex-1 rounded-xl border border-line bg-mist px-4 py-3 transition-colors hover:border-brand-600 hover:bg-white"
       >
-        <div className="font-mono text-[10px] uppercase tracking-widest text-slate-500">
+        <div className="font-mono text-[10px] uppercase tracking-widest text-muted">
           {dir === 'prev' ? '← Previous' : 'Next →'}
         </div>
-        <div className="mt-0.5 truncate text-[13px] font-semibold text-slate-800 group-hover:text-slate-900">
+        <div className="mt-0.5 truncate text-[13px] font-semibold text-ink group-hover:text-ink">
           {target.title}
         </div>
       </Link>
@@ -101,7 +100,7 @@ function ChapterNav({ chapter }) {
     )
 
   return (
-    <div className="mt-8 flex gap-3 border-t border-slate-900/10 pt-6">
+    <div className="mt-8 flex gap-3 border-t border-line pt-6">
       {link(prev, 'prev')}
       {link(next, 'next')}
     </div>
@@ -113,14 +112,14 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
   const next = neighbour(chapter.slug, 1)
 
   return (
-    <div className="mt-10 rounded-xl border border-slate-900/10 bg-slate-900/[0.04] p-5">
+    <div className="mt-10 rounded-xl border border-line bg-mist p-5">
       <div className="flex items-center gap-3">
         <ProgressBar
           pct={pct}
           gradient={`linear-gradient(90deg, ${chapter.accent}, ${chapter.accent}66)`}
           className="flex-1"
         />
-        <span className="font-mono text-[10px] text-slate-600">
+        <span className="font-mono text-[10px] text-body">
           {readSections}/{chapter.sections.length}
         </span>
       </div>
@@ -131,8 +130,8 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
           onClick={onToggleRead}
           className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
             chapterDone
-              ? 'border border-emerald-600/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-              : 'border border-slate-900/15 bg-white text-slate-700 hover:border-slate-900/30 hover:bg-slate-900/[0.04] hover:text-slate-900'
+              ? 'border border-leaf-200 bg-leaf-50 text-leaf-700 hover:bg-leaf-50'
+              : 'border border-line bg-white text-body hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700'
           }`}
         >
           {chapterDone ? '✓ Chapter read' : 'Mark chapter as read'}
@@ -141,7 +140,7 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
         <button
           type="button"
           onClick={onPractise}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-950 transition-transform hover:brightness-110"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-transform hover:brightness-110"
           style={{ background: chapter.accent }}
         >
           Practise this chapter →
@@ -150,7 +149,7 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
         {next ? (
           <Link
             to={`/academy/sql/${next.slug}`}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-950 transition-transform hover:brightness-110"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-transform hover:brightness-110"
             style={{ background: chapter.accent }}
           >
             Next chapter →
@@ -158,7 +157,7 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
         ) : (
           <Link
             to="/academy/sql"
-            className="rounded-lg border border-slate-900/15 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-900/30 hover:bg-slate-900/[0.04] hover:text-slate-900"
+            className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-body transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700"
           >
             ← Back to contents
           </Link>
@@ -175,8 +174,6 @@ export default function Chapter() {
 
   const [progress, setProgress] = useState(() => getProgress())
   const [activeId, setActiveId] = useState(null)
-  // The scroll spy takes over as soon as it reports; until then the outline
-  // highlights the opening section, which is what the reader is looking at.
   const activeSectionId = activeId ?? chapter?.sections[0]?.id ?? null
 
   const refresh = useCallback(() => setProgress(getProgress()), [])
@@ -221,7 +218,6 @@ export default function Chapter() {
       .filter(Boolean)
     if (nodes.length === 0) return
 
-    // A band near the top of the viewport decides which section is "current".
     const spy = new IntersectionObserver(
       (entries) => {
         const hit = entries
@@ -232,7 +228,6 @@ export default function Chapter() {
       { rootMargin: '-15% 0px -75% 0px' },
     )
 
-    // A section counts as read once most of it has been on screen.
     const reader = new IntersectionObserver(
       (entries) => {
         let changed = false
@@ -267,13 +262,13 @@ export default function Chapter() {
         <div className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-gradient">
           404
         </div>
-        <h1 className="mt-3 font-serif text-3xl font-semibold text-white">Chapter not found</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Nothing has been written at <span className="font-mono text-slate-300">/academy/sql/{chapterSlug}</span>.
+        <h1 className="mt-3 font-serif text-3xl font-semibold text-ink">Chapter not found</h1>
+        <p className="mt-2 text-sm text-muted">
+          Nothing has been written at <span className="font-mono text-muted">/academy/sql/{chapterSlug}</span>.
         </p>
         <Link
           to="/academy/sql"
-          className="mt-6 inline-block rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500"
+          className="mt-6 inline-block rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700"
         >
           Back to the book
         </Link>
@@ -293,7 +288,7 @@ export default function Chapter() {
       <div className="mx-auto max-w-5xl px-2 pb-10">
         <Link
           to="/academy/sql"
-          className="group inline-flex items-center text-sm text-slate-400 transition-colors hover:text-slate-200"
+          className="group inline-flex items-center text-sm text-muted transition-colors hover:text-body"
         >
           <span className="mr-1 inline-block transition-transform group-hover:-translate-x-1">←</span>
           All chapters
@@ -302,40 +297,40 @@ export default function Chapter() {
         <div className="mt-4 grid gap-8 lg:grid-cols-[186px_minmax(0,1fr)]">
           <ChapterOutline
             chapters={CHAPTERS}
-            upcoming={UPCOMING_CHAPTERS}
             currentSlug={chapter.slug}
             activeId={activeSectionId}
             isRead={isRead}
             onToggleRead={toggleRead}
             accent={chapter.accent}
+            ink={chapter.accentInk}
           />
 
           <PaperSheet accent={chapter.accent}>
             <header>
               <div
                 className="font-mono text-[10px] font-bold uppercase tracking-[0.3em]"
-                style={{ color: chapter.accent }}
+                style={{ color: chapter.accentInk }}
               >
                 Chapter {String(chapter.number).padStart(2, '0')}
               </div>
-              <h1 className="mt-2 font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-slate-900">
+              <h1 className="mt-2 font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-ink">
                 {chapter.title}
               </h1>
-              <p className="mt-2 text-[15px] leading-relaxed text-slate-600">{chapter.subtitle}</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-body">{chapter.subtitle}</p>
 
-              <div className="mt-5 flex items-center gap-3 border-t border-slate-900/10 pt-4">
+              <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
                 <ProgressBar
                   pct={Math.round((readSections / chapter.sections.length) * 100)}
                   gradient={`linear-gradient(90deg, ${chapter.accent}, ${chapter.accent}66)`}
                   className="flex-1"
                 />
-                <span className="font-mono text-[10px] text-slate-500">
+                <span className="font-mono text-[10px] text-muted">
                   {readSections}/{chapter.sections.length} read
                 </span>
               </div>
             </header>
 
-            <Objectives items={chapter.objectives} accent={chapter.accent} />
+            <Objectives items={chapter.objectives} accent={chapter.accent} ink={chapter.accentInk} />
 
             {chapter.sections.map((section) => {
               const key = sectionKey(chapter.slug, section.id)
@@ -345,16 +340,16 @@ export default function Chapter() {
                   key={section.id}
                   id={key}
                   data-section={section.id}
-                  className="scroll-mt-24 border-t border-slate-900/10 pt-8 mt-8 first:border-t-0"
+                  className="scroll-mt-24 border-t border-line pt-8 mt-8 first:border-t-0"
                 >
                   <div className="mb-3 flex items-baseline gap-3">
                     <span
                       className="font-mono text-sm font-black"
-                      style={{ color: chapter.accent }}
+                      style={{ color: chapter.accentInk }}
                     >
                       {section.number}
                     </span>
-                    <h2 className="font-serif text-2xl font-semibold tracking-tight text-slate-900">
+                    <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
                       {section.title}
                     </h2>
                     <button
@@ -364,8 +359,8 @@ export default function Chapter() {
                       title={done ? 'Mark as unread' : 'Mark as read'}
                       className={`ml-auto shrink-0 rounded-md px-2 py-0.5 font-mono text-[11px] transition-colors ${
                         done
-                          ? 'bg-emerald-500/15 text-emerald-600'
-                          : 'text-slate-400 hover:bg-slate-900/[0.06] hover:text-slate-700'
+                          ? 'bg-leaf-50 text-leaf-700'
+                          : 'text-muted hover:bg-mist hover:text-body'
                       }`}
                     >
                       {done ? '✓ read' : '○ mark read'}
@@ -374,20 +369,21 @@ export default function Chapter() {
 
                   <div className="space-y-5">
                     {section.blocks.map((block, i) => (
-                      <ReadingBlock key={i} block={block} accent={chapter.accent} />
+                      <ReadingBlock key={i} block={block} accent={chapter.accent} ink={chapter.accentInk} />
                     ))}
                   </div>
 
                   <SectionQuiz
                     questions={questionsForSection(chapter.slug, section.id)}
                     accent={chapter.accent}
+                    ink={chapter.accentInk}
                   />
                 </section>
               )
             })}
 
             <Mistakes items={chapter.commonMistakes} />
-            <Cheatsheet cheatsheet={chapter.cheatsheet} accent={chapter.accent} />
+            <Cheatsheet cheatsheet={chapter.cheatsheet} accent={chapter.accent} ink={chapter.accentInk} />
 
             <ChapterFooter
               chapter={chapter}

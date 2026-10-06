@@ -14,11 +14,6 @@ export async function saveScore({ game, mode, level, score, time, correctCount =
   if (!supabase) return { error: new Error('Supabase is not configured.') }
   if (!userId) return { error: new Error('Not signed in.') }
   try {
-    // `username` is only a fallback now. The scores_set_username BEFORE INSERT
-    // trigger overwrites it from `profiles`, because the client cannot be trusted
-    // with the name: AuthContext publishes `user` before `profile` resolves, so
-    // a run finished in that window used to land as 'Anonymous' while the UI
-    // still reported success.
     const { error } = await supabase.from('scores').insert({
       user_id: userId,
       username: (username || 'Anonymous').slice(0, 24),
@@ -106,5 +101,3 @@ export async function fetchPlayerSnapshot({ game = 'sql', mode = null, level = n
     return { top: [], you: null, error: err }
   }
 }
-
-export default { saveScore, fetchTopScores, fetchPlayerSnapshot }

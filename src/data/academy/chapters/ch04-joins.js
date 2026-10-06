@@ -3,7 +3,8 @@ export default {
   number: 4,
   title: 'Joins',
   subtitle: 'Putting two tables side by side, and losing rows without noticing',
-  accent: '#818cf8',
+  accent: '#2f6ad0',
+  accentInk: '#1449a3',
   icon: '⋈',
   practiceTopic: 'joins',
   objectives: [

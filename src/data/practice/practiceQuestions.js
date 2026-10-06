@@ -24,8 +24,6 @@ export const PRACTICE_POINTS = { easy: 10, medium: 20, hard: 30 }
 
 let loaded = null
 
-export const allPracticeQuestions = bundled
-
 export function loadPracticeQuestions() {
   if (!loaded) loaded = bundled
   return Promise.resolve(loaded)

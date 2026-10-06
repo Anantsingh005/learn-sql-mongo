@@ -3,7 +3,8 @@ export default {
   number: 6,
   title: 'Aggregation & GROUP BY',
   subtitle: 'COUNT, SUM, HAVING, and collapsing many rows into one',
-  accent: '#fb923c',
+  accent: '#a5680f',
+  accentInk: '#8a550b',
   icon: 'Σ',
   practiceTopic: 'aggregation',
   objectives: [

@@ -24,10 +24,10 @@ const MODE_TITLE = { mc: 'Multiple Choice', write: 'Write a Query', bug: 'Fix th
 const LEVEL_TITLE = { easy: 'Easy', medium: 'Medium', hard: 'Hard', all: 'All Levels' }
 
 const LEVELS = [
-  { key: 'easy', label: 'Easy', desc: 'Warm up', short: 'E', bar: 'from-emerald-400 to-teal-400', tag: 'text-emerald-300', ring: 'border-emerald-500/50', chip: 'bg-emerald-500/15 text-emerald-300', glow: 'shadow-[0_0_18px_rgba(16,185,129,0.25)]', hex: '#34d399' },
-  { key: 'medium', label: 'Medium', desc: 'Getting sharp', short: 'M', bar: 'from-amber-400 to-orange-400', tag: 'text-amber-300', ring: 'border-amber-500/50', chip: 'bg-amber-500/15 text-amber-300', glow: 'shadow-[0_0_18px_rgba(245,158,11,0.25)]', hex: '#fbbf24' },
-  { key: 'hard', label: 'Hard', desc: 'The real boss fight', short: 'H', bar: 'from-rose-400 to-pink-400', tag: 'text-rose-300', ring: 'border-rose-500/50', chip: 'bg-rose-500/15 text-rose-300', glow: 'shadow-[0_0_18px_rgba(244,63,94,0.25)]', hex: '#fb7185' },
-  { key: 'all', label: 'All Levels', desc: 'Every question, mixed', short: 'A', bar: 'from-cyan-400 to-fuchsia-400', tag: 'text-cyan-300', ring: 'border-cyan-500/40', chip: 'bg-cyan-500/15 text-cyan-300', glow: 'shadow-[0_0_18px_rgba(34,211,238,0.25)]', hex: '#22d3ee' },
+  { key: 'easy', label: 'Easy', desc: 'Warm up', short: 'E', bar: 'from-leaf-500 to-leaf-400', tag: 'text-leaf-700', ring: 'border-leaf-200', chip: 'bg-leaf-50 text-leaf-700', glow: 'shadow-[0_2px_10px_rgba(#3d7f55,0.22)]', hex: '#3d7f55' },
+  { key: 'medium', label: 'Medium', desc: 'Getting sharp', short: 'M', bar: 'from-amber-500 to-amber-400', tag: 'text-amber-700', ring: 'border-amber-200', chip: 'bg-amber-50 text-amber-700', glow: 'shadow-[0_2px_10px_rgba(#a5680f,0.22)]', hex: '#a5680f' },
+  { key: 'hard', label: 'Hard', desc: 'The real boss fight', short: 'H', bar: 'from-danger-500 to-plum-400', tag: 'text-danger-700', ring: 'border-danger-200', chip: 'bg-danger-50 text-danger-700', glow: 'shadow-[0_2px_10px_rgba(#b03333,0.22)]', hex: '#d24444' },
+  { key: 'all', label: 'All Levels', desc: 'Every question, mixed', short: 'A', bar: 'from-brand-500 to-plum-400', tag: 'text-brand-700', ring: 'border-brand-200', chip: 'bg-brand-50 text-brand-700', glow: 'shadow-[0_2px_10px_rgba(#1554c7,0.22)]', hex: '#1554c7' },
 ]
 
 const LOCK_HINTS = {
@@ -44,47 +44,47 @@ const levelFilter = [
 
 const MODE_ACCENTS = {
   mc: {
-    strip: 'from-indigo-400 to-cyan-400',
-    chip: 'border-indigo-500/40 bg-indigo-500/15 text-indigo-300',
-    glow: 'shadow-[0_0_14px_rgba(129,140,248,0.35)]',
-    tag: 'text-indigo-300',
+    strip: 'from-brand-500 to-brand-400',
+    chip: 'border-brand-200 bg-brand-50 text-brand-700',
+    glow: 'shadow-[0_2px_10px_rgba(#2f6ad0,0.22)]',
+    tag: 'text-brand-700',
   },
   write: {
-    strip: 'from-emerald-400 to-teal-400',
-    chip: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
-    glow: 'shadow-[0_0_14px_rgba(52,211,153,0.35)]',
-    tag: 'text-emerald-300',
+    strip: 'from-leaf-500 to-leaf-400',
+    chip: 'border-leaf-200 bg-leaf-50 text-leaf-700',
+    glow: 'shadow-[0_2px_10px_rgba(#4c9a68,0.22)]',
+    tag: 'text-leaf-700',
   },
   bug: {
-    strip: 'from-rose-400 to-orange-400',
-    chip: 'border-rose-500/40 bg-rose-500/15 text-rose-300',
-    glow: 'shadow-[0_0_14px_rgba(251,113,133,0.35)]',
-    tag: 'text-rose-300',
+    strip: 'from-danger-500 to-amber-400',
+    chip: 'border-danger-200 bg-danger-50 text-danger-700',
+    glow: 'shadow-[0_2px_10px_rgba(#d24444,0.22)]',
+    tag: 'text-danger-700',
   },
   global: {
-    strip: 'from-cyan-400 to-fuchsia-400',
-    chip: 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300',
-    glow: 'shadow-[0_0_14px_rgba(34,211,238,0.35)]',
-    tag: 'text-cyan-300',
+    strip: 'from-brand-500 to-plum-400',
+    chip: 'border-brand-200 bg-brand-50 text-brand-700',
+    glow: 'shadow-[0_2px_10px_rgba(#1554c7,0.22)]',
+    tag: 'text-brand-700',
   },
 }
 
 const LEVEL_ACCENTS = {
   easy: {
-    chip: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
-    glow: 'shadow-[0_0_12px_rgba(16,185,129,0.35)]',
+    chip: 'border-leaf-200 bg-leaf-50 text-leaf-700',
+    glow: 'shadow-[0_0_12px_rgba(#3d7f55,0.22)]',
   },
   medium: {
-    chip: 'border-amber-500/40 bg-amber-500/15 text-amber-300',
-    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.35)]',
+    chip: 'border-amber-200 bg-amber-50 text-amber-700',
+    glow: 'shadow-[0_0_12px_rgba(#a5680f,0.22)]',
   },
   hard: {
-    chip: 'border-rose-500/40 bg-rose-500/15 text-rose-300',
-    glow: 'shadow-[0_0_12px_rgba(244,63,94,0.35)]',
+    chip: 'border-danger-200 bg-danger-50 text-danger-700',
+    glow: 'shadow-[0_0_12px_rgba(#b03333,0.22)]',
   },
   all: {
-    chip: 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300',
-    glow: 'shadow-[0_0_12px_rgba(34,211,238,0.3)]',
+    chip: 'border-brand-200 bg-brand-50 text-brand-700',
+    glow: 'shadow-[0_0_12px_rgba(#1554c7,0.22)]',
   },
 }
 
@@ -143,25 +143,12 @@ function gameStats(rows, game) {
 }
 
 function rankStyle(rank) {
-  if (rank === 1) return 'border-amber-400/60 bg-amber-500/15 text-amber-300'
-  if (rank === 2) return 'border-slate-300/50 bg-slate-200/15 text-slate-200'
-  if (rank === 3) return 'border-amber-700/70 bg-amber-700/20 text-amber-500'
-  return 'border-slate-700 bg-slate-800 text-slate-400'
+  if (rank === 1) return 'border-amber-200 bg-amber-50 text-amber-700'
+  if (rank === 2) return 'border-line/50 bg-mist/15 text-body'
+  if (rank === 3) return 'border-amber-200 bg-amber-100 text-amber-700'
+  return 'border-line bg-line text-muted'
 }
 
-/**
- * A board row's numbers.
- *
- * The four stats do not fit beside the name on a phone: the group alone runs
- * about 158px, which leaves under 90px for the name on a 375px screen and forces
- * it to truncate to a couple of letters. So `dense` moves correct/lives/time to
- * a second line under the name and leaves only the score beside it. The score is
- * the one number that never moves — dropping it would be dropping the point of a
- * leaderboard.
- *
- * Lives keeps its green tint only when there are any left, so an empty heart
- * reads as spent at both sizes.
- */
 function BoardStats({ row, dense = false, className = '' }) {
   const correct = `${row.correct_count ?? 0}/${row.total_questions ?? 0}`
   const lives = `♥${row.lives_left ?? 0}`
@@ -169,7 +156,7 @@ function BoardStats({ row, dense = false, className = '' }) {
 
   if (dense) {
     return (
-      <span className={`block truncate text-[11px] tabular-nums text-slate-500 ${className}`}>
+      <span className={`block truncate text-[11px] tabular-nums text-muted ${className}`}>
         {correct} · {lives} · {time}
       </span>
     )
@@ -177,18 +164,18 @@ function BoardStats({ row, dense = false, className = '' }) {
 
   return (
     <>
-      <span className="shrink-0 font-bold text-emerald-300">
+      <span className="shrink-0 font-bold text-leaf-700">
         {row.score}
-        <span className="ml-0.5 font-medium text-slate-500">pts</span>
+        <span className="ml-0.5 font-medium text-muted">pts</span>
       </span>
-      <span className="hidden shrink-0 text-slate-400 sm:inline">{correct}</span>
-      <span className={`hidden shrink-0 sm:inline ${row.lives_left > 0 ? 'text-emerald-300/80' : 'text-slate-600'}`}>{lives}</span>
-      <span className="hidden w-10 shrink-0 text-right text-slate-500 sm:inline">{time}</span>
+      <span className="hidden shrink-0 text-muted sm:inline">{correct}</span>
+      <span className={`hidden shrink-0 sm:inline ${row.lives_left > 0 ? 'text-leaf-700/80' : 'text-body'}`}>{lives}</span>
+      <span className="hidden w-10 shrink-0 text-right text-muted sm:inline">{time}</span>
     </>
   )
 }
 
-function ProgressRing({ pct = 0, color = '#818cf8', locked = false, done = false, short = '', active = false, size = 52, stroke = 5 }) {
+function ProgressRing({ pct = 0, color = '#2f6ad0', locked = false, done = false, short = '', active = false, size = 52, stroke = 5 }) {
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
   const clamped = Math.max(0, Math.min(100, pct))
@@ -196,7 +183,7 @@ function ProgressRing({ pct = 0, color = '#818cf8', locked = false, done = false
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(148,163,184,0.14)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(#8fa8bf,0.14)" strokeWidth={stroke} />
         {!locked && clamped > 0 && (
           <circle
             cx={size / 2}
@@ -216,9 +203,9 @@ function ProgressRing({ pct = 0, color = '#818cf8', locked = false, done = false
         {locked ? (
           <span className="text-sm">🔒</span>
         ) : done ? (
-          <span className="text-sm font-black text-emerald-300">✔</span>
+          <span className="text-sm font-black text-leaf-700">✔</span>
         ) : (
-          <span className={`text-xs font-black ${active ? 'text-white' : 'text-slate-500'}`}>{short}</span>
+          <span className={`text-xs font-black ${active ? 'text-ink' : 'text-muted'}`}>{short}</span>
         )}
       </div>
     </div>
@@ -228,7 +215,7 @@ function ProgressRing({ pct = 0, color = '#818cf8', locked = false, done = false
 function Field({ label, type = 'text', value, onChange, placeholder, autoComplete, disabled }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-slate-400">{label}</span>
+      <span className="mb-1 block text-xs font-semibold text-muted">{label}</span>
       <input
         type={type}
         value={value}
@@ -236,7 +223,7 @@ function Field({ label, type = 'text', value, onChange, placeholder, autoComplet
         placeholder={placeholder}
         autoComplete={autoComplete}
         disabled={disabled}
-        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-indigo-500 disabled:opacity-50"
+        className="w-full rounded-xl border border-line bg-white px-4 py-2 text-sm text-ink placeholder-muted outline-none transition-colors focus:border-brand-200 disabled:opacity-50"
       />
     </label>
   )
@@ -244,8 +231,8 @@ function Field({ label, type = 'text', value, onChange, placeholder, autoComplet
 
 function Section({ title, children, danger }) {
   return (
-    <section className={`rounded-2xl border bg-slate-900 p-5 ${danger ? 'border-rose-800/60' : 'border-slate-800'}`}>
-      <h3 className={`mb-4 text-sm font-semibold uppercase tracking-wider ${danger ? 'text-rose-400' : 'text-slate-400'}`}>{title}</h3>
+    <section className={`rounded-2xl border bg-white p-5 ${danger ? 'border-line/60' : 'border-line'}`}>
+      <h3 className={`mb-4 text-sm font-semibold uppercase tracking-wider ${danger ? 'text-danger-600' : 'text-muted'}`}>{title}</h3>
       {children}
     </section>
   )
@@ -253,7 +240,7 @@ function Section({ title, children, danger }) {
 
 function Feedback({ error, message }) {
   if (!error && !message) return null
-  return <p className={`text-sm ${error ? 'text-rose-400' : 'text-emerald-400'}`}>{error || message}</p>
+  return <p className={`text-sm ${error ? 'text-danger-600' : 'text-leaf-600'}`}>{error || message}</p>
 }
 
 function avatarPreviewUrl(profile) {
@@ -267,11 +254,6 @@ export default function Profile() {
   const [leaderboard, setLeaderboard] = useState(null)
   const [boardTab, setBoardTab] = useState(null)
   const [boardLevel, setBoardLevel] = useState('easy')
-  // Unlike the standalone board, the mode here is auto-picked from your best
-  // score, so it is never null and cannot double as "has this been revealed".
-  // On a phone the level row waits for a real tap even though a mode is already
-  // highlighted; at sm and up it shows regardless, via the `sm:` pair on the
-  // container's className.
   const [levelsRevealed, setLevelsRevealed] = useState(false)
 
   const [showEdit, setShowEdit] = useState(false)
@@ -371,7 +353,7 @@ export default function Profile() {
 
   if (!isSupabaseConfigured) {
     return (
-      <div className="mx-auto max-w-lg py-16 text-center text-sm text-slate-500">
+      <div className="mx-auto max-w-lg py-16 text-center text-sm text-muted">
         Profile is unavailable until Supabase is configured.
       </div>
     )
@@ -380,9 +362,9 @@ export default function Profile() {
   if (!user) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
-        <h1 className="text-2xl font-bold text-white">Your profile</h1>
-        <p className="mt-3 text-sm text-slate-400">Sign in to see your account details and game progress.</p>
-        <Link to="/auth" className="mt-6 inline-block rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500">
+        <h1 className="text-2xl font-bold text-ink">Your profile</h1>
+        <p className="mt-3 text-sm text-muted">Sign in to see your account details and game progress.</p>
+        <Link to="/auth" className="mt-6 inline-block rounded-full bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-700">
           Sign in
         </Link>
       </div>
@@ -519,27 +501,27 @@ export default function Profile() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900">
-        <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full border border-indigo-500/20" />
-        <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full border border-fuchsia-500/20" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 h-48 w-48 rounded-full border border-cyan-500/10" />
+      <div className="relative overflow-hidden rounded-[2rem] border border-line bg-white">
+        <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full border border-brand-200" />
+        <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full border border-plum-200" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 h-48 w-48 rounded-full border border-brand-200" />
 
         <div className="relative flex flex-col items-center gap-4 px-6 py-8 sm:flex-row sm:gap-6">
           {avatar ? (
             <img
               src={avatar}
               alt="Your avatar"
-              className="h-20 w-20 shrink-0 rounded-full border border-indigo-400/40 object-cover shadow-[0_0_24px_rgba(99,102,241,0.4)]"
+              className="h-20 w-20 shrink-0 rounded-full border border-brand-200 object-cover shadow-[0_2px_10px_rgba(#1554c7,0.22)]"
             />
           ) : (
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-indigo-400/40 bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-3xl font-black text-white shadow-[0_0_24px_rgba(99,102,241,0.4)]">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-brand-200 bg-gradient-to-br from-brand-100 to-plum-100 text-3xl font-black text-ink shadow-[0_2px_10px_rgba(#1554c7,0.22)]">
               {initialFor({ profile, user })}
             </div>
           )}
           <div className="text-center sm:text-left">
-            <h1 className="text-2xl font-bold text-white">{profile?.username ?? 'player'}</h1>
-            {profile?.name && <div className="text-sm text-slate-300">{profile.name}</div>}
-            <div className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-slate-500 sm:justify-start">
+            <h1 className="text-2xl font-bold text-ink">{profile?.username ?? 'player'}</h1>
+            {profile?.name && <div className="text-sm text-muted">{profile.name}</div>}
+            <div className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted sm:justify-start">
               <span>{user.email}</span>
               <span>Member since {formatDate(profile?.created_at)}</span>
             </div>
@@ -548,14 +530,14 @@ export default function Profile() {
             <button
               type="button"
               onClick={() => setShowEdit((s) => !s)}
-              className="rounded-full border border-indigo-700/60 px-4 py-2 text-sm font-medium text-indigo-300 transition-colors hover:bg-indigo-500/10"
+              className="rounded-full border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
             >
               {showEdit ? 'Close editor' : 'Edit profile'}
             </button>
             <button
               type="button"
               onClick={signOut}
-              className="rounded-full border border-rose-700/60 px-4 py-2 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/10"
+              className="rounded-full border border-danger-200 px-4 py-2 text-sm font-medium text-danger-700 transition-colors hover:bg-danger-50"
             >
               Sign out
             </button>
@@ -568,9 +550,9 @@ export default function Profile() {
           <Section title="Avatar">
             <div className="flex flex-wrap items-center gap-4">
               {avatar ? (
-                <img src={avatar} alt="Avatar preview" className="h-16 w-16 rounded-full border border-slate-700 object-cover" />
+                <img src={avatar} alt="Avatar preview" className="h-16 w-16 rounded-full border border-line object-cover" />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-700 bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-xl font-black text-white">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-line bg-gradient-to-br from-brand-100 to-plum-100 text-xl font-black text-ink">
                   {initialFor({ profile, user })}
                 </div>
               )}
@@ -580,7 +562,7 @@ export default function Profile() {
                   type="button"
                   disabled={avatarBusy}
                   onClick={() => fileInputRef.current?.click()}
-                  className="rounded-full border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                  className="rounded-full border border-line px-4 py-2 text-sm font-medium text-body transition-colors hover:bg-line disabled:opacity-40"
                 >
                   {avatarFile ? 'Choose another' : 'Change photo'}
                 </button>
@@ -589,7 +571,7 @@ export default function Profile() {
                     type="button"
                     disabled={avatarBusy}
                     onClick={handleUploadAvatar}
-                    className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-40"
+                    className="rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-40"
                   >
                     {avatarBusy ? 'Uploading…' : 'Save photo'}
                   </button>
@@ -599,14 +581,14 @@ export default function Profile() {
                     type="button"
                     disabled={avatarBusy}
                     onClick={handleRemoveAvatar}
-                    className="rounded-full border border-rose-700/60 px-4 py-2 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/10 disabled:opacity-40"
+                    className="rounded-full border border-danger-200 px-4 py-2 text-sm font-medium text-danger-700 transition-colors hover:bg-danger-50 disabled:opacity-40"
                   >
                     Remove
                   </button>
                 )}
               </div>
             </div>
-            <p className="mt-3 text-xs text-slate-500">PNG, JPEG or WebP, up to 2 MB.</p>
+            <p className="mt-3 text-xs text-muted">PNG, JPEG or WebP, up to 2 MB.</p>
             <div className="mt-2"><Feedback error={avatarError} message={avatarMessage} /></div>
           </Section>
 
@@ -619,7 +601,7 @@ export default function Profile() {
                 <button
                   type="submit"
                   disabled={identityBusy}
-                  className="mt-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="mt-2 rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {identityBusy ? 'Saving…' : 'Save details'}
                 </button>
@@ -628,8 +610,8 @@ export default function Profile() {
           </Section>
 
           <Section title="Email">
-            <p className="mb-4 text-sm text-slate-400">
-              You are signed in as <span className="text-slate-200">{user.email}</span>. Changing your email takes effect instantly — no confirmation email is sent.
+            <p className="mb-4 text-sm text-muted">
+              You are signed in as <span className="text-body">{user.email}</span>. Changing your email takes effect instantly — no confirmation email is sent.
             </p>
             <form onSubmit={handleChangeEmail} className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <div className="flex-1">
@@ -638,7 +620,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={emailBusy || !emailField.trim()}
-                className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {emailBusy ? 'Working…' : 'Change email'}
               </button>
@@ -655,7 +637,7 @@ export default function Profile() {
                 <button
                   type="submit"
                   disabled={passwordBusy || newPassword.length < 6 || newPassword !== confirmPassword}
-                  className="mt-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="mt-2 rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {passwordBusy ? 'Working…' : 'Update password'}
                 </button>
@@ -664,10 +646,10 @@ export default function Profile() {
           </Section>
 
           <Section title="Reset progress" danger>
-            <p className="mb-2 text-sm text-slate-400">
+            <p className="mb-2 text-sm text-muted">
               Reset your SQL and Mongo level progress back to zero — locked levels, best scores, and completed markers are cleared.
             </p>
-            <p className="mb-4 text-sm text-slate-500">
+            <p className="mb-4 text-sm text-muted">
               Your leaderboard scores stay on the public board.
             </p>
             {resetStep === 0 ? (
@@ -678,22 +660,22 @@ export default function Profile() {
                   setResetMessage(null)
                   setResetStep(1)
                 }}
-                className="rounded-full border border-rose-700/60 px-5 py-2 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/10"
+                className="rounded-full border border-danger-200 px-5 py-2 text-sm font-medium text-danger-700 transition-colors hover:bg-danger-50"
               >
                 Reset progress
               </button>
             ) : null}
             {resetStep === 1 ? (
-              <div className="rounded-xl border border-rose-800/60 bg-rose-950/30 p-4">
-                <p className="mb-3 text-sm text-slate-300">
-                  This resets <span className="font-semibold text-white">SQL and Mongo level progress to zero</span> — locked levels, best scores and completed markers are cleared.
+              <div className="rounded-xl border border-line/60 bg-white/30 p-4">
+                <p className="mb-3 text-sm text-muted">
+                  This resets <span className="font-semibold text-ink">SQL and Mongo level progress to zero</span> — locked levels, best scores and completed markers are cleared.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     disabled={resetBusy}
                     onClick={() => setResetStep(2)}
-                    className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-full bg-danger-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-danger-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Yes, reset progress
                   </button>
@@ -701,7 +683,7 @@ export default function Profile() {
                     type="button"
                     disabled={resetBusy}
                     onClick={() => setResetStep(0)}
-                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                    className="rounded-full border border-line px-5 py-2 text-sm font-medium text-body transition-colors hover:bg-line disabled:opacity-40"
                   >
                     Cancel
                   </button>
@@ -709,9 +691,9 @@ export default function Profile() {
               </div>
             ) : null}
             {resetStep === 2 ? (
-              <div className="rounded-xl border border-rose-800/60 bg-rose-950/30 p-4">
-                <p className="mb-3 text-sm text-slate-300">
-                  Do you also want to clear your <span className="font-semibold text-white">Practice &amp; sessions and Recent sessions</span>? Your score and attempt history will be archived.
+              <div className="rounded-xl border border-line/60 bg-white/30 p-4">
+                <p className="mb-3 text-sm text-muted">
+                  Do you also want to clear your <span className="font-semibold text-ink">Practice &amp; sessions and Recent sessions</span>? Your score and attempt history will be archived.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -721,7 +703,7 @@ export default function Profile() {
                       setPendingScores(true)
                       setResetStep(3)
                     }}
-                    className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-full bg-danger-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-danger-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Yes, reset everything
                   </button>
@@ -732,7 +714,7 @@ export default function Profile() {
                       setPendingScores(false)
                       setResetStep(3)
                     }}
-                    className="rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-full bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     No, just level progress
                   </button>
@@ -740,7 +722,7 @@ export default function Profile() {
                     type="button"
                     disabled={resetBusy}
                     onClick={() => setResetStep(0)}
-                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                    className="rounded-full border border-line px-5 py-2 text-sm font-medium text-body transition-colors hover:bg-line disabled:opacity-40"
                   >
                     Cancel
                   </button>
@@ -748,10 +730,10 @@ export default function Profile() {
               </div>
             ) : null}
             {resetStep === 3 ? (
-              <div className="rounded-xl border border-rose-800/60 bg-rose-950/30 p-4">
-                <p className="mb-3 text-sm text-slate-300">
+              <div className="rounded-xl border border-line/60 bg-white/30 p-4">
+                <p className="mb-3 text-sm text-muted">
                   Are you absolutely sure? This{' '}
-                  <span className="font-semibold text-white">{pendingScores ? 'clears your level progress and archives your session history' : 'clears your level progress'}</span>
+                  <span className="font-semibold text-ink">{pendingScores ? 'clears your level progress and archives your session history' : 'clears your level progress'}</span>
                   — it cannot be undone.
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -759,7 +741,7 @@ export default function Profile() {
                     type="button"
                     disabled={resetBusy}
                     onClick={() => handleResetLevels(pendingScores)}
-                    className="rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-full bg-danger-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-danger-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {resetBusy ? 'Resetting…' : 'Yes, I’m sure — reset'}
                   </button>
@@ -767,7 +749,7 @@ export default function Profile() {
                     type="button"
                     disabled={resetBusy}
                     onClick={() => setResetStep(2)}
-                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                    className="rounded-full border border-line px-5 py-2 text-sm font-medium text-body transition-colors hover:bg-line disabled:opacity-40"
                   >
                     Back
                   </button>
@@ -775,7 +757,7 @@ export default function Profile() {
                     type="button"
                     disabled={resetBusy}
                     onClick={() => setResetStep(0)}
-                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+                    className="rounded-full border border-line px-5 py-2 text-sm font-medium text-body transition-colors hover:bg-line disabled:opacity-40"
                   >
                     Cancel
                   </button>
@@ -789,20 +771,20 @@ export default function Profile() {
 
       <div>
         <div className="mb-3 flex items-baseline justify-between gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">SQL game progress</h2>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-slate-600">3 modes · 4 levels</span>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">SQL game progress</h2>
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-body">3 modes · 4 levels</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {MODES.map((mode) => {
             const a = MODE_ACCENTS[mode.key]
             return (
-              <div key={mode.key} className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4">
+              <div key={mode.key} className="relative overflow-hidden rounded-2xl border border-line bg-white p-4">
                 <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${a.strip} opacity-80`} />
                 <div className="mb-3 flex items-center gap-2">
                   <span className={`rounded-lg border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wider ${a.chip}`}>
                     {mode.key.toUpperCase()}
                   </span>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">{mode.label}</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted">{mode.label}</span>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
                   {LEVELS.map((lv) => {
@@ -816,7 +798,7 @@ export default function Profile() {
                         key={lv.key}
                         to={`/profile/report/${mode.key}/${lv.key}`}
                         title={`View ${mode.label} · ${lv.label} report`}
-                        className="group flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2.5 transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-800/60"
+                        className="group flex items-center gap-3 rounded-xl border border-line bg-white/60 px-3 py-2.5 transition-all hover:-translate-y-0.5 hover:border-line hover:bg-line/60"
                       >
                         <ProgressRing
                           pct={pct}
@@ -827,21 +809,21 @@ export default function Profile() {
                           active={unlocked && active}
                         />
                         <div className="min-w-0 flex-1">
-                          <div className={`truncate text-sm font-semibold ${unlocked ? 'text-white' : 'text-slate-400'}`}>{lv.label}</div>
-                          <div className="truncate text-[10px] text-slate-500">{unlocked ? lv.desc : LOCK_HINTS[lv.key] ?? 'locked'}</div>
+                          <div className={`truncate text-sm font-semibold ${unlocked ? 'text-ink' : 'text-muted'}`}>{lv.label}</div>
+                          <div className="truncate text-[10px] text-muted">{unlocked ? lv.desc : LOCK_HINTS[lv.key] ?? 'locked'}</div>
                           <div className="mt-1 text-[10px]">
                             {done ? (
-                              <span className="font-semibold text-emerald-300">✔ completed</span>
+                              <span className="font-semibold text-leaf-700">✔ completed</span>
                             ) : active ? (
                               <span className={`font-mono font-bold ${lv.tag}`}>{pct}%</span>
                             ) : unlocked ? (
-                              <span className="text-slate-600">not started</span>
+                              <span className="text-body">not started</span>
                             ) : (
-                              <span className="rounded-full border border-slate-700 bg-slate-800/60 px-1.5 py-px font-semibold text-slate-500">locked</span>
+                              <span className="rounded-full border border-line bg-line/60 px-1.5 py-px font-semibold text-muted">locked</span>
                             )}
                           </div>
                         </div>
-                        <span className="text-[10px] text-slate-600 transition-transform group-hover:translate-x-0.5" aria-hidden="true">›</span>
+                        <span className="text-[10px] text-body transition-transform group-hover:translate-x-0.5" aria-hidden="true">›</span>
                       </Link>
                     )
                   })}
@@ -851,15 +833,15 @@ export default function Profile() {
           })}
         </div>
         {(mongoProgress.completed ?? []).length > 0 || Object.keys(mongoProgress.best ?? {}).length > 0 ? (
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-muted">
             Mongo progress saved: {mongoProgress.completed.length} completed level{(mongoProgress.completed.length === 1 ? '' : 's')}.
           </p>
         ) : null}
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">Leaderboard</h2>
-        <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">Leaderboard</h2>
+        <div className="relative overflow-hidden rounded-2xl border border-line bg-white p-4 sm:p-5">
           <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${(MODE_ACCENTS[boardTab] ?? MODE_ACCENTS.mc).strip} opacity-80`} />
           <div className="mb-3 flex items-center justify-between gap-2">
             <span className={`font-mono text-[10px] font-bold uppercase tracking-[0.2em] ${(MODE_ACCENTS[boardTab] ?? MODE_ACCENTS.mc).tag}`}>
@@ -868,7 +850,7 @@ export default function Profile() {
             </span>
             <Link
               to={`/leaderboard?game=sql&mode=${boardTab ?? 'mc'}&level=${boardLevel ?? 'easy'}`}
-              className="text-xs font-medium text-indigo-300 transition-colors hover:text-indigo-200"
+              className="text-xs font-medium text-brand-700 transition-colors hover:text-brand-700"
             >
               View all →
             </Link>
@@ -892,7 +874,7 @@ export default function Profile() {
                         'relative flex min-h-11 w-full items-center justify-center rounded-lg px-2.5 py-2.5 text-[11px] font-semibold transition-all sm:min-h-0 sm:w-auto sm:py-1 ' +
                         (active
                           ? `pop-on ${a.chip} ${a.glow}`
-                          : 'bg-slate-800/70 text-slate-500 hover:bg-slate-700 hover:text-slate-300')
+                          : 'bg-line/70 text-muted hover:bg-line hover:text-muted')
                       }
                     >
                       {m.label}
@@ -902,16 +884,13 @@ export default function Profile() {
               </div>
               {boardTab !== 'global' && (
                 <div
-                  // Both branches are identical from sm up — the not-revealed one
-                  // is only `hidden` below it — so this is invisible on desktop
-                  // and costs a phone a tap before the levels appear.
                   className={
                     levelsRevealed
                       ? 'reveal-levels mb-1.5 grid grid-cols-2 gap-1.5 sm:mb-3 sm:flex sm:flex-wrap'
                       : 'mb-3 hidden gap-1.5 sm:flex sm:flex-wrap'
                   }
                 >
-                  <div className="col-span-full mb-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 sm:hidden">
+                  <div className="col-span-full mb-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-muted sm:hidden">
                     Level
                   </div>
                   {levelFilter.map((lv) => {
@@ -926,7 +905,7 @@ export default function Profile() {
                           'relative flex min-h-11 w-full items-center justify-center rounded-lg px-2.5 py-2.5 text-[11px] font-semibold transition-all sm:min-h-0 sm:w-auto sm:py-1 ' +
                           (active
                             ? `pop-on ${a.chip} ${a.glow}`
-                            : 'bg-slate-800/50 text-slate-500 hover:bg-slate-800 hover:text-slate-300')
+                            : 'bg-line/50 text-muted hover:bg-line hover:text-muted')
                         }
                       >
                         {lv.label}
@@ -939,15 +918,12 @@ export default function Profile() {
           )}
 
           {!leaderboard ? (
-            <p className="py-4 text-center text-sm text-slate-500">Loading…</p>
+            <p className="py-4 text-center text-sm text-muted">Loading…</p>
           ) : leaderboard.error ? (
-            <p className="py-4 text-center text-sm text-rose-400">{leaderboard.error.message}</p>
+            <p className="py-4 text-center text-sm text-danger-600">{leaderboard.error.message}</p>
           ) : leaderboard.top.length === 0 && !leaderboard.you ? (
             <div className="py-4 text-center">
-              <p className="text-sm text-slate-500">
-                {/* This card is only ever reachable signed in, so the old copy
-                    telling the reader to "sign in" was addressed to someone who
-                    already had. */}
+              <p className="text-sm text-muted">
                 {user
                   ? `No scores yet for ${MODE_TITLE[boardTab] ?? 'this category'}${boardTab !== 'global' ? ` · ${LEVEL_TITLE[boardLevel]}` : ''} — finish a quiz to claim the top spot!`
                   : 'Sign in and finish a quiz to land on the board!'}
@@ -955,29 +931,29 @@ export default function Profile() {
               {user && (
                 <Link
                   to={boardTab && boardTab !== 'global' ? `/quiz/sql?mode=${boardTab}&level=easy` : '/quiz/sql'}
-                  className="mt-3 inline-block rounded-lg bg-indigo-500 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-400"
+                  className="mt-3 inline-block rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
                 >
                   Play a quiz
                 </Link>
               )}
             </div>
           ) : (
-            <ul className="divide-y divide-slate-800/60">
+            <ul className="divide-y divide-line/60">
               {leaderboard.top.map((row, idx) => {
                 const rank = idx + 1
                 const isYou = user?.id && row.user_id === user.id
                 return (
                   <li
                     key={row.id ?? idx}
-                    className={`flex items-center gap-2 px-2 py-1.5 ${isYou ? '-mx-1.5 rounded-lg bg-indigo-500/10' : ''}`}
+                    className={`flex items-center gap-2 px-2 py-1.5 ${isYou ? '-mx-1.5 rounded-lg bg-brand-50' : ''}`}
                   >
                     <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-black ${rankStyle(rank)}`}>
                       {rank}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className={`block truncate text-sm ${isYou ? 'font-semibold text-white' : 'text-slate-300'}`}>
+                      <span className={`block truncate text-sm ${isYou ? 'font-semibold text-ink' : 'text-muted'}`}>
                         {row.username || 'Anonymous'}
-                        {isYou ? <span className="ml-2 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-300">you</span> : null}
+                        {isYou ? <span className="ml-2 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700">you</span> : null}
                       </span>
                       <BoardStats row={row} dense className="mt-0.5 sm:hidden" />
                     </span>
@@ -988,14 +964,14 @@ export default function Profile() {
                 )
               })}
               {leaderboard.you && leaderboard.you.rank > leaderboard.top.length ? (
-                <li className="-mx-1.5 -mb-1 mt-1.5 flex items-center gap-2 rounded-lg bg-indigo-500/10 px-2 py-1.5">
+                <li className="-mx-1.5 -mb-1 mt-1.5 flex items-center gap-2 rounded-lg bg-brand-50 px-2 py-1.5">
                   <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-black ${rankStyle(leaderboard.you.rank)}`}>
                     {leaderboard.you.rank}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-white">
+                    <span className="block truncate text-sm font-semibold text-ink">
                       {leaderboard.you.username || 'You'}
-                      <span className="ml-2 rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-300">you</span>
+                      <span className="ml-2 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700">you</span>
                     </span>
                     <BoardStats row={leaderboard.you} dense className="mt-0.5 sm:hidden" />
                   </span>
@@ -1010,30 +986,30 @@ export default function Profile() {
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">Practice &amp; sessions</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">Practice &amp; sessions</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {['sql', 'mongo'].map((gameId) => {
             const g = gameStats(scores?.rows, gameId)
             const label = gameId === 'sql' ? 'SQL' : 'Mongo'
             return (
-              <div key={gameId} className="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5">
-                <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</div>
+              <div key={gameId} className="rounded-2xl border border-line bg-white p-4 sm:p-5">
+                <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">{label}</div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Sessions</div>
-                    <div className="mt-1 text-lg font-bold text-white">{scores ? String(g.sessions) : '…'}</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">Sessions</div>
+                    <div className="mt-1 text-lg font-bold text-ink">{scores ? String(g.sessions) : '…'}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Total play time</div>
-                    <div className="mt-1 text-lg font-bold text-white">{scores ? formatDuration(g.totalSeconds) : '…'}</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">Total play time</div>
+                    <div className="mt-1 text-lg font-bold text-ink">{scores ? formatDuration(g.totalSeconds) : '…'}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Average score</div>
-                    <div className="mt-1 text-lg font-bold text-white">{scores ? (g.averageScore === null ? '—' : `${g.averageScore}%`) : '…'}</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">Average score</div>
+                    <div className="mt-1 text-lg font-bold text-ink">{scores ? (g.averageScore === null ? '—' : `${g.averageScore}%`) : '…'}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Best score</div>
-                    <div className="mt-1 text-lg font-bold text-white">{scores ? (g.bestPct === null ? '—' : `${g.bestPct}%`) : '…'}</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">Best score</div>
+                    <div className="mt-1 text-lg font-bold text-ink">{scores ? (g.bestPct === null ? '—' : `${g.bestPct}%`) : '…'}</div>
                   </div>
                 </div>
               </div>
@@ -1041,30 +1017,30 @@ export default function Profile() {
           })}
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-          <h3 className="border-b border-slate-800 px-4 py-3 text-sm font-semibold text-white">Recent sessions</h3>
+        <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-white">
+          <h3 className="border-b border-line px-4 py-3 text-sm font-semibold text-ink">Recent sessions</h3>
           {recentRows.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-slate-500">
+            <p className="px-4 py-8 text-center text-sm text-muted">
               No sessions yet.{' '}
-              <Link to="/quiz/sql" className="text-indigo-300 hover:text-indigo-200">Play a level</Link> to record one.
+              <Link to="/quiz/sql" className="text-brand-700 hover:text-brand-700">Play a level</Link> to record one.
             </p>
           ) : (
-            <ul className="divide-y divide-slate-800/60">
+            <ul className="divide-y divide-line/60">
               {recentRows.map((row) => (
                 <li key={row.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
                   <span className="flex items-center gap-2">
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-400">
+                    <span className="rounded-full bg-line px-2 py-0.5 text-[10px] font-bold uppercase text-muted">
                       {row.game}
                     </span>
                     {row.mode ? (
-                      <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-400">
+                      <span className="rounded-full bg-line px-2 py-0.5 text-[10px] font-bold uppercase text-muted">
                         {modeShort(row.mode)} · {LEVEL_TITLE[row.level] ?? row.level}
                       </span>
                     ) : null}
-                    <span className="text-slate-500">{formatDate(row.created_at)}</span>
+                    <span className="text-muted">{formatDate(row.created_at)}</span>
                   </span>
-                  <span className="text-slate-300">
-                    <span className="font-semibold text-white">{row.score}<span className="ml-0.5 font-medium text-slate-500">pts</span></span>
+                  <span className="text-muted">
+                    <span className="font-semibold text-ink">{row.score}<span className="ml-0.5 font-medium text-muted">pts</span></span>
                     {' '}· {formatDuration(row.time_seconds)}
                   </span>
                 </li>

@@ -4,32 +4,31 @@ import ResultTable from '../quiz/ResultTable.jsx'
 
 const TONES = {
   good: {
-    ring: 'border-emerald-500/30',
-    glow: 'shadow-[0_0_24px_rgba(16,185,129,0.10)]',
+    ring: 'border-leaf-200',
+    glow: 'shadow-[0_2px_10px_rgba(#3d7f55,0.1)]',
     badge: 'Works',
-    badgeClass: 'bg-emerald-500/15 text-emerald-300',
+    badgeClass: 'bg-leaf-50 text-leaf-700',
   },
   bad: {
-    ring: 'border-rose-500/35',
-    glow: 'shadow-[0_0_24px_rgba(244,63,94,0.12)]',
+    ring: 'border-danger-200',
+    glow: 'shadow-[0_2px_10px_rgba(#b03333,0.12)]',
     badge: 'Broken',
-    badgeClass: 'bg-rose-500/15 text-rose-300',
+    badgeClass: 'bg-danger-50 text-danger-700',
   },
   plain: {
-    ring: 'border-slate-700/80',
+    ring: 'border-line/80',
     glow: '',
     badge: '',
     badgeClass: '',
   },
 }
 
-/** A SQL listing, and the result it produces when the block declares one. */
 export default function CodeBlock({ code, caption, tone, expect, expectError }) {
   const t = TONES[tone] ?? TONES.plain
   const outcome = expectError
-    ? { badge: 'Will not run', badgeClass: 'bg-rose-500/15 text-rose-300' }
+    ? { badge: 'Will not run', badgeClass: 'bg-danger-50 text-danger-700' }
     : expect
-      ? { badge: 'Runs', badgeClass: 'bg-emerald-500/15 text-emerald-300' }
+      ? { badge: 'Runs', badgeClass: 'bg-leaf-50 text-leaf-700' }
       : { badge: '', badgeClass: '' }
 
   return (
@@ -47,12 +46,12 @@ export default function CodeBlock({ code, caption, tone, expect, expectError }) 
       </Console>
 
       {caption && (
-        <p className="px-0.5 text-[13px] leading-relaxed text-slate-600 italic">{caption}</p>
+        <p className="px-0.5 text-[13px] leading-relaxed text-body italic">{caption}</p>
       )}
 
       {expect && (
         <div>
-          <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
             {expect.label ?? 'Result'}
           </div>
           <ResultTable columns={expect.columns} rows={expect.rows} />

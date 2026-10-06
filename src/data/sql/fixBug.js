@@ -1,4 +1,4 @@
-export const fixBug = [
+﻿export const fixBug = [
   {
     id: 'bug-01',
     type: 'bug',
@@ -163,7 +163,7 @@ export const fixBug = [
     },
     hint: 'Use GROUP BY category.',
     explanation:
-      'SELECT category, COUNT(*) FROM products GROUP BY category;. A column with an aggregate must either be the aggregate itself or appear in GROUP BY — otherwise SQLite raises "misuse of aggregate".',
+      'SELECT category, COUNT(*) FROM products GROUP BY category;. A column with an aggregate must either be the aggregate itself or appear in GROUP BY â€” otherwise SQLite raises "misuse of aggregate".',
   },
   {
     id: 'bug-06',
@@ -171,7 +171,7 @@ export const fixBug = [
     topic: 'Wrong join key',
     difficulty: 'medium',
     question:
-      'This query pairs posts with the wrong user — it joins on the wrong column. Write the fixed query so each post shows its author.',
+      'This query pairs posts with the wrong user â€” it joins on the wrong column. Write the fixed query so each post shows its author.',
     buggyQuery: 'SELECT users.name, posts.title FROM users JOIN posts ON users.id = posts.id;',
     fixedQuery: 'SELECT users.name, posts.title FROM users JOIN posts ON users.id = posts.user_id',
     schema: {
@@ -202,7 +202,7 @@ export const fixBug = [
     },
     hint: 'Join on posts.user_id, not posts.id.',
     explanation:
-      'SELECT users.name, posts.title FROM users JOIN posts ON users.id = posts.user_id;. Using posts.id as the foreign key matches a post to the user whose id equals the post id — almost always wrong.',
+      'SELECT users.name, posts.title FROM users JOIN posts ON users.id = posts.user_id;. Using posts.id as the foreign key matches a post to the user whose id equals the post id â€” almost always wrong.',
   },
   {
     id: 'bug-07',
@@ -488,7 +488,7 @@ export const fixBug = [
     },
     hint: 'ORDER BY must come before LIMIT.',
     explanation:
-      'SELECT name FROM employees ORDER BY salary DESC LIMIT 2;. LIMIT cannot precede ORDER BY — that is a syntax error.',
+      'SELECT name FROM employees ORDER BY salary DESC LIMIT 2;. LIMIT cannot precede ORDER BY â€” that is a syntax error.',
   },
   {
     id: 'bug_e8',
@@ -1626,7 +1626,7 @@ export const fixBug = [
   {
     id: 'bug_h1',
     type: 'bug',
-    topic: 'Window · missing PARTITION',
+    topic: 'Window Â· missing PARTITION',
     difficulty: 'hard',
     question:
       'The goal is to number employees from 1 within each department, ordered by salary descending. This query numbers the whole company. Write the fixed query.',
@@ -1836,7 +1836,7 @@ export const fixBug = [
   {
     id: 'bug_h7',
     type: 'bug',
-    topic: 'LEFT JOIN · WHERE filter',
+    topic: 'LEFT JOIN Â· WHERE filter',
     difficulty: 'hard',
     question:
       'The goal is every department with its employee count (0 if none), but this drops the empty department. Fix it.',
@@ -2009,7 +2009,7 @@ export const fixBug = [
   {
     id: 'bug_h12',
     type: 'bug',
-    topic: 'GROUP BY · HAVING',
+    topic: 'GROUP BY Â· HAVING',
     difficulty: 'hard',
     question:
       'The goal is the emails that appear more than once, but this lists every email. Write the fixed query.',
@@ -2039,7 +2039,7 @@ export const fixBug = [
   {
     id: 'bug_h13',
     type: 'bug',
-    topic: 'LEFT JOIN · IS NULL',
+    topic: 'LEFT JOIN Â· IS NULL',
     difficulty: 'hard',
     question:
       'The goal is publishers that have released no books, but this returns nothing because it uses an INNER JOIN. Write the fixed query.',
@@ -2077,7 +2077,7 @@ export const fixBug = [
   {
     id: 'bug_h14',
     type: 'bug',
-    topic: 'Window · OVER () vs ORDER BY',
+    topic: 'Window Â· OVER () vs ORDER BY',
     difficulty: 'hard',
     question:
       'The goal is each product with the overall average price repeated on every row, but this computes a running average. Write the fixed query.',
@@ -2143,7 +2143,7 @@ export const fixBug = [
   {
     id: 'bug_h16',
     type: 'bug',
-    topic: 'LAG · missing PARTITION',
+    topic: 'LAG Â· missing PARTITION',
     difficulty: 'hard',
     question:
       'The goal is each sale with the previous amount for the same product, but this takes the previous row across all products. Write the fixed query.',
@@ -2250,4 +2250,3 @@ export const fixBug = [
   },
 ]
 
-export default fixBug

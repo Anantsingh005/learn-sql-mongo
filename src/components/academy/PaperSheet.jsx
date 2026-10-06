@@ -1,9 +1,4 @@
-/**
- * The paper the book is printed on. Page chrome stays dark so the section still
- * looks native next to the quiz screens, while the prose sits on a warm sheet
- * with a coloured spine down the left edge.
- */
-export default function PaperSheet({ accent = '#38bdf8', children, className = '' }) {
+export default function PaperSheet({ accent = '#1554c7', children, className = '' }) {
   return (
     <div
       className={`relative overflow-hidden rounded-2xl bg-[#faf7f0] shadow-[0_2px_48px_rgba(0,0,0,0.5)] ring-1 ring-black/40 ${className}`}

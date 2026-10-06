@@ -2,17 +2,6 @@ import { CHAPTERS } from './book.js'
 
 const WRITTEN = new Set(CHAPTERS.map((c) => c.slug))
 
-/**
- * Every question in the app carries a free-form label — `topic` in the quiz
- * bank, `subtopic` in the practice bank. They were never written as a taxonomy
- * (there are 152 of them in the quiz bank alone), so we classify the label by
- * the words in it and see which chapter it belongs to.
- *
- * The rules are ordered most-specific first, and the first match wins. The
- * window/CTE rule therefore has to sit *above* aggregation, because those labels
- * contain words like `sum` and `count` that would otherwise win first and send
- * a `RANK` question to the chapter that does not teach it.
- */
 const RULES = [
   {
     slug: 'ctes-windows',
@@ -71,10 +60,6 @@ function slugForLabel(label) {
   return null
 }
 
-/**
- * @returns the chapter slug to link to, or null when the question's real home
- *   is a chapter that has not been written yet.
- */
 export function chapterSlugForQuestion(question) {
   if (!question) return null
   const slug = slugForLabel(question.subtopic) ?? slugForLabel(question.topic)

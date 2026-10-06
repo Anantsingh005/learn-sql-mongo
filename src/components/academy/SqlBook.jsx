@@ -4,7 +4,6 @@ import {
   BOOK,
   CHAPTERS,
   PARTS,
-  UPCOMING_CHAPTERS,
   sectionKey,
   totalSections,
 } from '../../data/academy/book.js'
@@ -25,8 +24,8 @@ function ChapterCard({ chapter, readSections, done }) {
         style={{ background: `linear-gradient(120deg, ${chapter.accent}55, transparent 70%)` }}
       />
       <div
-        className={`relative overflow-hidden rounded-2xl border bg-slate-900/95 p-5 transition-all duration-300 group-hover:-translate-y-1 ${
-          done ? 'border-slate-700' : 'border-slate-700/80 group-hover:border-slate-600'
+        className={`relative overflow-hidden rounded-2xl border bg-white p-5 transition-all duration-300 group-hover:-translate-y-1 ${
+          done ? 'border-line' : 'border-line/80 group-hover:border-line'
         }`}
       >
         <span
@@ -40,7 +39,7 @@ function ChapterCard({ chapter, readSections, done }) {
             style={{
               borderColor: `${chapter.accent}55`,
               background: `${chapter.accent}1a`,
-              color: chapter.accent,
+              color: chapter.accentInk,
             }}
           >
             {chapter.icon}
@@ -49,29 +48,29 @@ function ChapterCard({ chapter, readSections, done }) {
           <div className="min-w-0 flex-1">
             <div
               className="font-mono text-[10px] font-bold uppercase tracking-[0.2em]"
-              style={{ color: chapter.accent }}
+              style={{ color: chapter.accentInk }}
             >
               Chapter {String(chapter.number).padStart(2, '0')}
             </div>
-            <h3 className="mt-0.5 font-serif text-xl font-semibold tracking-tight text-white">
+            <h3 className="mt-0.5 font-serif text-xl font-semibold tracking-tight text-ink">
               {chapter.title}
             </h3>
-            <p className="mt-0.5 text-[12px] leading-snug text-slate-400">{chapter.subtitle}</p>
+            <p className="mt-0.5 text-[12px] leading-snug text-muted">{chapter.subtitle}</p>
           </div>
 
           {done && (
-            <span className="shrink-0 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+            <span className="shrink-0 rounded-full bg-leaf-100 px-2 py-0.5 text-[10px] font-bold text-leaf-700">
               ✓ Read
             </span>
           )}
         </div>
 
-        <ul className="mt-4 space-y-1 border-t border-slate-800 pt-3">
+        <ul className="mt-4 space-y-1 border-t border-line pt-3">
           {chapter.sections.map((s) => (
-            <li key={s.id} className="flex items-baseline gap-2 text-[12px] text-slate-500">
+            <li key={s.id} className="flex items-baseline gap-2 text-[12px] text-muted">
               <span
                 className="w-8 shrink-0 font-mono text-[10px]"
-                style={{ color: `${chapter.accent}bb` }}
+                style={{ color: chapter.accentInk }}
               >
                 {s.number}
               </span>
@@ -86,12 +85,12 @@ function ChapterCard({ chapter, readSections, done }) {
             gradient={`linear-gradient(90deg, ${chapter.accent}, ${chapter.accent}66)`}
             className="flex-1"
           />
-          <span className="shrink-0 font-mono text-[10px] text-slate-500">
+          <span className="shrink-0 font-mono text-[10px] text-muted">
             {readSections}/{chapter.sections.length} sections
           </span>
           <span
             className="shrink-0 text-[11px] font-bold transition-transform group-hover:translate-x-1"
-            style={{ color: chapter.accent }}
+            style={{ color: chapter.accentInk }}
           >
             Read →
           </span>
@@ -101,21 +100,13 @@ function ChapterCard({ chapter, readSections, done }) {
   )
 }
 
-/** The SQL book: cover, contents, and one card per written chapter. */
 export default function SqlBook() {
-  // Read once on mount: returning from a chapter remounts this page, so the
-  // latest progress is picked up without an effect.
   const [progress] = useState(getProgress)
 
   const sections = totalSections()
   const read = progress.sections.length
   const chaptersDone = CHAPTERS.filter((c) => progress.chapters.includes(c.slug)).length
 
-  // Where the reader should actually land. Deliberately the first chapter with
-  // an unread *section*, not the first unfinished chapter: a reader who marked
-  // a chapter done but added a new section to it should come back to it, and
-  // this also means a reader who has finished everything is sent to the last
-  // chapter rather than being dumped at the start of the book.
   const resume =
     CHAPTERS.find((c) => c.sections.some((s) => !progress.sections.includes(sectionKey(c.slug, s.id)))) ??
     CHAPTERS[CHAPTERS.length - 1]
@@ -126,29 +117,29 @@ export default function SqlBook() {
         <div className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-gradient">
           Academy
         </div>
-        <h1 className="mt-2 bg-gradient-to-r from-indigo-300 via-sky-300 to-fuchsia-300 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent sm:text-4xl">
+        <h1 className="mt-2 bg-gradient-to-r from-brand-700 via-brand-600 to-plum-600 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent sm:text-4xl">
           {BOOK.title}
         </h1>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-slate-400">{BOOK.tagline}</p>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-muted">{BOOK.tagline}</p>
         <div className="mt-4 flex justify-center">
           <Byline />
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-        <p className="text-sm leading-relaxed text-slate-400">{BOOK.blurb}</p>
+      <div className="rounded-2xl border border-line bg-white p-5">
+        <p className="text-sm leading-relaxed text-muted">{BOOK.blurb}</p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <ProgressBar
             pct={sections ? Math.round((read / sections) * 100) : 0}
-            gradient="linear-gradient(90deg, #34d399, #22d3ee)"
+            gradient="linear-gradient(90deg, #3d7f55, #1554c7)"
             className="min-w-32 flex-1"
           />
-          <span className="font-mono text-[11px] text-slate-500">
+          <span className="font-mono text-[11px] text-muted">
             {read}/{sections} sections · {chaptersDone}/{CHAPTERS.length} chapters
           </span>
           <Link
             to={`/academy/sql/${resume.slug}`}
-            className="rounded-lg bg-indigo-600 px-3 py-1.5 text-[12px] font-semibold text-white outline-none transition-colors hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
+            className="rounded-lg bg-brand-600 px-3 py-1.5 text-[12px] font-semibold text-white outline-none transition-colors hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-200 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
           >
             {read === 0 ? 'Start reading' : 'Continue'}
           </Link>
@@ -162,10 +153,10 @@ export default function SqlBook() {
           return (
             <section key={part.label}>
               <div className="mb-3 flex items-baseline gap-3">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-muted">
                   {part.label}
                 </span>
-                <span className="text-[13px] text-slate-500">{part.title}</span>
+                <span className="text-[13px] text-muted">{part.title}</span>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 {partChapters.map((c) => (
@@ -183,35 +174,6 @@ export default function SqlBook() {
           )
         })}
       </div>
-
-      {UPCOMING_CHAPTERS.length > 0 && (
-        <section className="mt-10">
-          <div className="mb-3 flex items-baseline gap-3">
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-slate-600">
-              Coming next
-            </span>
-            <span className="text-[13px] text-slate-600">
-              The numbering is already in place — these chapters are just not written yet.
-            </span>
-          </div>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {UPCOMING_CHAPTERS.map((c) => (
-              <li
-                key={c.number}
-                className="flex items-center gap-3 rounded-xl border border-slate-800/80 bg-slate-900/40 px-4 py-3"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-900 font-mono text-[10px] font-black text-slate-600">
-                  {String(c.number).padStart(2, '0')}
-                </span>
-                <div className="min-w-0">
-                  <div className="truncate text-[13px] font-medium text-slate-400">{c.title}</div>
-                  <div className="truncate text-[11px] text-slate-600">{c.blurb}</div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
     </div>
   )
 }

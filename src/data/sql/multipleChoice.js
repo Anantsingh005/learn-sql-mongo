@@ -1,4 +1,4 @@
-export const multipleChoice = [
+﻿export const multipleChoice = [
   // ===================== EASY (25) =====================
   {
     id: 'mc_e1',
@@ -53,7 +53,7 @@ export const multipleChoice = [
     question: 'SELECT name FROM employees ORDER BY salary DESC;\n\nHow are the results sorted?',
     options: ['Alphabetically by name', 'Salary from lowest to highest', 'Salary from highest to lowest', 'Random order'],
     answerIndex: 2,
-    explanation: 'DESC means descending — largest values first.',
+    explanation: 'DESC means descending â€” largest values first.',
   },
   {
     id: 'mc_e6',
@@ -64,7 +64,7 @@ export const multipleChoice = [
     question: 'SELECT name FROM employees ORDER BY name ASC;\n\nHow are results sorted?',
     options: ['Z to A', 'A to Z', 'By salary', 'Not sorted at all'],
     answerIndex: 1,
-    explanation: 'ASC (ascending, the default) sorts smallest/earliest first — alphabetically A to Z for text.',
+    explanation: 'ASC (ascending, the default) sorts smallest/earliest first â€” alphabetically A to Z for text.',
   },
   {
     id: 'mc_e7',
@@ -141,7 +141,7 @@ export const multipleChoice = [
     question: 'SELECT name FROM employees WHERE manager_id = NULL;\n\nWhat\'s wrong with this query?',
     options: ['Nothing, it works fine', 'You can\'t compare to NULL with =, use IS NULL instead', 'NULL isn\'t allowed in SQL', 'It will delete rows'],
     answerIndex: 1,
-    explanation: 'NULL means \'unknown\', so = NULL never matches anything — IS NULL is the correct check.',
+    explanation: 'NULL means \'unknown\', so = NULL never matches anything â€” IS NULL is the correct check.',
   },
   {
     id: 'mc_e14',
@@ -174,7 +174,7 @@ export const multipleChoice = [
     question: 'SELECT name FROM employees WHERE dept_id IN (1, 3);\n\nWhat\'s the simplest way to describe this?',
     options: ['Same as dept_id = 1 AND dept_id = 3', 'Same as dept_id = 1 OR dept_id = 3', 'Excludes departments 1 and 3', 'A syntax error'],
     answerIndex: 1,
-    explanation: 'IN checks if a value matches any item in the list — shorthand for multiple ORs.',
+    explanation: 'IN checks if a value matches any item in the list â€” shorthand for multiple ORs.',
   },
   {
     id: 'mc_e17',
@@ -339,7 +339,7 @@ export const multipleChoice = [
     difficulty: 'medium',
     schema: 'store',
     question: 'Why can\'t you write: SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id WHERE COUNT(*) > 2?',
-    options: ['COUNT(*) isn\'t a real function', 'WHERE can\'t filter on aggregate results — use HAVING instead', 'GROUP BY is written wrong', 'This actually works fine'],
+    options: ['COUNT(*) isn\'t a real function', 'WHERE can\'t filter on aggregate results â€” use HAVING instead', 'GROUP BY is written wrong', 'This actually works fine'],
     answerIndex: 1,
     explanation: 'WHERE filters rows before grouping happens; HAVING filters groups after aggregation.',
   },
@@ -429,7 +429,7 @@ export const multipleChoice = [
     question: 'DELETE FROM employees WHERE dept_id = 4;\n\nWhat happens if you forget the WHERE clause?',
     options: ['Nothing changes', 'Only one row is deleted', 'Every row in the table is deleted', 'It causes a syntax error'],
     answerIndex: 2,
-    explanation: 'DELETE without WHERE removes all rows — a common and costly mistake.',
+    explanation: 'DELETE without WHERE removes all rows â€” a common and costly mistake.',
   },
   {
     id: 'mc_m15',
@@ -475,7 +475,7 @@ export const multipleChoice = [
     question: 'SELECT name FROM customers c WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);\n\nWhat does this return?',
     options: ['Customers who have placed at least one order', 'Customers who have never ordered', 'All customers, EXISTS is ignored', 'An error'],
     answerIndex: 0,
-    explanation: 'EXISTS checks whether the subquery returns any rows at all — true if there\'s at least one match.',
+    explanation: 'EXISTS checks whether the subquery returns any rows at all â€” true if there\'s at least one match.',
   },
   {
     id: 'mc_h4',
@@ -486,7 +486,7 @@ export const multipleChoice = [
     question: 'SELECT name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.id);\n\nWhat does this find?',
     options: ['Customers who have placed orders', 'Customers who have never placed an order', 'All orders with no customer', 'A syntax error'],
     answerIndex: 1,
-    explanation: 'NOT EXISTS flips the logic — it keeps rows where the subquery finds nothing.',
+    explanation: 'NOT EXISTS flips the logic â€” it keeps rows where the subquery finds nothing.',
   },
   {
     id: 'mc_h5',
@@ -596,7 +596,7 @@ export const multipleChoice = [
     question: 'SELECT name, COALESCE(manager_id, 0) FROM employees;\n\nWhat does COALESCE do here?',
     options: ['Deletes NULL rows', 'Replaces a NULL manager_id with 0 in the output', 'Converts manager_id to text', 'Sums manager_id values'],
     answerIndex: 1,
-    explanation: 'COALESCE returns the first non-NULL value from its arguments — handy for default values.',
+    explanation: 'COALESCE returns the first non-NULL value from its arguments â€” handy for default values.',
   },
   {
     id: 'mc_h15',
@@ -666,4 +666,3 @@ export const multipleChoice = [
   },
 ]
 
-export default multipleChoice

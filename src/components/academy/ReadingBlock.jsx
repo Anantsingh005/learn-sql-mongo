@@ -7,12 +7,7 @@ import SyntaxMap from './SyntaxMap.jsx'
 import JoinMap from './JoinMap.jsx'
 import Note from './Note.jsx'
 
-/**
- * Renders one entry from a section's `blocks` array. Keeping the content as
- * plain data means a chapter file is the whole of a chapter — there is no JSX
- * to keep in sync with the layout.
- */
-export default function ReadingBlock({ block, accent }) {
+export default function ReadingBlock({ block, accent, ink = accent }) {
   switch (block.type) {
     case 'theory':
       return (
@@ -21,7 +16,7 @@ export default function ReadingBlock({ block, accent }) {
             <Prose
               key={i}
               text={para}
-              className="text-[15px] leading-[1.75] text-slate-700 first:text-[16px]"
+              className="text-[15px] leading-[1.75] text-body first:text-[16px]"
             />
           ))}
         </div>
@@ -60,11 +55,11 @@ export default function ReadingBlock({ block, accent }) {
       )
 
     case 'flow':
-      return <FlowDiagram steps={block.steps} caption={block.caption} accent={accent} />
+      return <FlowDiagram steps={block.steps} caption={block.caption} accent={accent} ink={ink} />
 
     case 'visual':
-      if (block.name === 'join-types') return <JoinMap accent={accent} />
-      return <SyntaxMap highlight={block.highlight} accent={accent} />
+      if (block.name === 'join-types') return <JoinMap accent={accent} ink={ink} />
+      return <SyntaxMap highlight={block.highlight} accent={accent} ink={ink} />
 
     case 'note':
       return <Note tone={block.tone} title={block.title} body={block.body} />

@@ -3,7 +3,8 @@ export default {
   number: 1,
   title: 'Reading Data',
   subtitle: 'SELECT, aliases, and DISTINCT',
-  accent: '#38bdf8',
+  accent: '#1554c7',
+  accentInk: '#1449a3',
   icon: '{ }',
   practiceTopic: 'table-query',
   objectives: [

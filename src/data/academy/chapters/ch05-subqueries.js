@@ -3,7 +3,8 @@ export default {
   number: 5,
   title: 'Subqueries & Set Operations',
   subtitle: 'A query inside a query, and stacking two result sets on top of each other',
-  accent: '#c084fc',
+  accent: '#6b46c9',
+  accentInk: '#573499',
   icon: '⊞',
   practiceTopic: 'table-query',
   objectives: [

@@ -24,7 +24,7 @@ const TABLE_TABS = [
 
 function tabClass(active) {
   return `relative rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-    active ? 'pop-on pop-on-indigo bg-indigo-500/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+    active ? 'pop-on pop-on-indigo bg-brand-100 text-brand-700' : 'text-muted hover:bg-shell hover:text-ink'
   }`
 }
 
@@ -35,19 +35,19 @@ export default function Admin() {
   const [table, setTable] = useState('profiles')
 
   if (checking) {
-    return <p className="py-16 text-center text-sm text-slate-500">Checking access…</p>
+    return <p className="py-16 text-center text-sm text-muted">Checking access…</p>
   }
 
   if (!isAdmin) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <h1 className="text-2xl font-bold text-white">Admins only</h1>
-        <p className="mt-3 text-sm text-slate-400">
+        <h1 className="text-2xl font-bold text-ink">Admins only</h1>
+        <p className="mt-3 text-sm text-muted">
           {user
             ? 'You are signed in, but this account is not on the admin list.'
             : 'Sign in with an admin account to open the dashboard.'}
         </p>
-        <Link to="/" className="mt-6 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500">
+        <Link to="/" className="mt-6 inline-block rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
           Back to home
         </Link>
       </div>
@@ -59,13 +59,13 @@ export default function Admin() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Admin dashboard</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <h1 className="text-2xl font-bold text-ink">Admin dashboard</h1>
+        <p className="mt-1 text-sm text-muted">
           Full view over the data and data flow — {user?.email ?? 'admin'}.
         </p>
       </div>
 
-      <nav className="flex flex-wrap gap-1 border-b border-slate-800 pb-2">
+      <nav className="flex flex-wrap gap-1 border-b border-line pb-2">
         {TABS.map((t) => (
           <button key={t.id} type="button" onClick={() => setTab(t.id)} className={tabClass(tab === t.id)}>
             {t.label}

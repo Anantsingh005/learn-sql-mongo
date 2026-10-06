@@ -1,14 +1,77 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, Consolas, "Courier New", monospace;
-  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia,
-    "Times New Roman", serif;
+@import "@fontsource-variable/inter/wght.css";
+@import "@fontsource-variable/source-serif-4/wght.css";
+@import "@fontsource-variable/jetbrains-mono/wght.css";
 
-  /* One curve for every lift, flip and depth push in the 3D quiz arena, so the
-     scene settles at a single rhythm instead of each piece picking its own. */
+@theme {
+  --font-sans: "Inter Variable", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, Consolas, monospace;
+  --font-serif: "Source Serif 4 Variable", "Iowan Old Style", Palatino, Georgia, serif;
+
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #bcd2ff;
+  --color-brand-300: #8fb4ff;
+  --color-brand-400: #5b8dfa;
+  --color-brand-500: #2f6ad0;
+  --color-brand-600: #1554c7;
+  --color-brand-700: #1449a3;
+  --color-brand-800: #143c84;
+  --color-brand-900: #14346a;
+
+  --color-ink: #102a43;
+  --color-body: #243b53;
+  --color-muted: #4a6178;
+
+  --color-shell: #f4f8ff;
+  --color-mist: #f3f7ff;
+  --color-paper: #faf7f0;
+
+  /* The MongoDB side of the product gets a green, never a second blue. */
+  --color-leaf: #4c9a68;
+  --color-leaf-50: #f3faf5;
+  --color-leaf-100: #e3f2e9;
+  --color-leaf-200: #c4e2d0;
+  --color-leaf-400: #6cae85;
+  --color-leaf-500: #2f7a4f;
+  --color-leaf-600: #3d7f55;
+  --color-leaf-700: #316644;
+
+  --color-plum-50: #f6f2ff;
+  --color-plum-100: #e9dffb;
+  --color-plum-200: #d5c2f5;
+  --color-plum-400: #9575e0;
+  --color-plum-600: #6b46c9;
+  --color-plum-700: #573499;
+  --color-amber-50: #fff8ec;
+  --color-amber-100: #fdeed2;
+  --color-amber-200: #f8d9a4;
+  --color-amber-400: #c98a2e;
+  --color-amber-500: #b5741a;
+  --color-amber-600: #a5680f;
+  --color-amber-700: #8a550b;
+  --color-amber-900: #6b4007;
+
+  --color-line: #d9e2ec;
+  --color-line-soft: #e8eef5;
+  --color-success: #1a855b;
+  --color-danger: #d24444;
+  --color-danger-600: #b03333;
+  --color-danger-500: #c93c3c;
+  --color-danger-700: #a32e2e;
+  --color-danger-100: #fbe1e1;
+  --color-warning: #a76703;
+
+  --color-success-50: #eaf7f1;
+  --color-success-200: #a9e0c6;
+  --color-danger-50: #fdeeee;
+  --color-danger-200: #f4bcbc;
+  --color-warning-50: #fdf4e3;
+  --color-warning-200: #f2d59b;
+
   --ease-3d: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html,
@@ -19,43 +82,93 @@ body,
 
 body {
   margin: 0;
-  background: #0b0e14;
-  color: #e2e8f0;
+  background: #ffffff;
+  color: #243b53;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
-  .text-gradient {
-    background-image: linear-gradient(90deg, #a5b4fc, #67e8f9 45%, #c4b5fd 90%);
-    background-size: 200% 100%;
+  .enter-rise {
+    animation: enter-rise 620ms var(--ease-out-soft) both;
+  }
+
+  .enter-fade {
+    animation: enter-fade 700ms var(--ease-out-soft) both;
+  }
+
+  .enter-word {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+  }
+
+  .grad-text {
+    background-image: linear-gradient(96deg, #1554c7 0%, #2f6ad0 42%, #102a43 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: gradient-pan 8s ease-in-out infinite alternate;
   }
 
-  .text-gradient-rise {
-    background-image: linear-gradient(90deg, #34d399, #fbbf24 50%, #f43f5e);
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .parallax-scene {
+    animation: parallax-drift 9s ease-in-out infinite alternate;
+    transform-origin: center bottom;
   }
 
-  /* Selection punch. The ring rides on ::after so it never clobbers the
-     shadow-[...] glow utilities used on the leaderboard chips, and it
-     inherits currentColor so each chip flashes its own accent for free.
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 620ms var(--ease-out-soft),
+      transform 620ms var(--ease-out-soft);
+  }
 
-     `.pop-on` is meant to be applied only while an option *is* selected: taking
-     it off is what stops the animation, and putting it back on replays it. That
-     is what keeps a re-click on an already-selected option from popping again.
+  .reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
 
-     The peak is a deliberate 1.045 rather than an overshoot, so this reads as a
-     punch instead of a bounce and settles on --ease-3d like the rest of the
-     app's motion. Do not add it to anything that also transforms on hover — the
-     keyframe's `transform` wins for the length of the animation. */
+  .card-part {
+    animation: enter-rise 560ms var(--ease-out-soft) both;
+  }
+
+  .cta-sheen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 20%,
+      rgb(255 255 255 / 0.22) 50%,
+      transparent 80%
+    );
+    transform: translateX(-120%);
+    pointer-events: none;
+  }
+
+  .cta-sheen:hover::before {
+    animation: cta-sheen 900ms var(--ease-out-soft);
+  }
+
+  .ripple-magnetic {
+    transform: translate3d(var(--mag-x, 0px), var(--mag-y, 0px), 0);
+    transition: transform 220ms var(--ease-out-soft);
+  }
+
+  .enter-pop {
+    animation: enter-pop 200ms var(--ease-out-soft) both;
+  }
+
+  .ripple-magnetic > .ripple {
+    position: absolute;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.35);
+    transform: translate(-50%, -50%) scale(0);
+    pointer-events: none;
+    animation: ripple-out 620ms var(--ease-out-soft) forwards;
+  }
+
   .pop-on::after {
     content: '';
     position: absolute;
@@ -67,7 +180,71 @@ body {
   }
 
   .pop-on.pop-on-indigo::after {
-    box-shadow: 0 0 0 2px rgb(129 140 248 / 0.95);
+    box-shadow: 0 0 0 2px rgb(21 84 199 / 0.95);
+  }
+
+  .text-gradient {
+    background-image: linear-gradient(96deg, #1554c7, #2f6ad0 55%, #1449a3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-rise {
+    background-image: linear-gradient(96deg, #1f9d6b, #c27803);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .type-char {
+    display: inline;
+    opacity: 0;
+    animation: type-char 260ms var(--ease-out-soft) both;
+  }
+
+  .type-caret-window {
+    display: inline-block;
+    width: 0.06em;
+    margin-left: 0.02em;
+  }
+
+  .type-caret {
+    display: block;
+    width: 100%;
+    height: 0.78em;
+    border-radius: 2px;
+    background: var(--color-brand-600);
+  }
+
+  .caret-blink {
+    animation: caret-blink 1.05s steps(1, end) infinite;
+  }
+
+  .headline-underline {
+    position: absolute;
+    left: 0;
+    bottom: -0.06em;
+    height: 4px;
+    width: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #1554c7, #7ba7e8);
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation: headline-underline 620ms var(--ease-out-soft) 1500ms both;
+  }
+
+  .badge-pulse {
+    position: relative;
+  }
+
+  .badge-pulse::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: inherit;
+    animation: badge-pulse 2.4s ease-out infinite;
   }
 }
 
@@ -79,15 +256,114 @@ body {
   .pop-on::after {
     animation: pop-ring 320ms ease-out;
   }
+
+  .parallax-scene {
+    will-change: transform;
+  }
+
+  @media (width < 40rem) {
+    .reveal-levels {
+      animation: reveal-in 260ms var(--ease-3d) both;
+    }
+  }
 }
 
-/* The level filter arriving under a tapped mode, on a phone only. The
-   `width < 40rem` half matters: at sm and up the level row is always present
-   from the first render, so animating it there would just replay a flourish on
-   every page load. Pinned below sm, it only ever runs in response to a tap. */
-@media (width < 40rem) and (prefers-reduced-motion: no-preference) {
-  .reveal-levels {
-    animation: reveal-in 260ms var(--ease-3d) both;
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.is-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .enter-rise,
+  .enter-fade,
+  .enter-pop,
+  .card-part {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+.type-char {
+        animation: none;
+        opacity: 1;
+      }
+
+  .headline-underline {
+    animation: none;
+    transform: scaleX(1);
+  }
+
+  .caret-blink,
+  .badge-pulse::after {
+    animation: none;
+  }
+
+  .parallax-scene {
+    animation: none;
+  }
+}
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes parallax-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes enter-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ripple-out {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.55;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes cta-sheen {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
   }
 }
 
@@ -134,16 +410,46 @@ body {
   }
 }
 
-/* The end-of-deck panel tipping up off the floor of the arena. Applied as an
-   animation rather than a transition because the panel mounts fresh, so there
-   is no previous transform to transition away from. */
-@keyframes arena-in {
-  from {
-    transform: rotateX(-64deg) translateZ(-48px);
+     @keyframes type-char {
+       from {
+         opacity: 0;
+       }
+       to {
+         opacity: 1;
+       }
+     }
+
+@keyframes caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  95% {
     opacity: 0;
   }
-  to {
-    transform: none;
+  100% {
     opacity: 1;
+  }
+}
+
+@keyframes headline-underline {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes badge-pulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
   }
 }

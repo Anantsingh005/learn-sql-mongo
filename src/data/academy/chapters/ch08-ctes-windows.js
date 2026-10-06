@@ -3,7 +3,8 @@ export default {
   number: 8,
   title: 'CTEs & Window Functions',
   subtitle: 'WITH, RANK and LAG — reading a whole group of rows at once',
-  accent: '#22d3ee',
+  accent: '#1554c7',
+  accentInk: '#1449a3',
   icon: '⧉',
   practiceTopic: 'table-query',
   objectives: [

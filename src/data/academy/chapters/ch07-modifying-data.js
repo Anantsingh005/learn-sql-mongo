@@ -3,7 +3,8 @@ export default {
   number: 7,
   title: 'Modifying Data',
   subtitle: 'INSERT, UPDATE, DELETE — and the mistakes you cannot undo',
-  accent: '#f87171',
+  accent: '#d24444',
+  accentInk: '#a32e2e',
   icon: '✎',
   practiceTopic: 'table-query',
   objectives: [

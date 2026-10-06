@@ -12,7 +12,7 @@ function serializeValue(value) {
   return `'${String(value).replace(/'/g, "''")}'`
 }
 
-export function schemaToStatements(schema) {
+function schemaToStatements(schema) {
   const statements = []
   for (const [table, def] of Object.entries(schema)) {
     const columns = def.columns
@@ -31,8 +31,4 @@ export function runSchema(db, schema) {
   const statements = schemaToStatements(schema)
   for (const stmt of statements) db.run(stmt)
   return statements
-}
-
-export function tableNames(schema) {
-  return Object.keys(schema)
 }

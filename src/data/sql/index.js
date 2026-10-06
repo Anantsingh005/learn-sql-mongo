@@ -1,4 +1,4 @@
-import { fixBug } from './fixBug.js'
+﻿import { fixBug } from './fixBug.js'
 import { multipleChoice } from './multipleChoice.js'
 import { storeSchema } from './schemas.js'
 import { windowCte } from './windowCte.js'
@@ -25,4 +25,3 @@ export const allSqlQuestions = [
   ...windowCte,
 ]
 
-export default sqlQuestionBank

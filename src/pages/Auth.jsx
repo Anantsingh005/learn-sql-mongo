@@ -8,16 +8,16 @@ const USERNAME_RE = /^[A-Za-z0-9_.-]{1,24}$/
 function Field({ label, type = 'text', value, onChange, placeholder, autoComplete, hint }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-slate-400">{label}</span>
+      <span className="mb-1 block text-xs font-semibold text-muted">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="w-full rounded-full border border-slate-700 bg-slate-950 px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-indigo-500"
+        className="w-full rounded-full border border-line bg-white px-4 py-2 text-sm text-ink placeholder-muted outline-none transition-colors focus:border-brand-200"
       />
-      {hint && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
   )
 }
@@ -174,14 +174,14 @@ function AuthPage() {
 
   if (!configured) {
     return (
-      <div className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900 p-8 text-center">
-        <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full border border-indigo-500/20" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full border border-fuchsia-500/10" />
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-indigo-400/40 bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-xl font-black text-white shadow-[0_0_24px_rgba(99,102,241,0.4)]">
+      <div className="relative mx-auto max-w-md overflow-hidden rounded-[2rem] border border-line bg-white p-8 text-center">
+        <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full border border-brand-200" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full border border-plum-200" />
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-brand-200 bg-gradient-to-br from-brand-100 to-plum-100 text-xl font-black text-brand-700 shadow-[0_2px_10px_rgba(#1554c7,0.22)]">
           DB
         </div>
-        <div className="mt-4 font-mono text-2xl font-bold text-white">Sign up / Sign in</div>
-        <p className="mt-4 text-sm text-slate-400">
+        <h1 className="mt-4 font-mono text-2xl font-bold text-ink">Sign up / Sign in</h1>
+        <p className="mt-4 text-sm text-muted">
           Supabase is not configured. Add <span className="font-mono">VITE_SUPABASE_URL</span> and{' '}
           <span className="font-mono">VITE_SUPABASE_ANON_KEY</span> to{' '}
           <span className="font-mono">.env</span>, then reload.
@@ -193,20 +193,20 @@ function AuthPage() {
   if (mode === 'reset') {
     return (
       <div className="mx-auto max-w-md">
-        <div className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900 p-8">
-          <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full border border-indigo-500/20" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full border border-fuchsia-500/10" />
+        <div className="relative overflow-hidden rounded-[2rem] border border-line bg-white p-8">
+          <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full border border-brand-200" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full border border-plum-200" />
           <div className="flex flex-col items-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-indigo-400/40 bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-xl font-black text-white shadow-[0_0_24px_rgba(99,102,241,0.4)]">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-brand-200 bg-gradient-to-br from-brand-100 to-plum-100 text-xl font-black text-brand-700 shadow-[0_2px_10px_rgba(#1554c7,0.22)]">
               DB
             </div>
-            <div className="mt-4 font-mono text-2xl font-bold text-white">
+            <h1 className="mt-4 font-mono text-2xl font-bold text-ink">
               {user ? 'Set a new password' : 'Reset your password'}
-            </div>
+            </h1>
           </div>
 
           {loading ? (
-            <p className="mt-6 text-sm text-slate-400">Loading…</p>
+            <p className="mt-6 text-sm text-muted">Loading…</p>
           ) : user ? (
             <form onSubmit={handleSetNewPassword} className="mt-6 flex flex-col gap-4">
               <Field
@@ -218,11 +218,11 @@ function AuthPage() {
                 autoComplete="new-password"
                 hint="At least 6 characters long."
               />
-              {error && <p className="text-sm text-rose-400">{error}</p>}
+              {error && <p className="text-sm text-danger-600">{error}</p>}
               <button
                 type="submit"
                 disabled={busy || resetPassword.length < 6}
-                className="rounded-full bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? 'Working…' : 'Update password'}
               </button>
@@ -230,7 +230,7 @@ function AuthPage() {
           ) : resetStep === 'code' ? (
             <form onSubmit={handleCompleteReset} className="mt-6 flex flex-col gap-4">
               {issuedCode && (
-                <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/5 px-4 py-3 text-sm text-cyan-300">
+                <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700">
                   Dev preview — no email is sent yet. Your code:{' '}
                   <span className="font-mono font-bold">{issuedCode}</span>
                 </div>
@@ -252,19 +252,19 @@ function AuthPage() {
                 autoComplete="new-password"
                 hint="At least 6 characters long."
               />
-              {error && <p className="text-sm text-rose-400">{error}</p>}
-              {message && <p className="text-sm text-emerald-400">{message}</p>}
+              {error && <p className="text-sm text-danger-600">{error}</p>}
+              {message && <p className="text-sm text-leaf-600">{message}</p>}
               <button
                 type="submit"
                 disabled={busy || resetCodeInput.trim().length !== 6 || resetPassword.length < 6}
-                className="rounded-full bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? 'Working…' : 'Set new password'}
               </button>
               <button
                 type="button"
                 onClick={() => setResetStep('email')}
-                className="text-sm text-slate-400 transition-colors hover:text-slate-200"
+                className="text-sm text-muted transition-colors hover:text-body"
               >
                 ← Request a new code
               </button>
@@ -279,23 +279,23 @@ function AuthPage() {
                 placeholder="you@example.com"
                 autoComplete="email"
               />
-              {error && <p className="text-sm text-rose-400">{error}</p>}
-              {message && <p className="text-sm text-emerald-400">{message}</p>}
+              {error && <p className="text-sm text-danger-600">{error}</p>}
+              {message && <p className="text-sm text-leaf-600">{message}</p>}
               <button
                 type="submit"
                 disabled={busy || !resetEmail.trim()}
-                className="rounded-full bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-full bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busy ? 'Working…' : 'Send reset code'}
               </button>
             </form>
           )}
 
-          <div className="my-5 h-px bg-slate-800" />
+          <div className="my-5 h-px bg-line" />
           <button
             type="button"
             onClick={() => navigate('/auth')}
-            className="text-sm text-slate-400 transition-colors hover:text-slate-200"
+            className="text-sm text-muted transition-colors hover:text-body"
           >
             ← Back to sign in
           </button>
@@ -306,26 +306,26 @@ function AuthPage() {
 
   return (
     <div className="mx-auto max-w-md">
-      <div className="relative overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900 p-8">
-        <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full border border-indigo-500/20" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full border border-fuchsia-500/10" />
-        <div className="pointer-events-none absolute -top-8 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full border border-cyan-400/10" />
+      <div className="relative overflow-hidden rounded-[2rem] border border-line bg-white p-8">
+        <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full border border-brand-200" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-44 w-44 rounded-full border border-plum-200" />
+        <div className="pointer-events-none absolute -top-8 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full border border-brand-200" />
 
         <div className="relative flex flex-col items-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-indigo-400/40 bg-gradient-to-br from-indigo-500 to-fuchsia-600 text-xl font-black text-white shadow-[0_0_24px_rgba(99,102,241,0.4)]">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-brand-200 bg-gradient-to-br from-brand-100 to-plum-100 text-xl font-black text-brand-700 shadow-[0_2px_10px_rgba(#1554c7,0.22)]">
             DB
           </div>
-          <div className="mt-4 font-mono text-2xl font-bold text-white">
+          <h1 className="mt-4 font-mono text-2xl font-bold text-ink">
             {mode === 'signin' ? 'Welcome back' : 'Create account'}
-          </div>
+          </h1>
         </div>
 
-        <div className="relative mt-6 flex rounded-full bg-slate-950 p-1 text-sm">
+        <div className="relative mt-6 flex rounded-full bg-white p-1 text-sm">
           <button
             type="button"
             onClick={() => { setMode('signin'); setError(null); setMessage(null) }}
             className={`flex-1 rounded-full px-3 py-1.5 font-medium transition-colors ${
-              mode === 'signin' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              mode === 'signin' ? 'bg-brand-600 text-white' : 'text-muted hover:text-body'
             }`}
           >
             Sign in
@@ -334,7 +334,7 @@ function AuthPage() {
             type="button"
             onClick={() => { setMode('signup'); setError(null); setMessage(null) }}
             className={`flex-1 rounded-full px-3 py-1.5 font-medium transition-colors ${
-              mode === 'signup' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              mode === 'signup' ? 'bg-brand-600 text-white' : 'text-muted hover:text-body'
             }`}
           >
             Sign up
@@ -354,33 +354,33 @@ function AuthPage() {
             <button
               type="button"
               onClick={() => navigate('/auth?mode=reset')}
-              className="-mt-1 self-end text-xs font-medium text-slate-400 transition-colors hover:text-indigo-300"
+              className="-mt-1 self-end text-xs font-medium text-muted transition-colors hover:text-brand-700"
             >
               Forgot your password?
             </button>
           )}
-          {error && <p className="text-sm text-rose-400">{error}</p>}
-          {message && <p className="text-sm text-emerald-400">{message}</p>}
+          {error && <p className="text-sm text-danger-600">{error}</p>}
+          {message && <p className="text-sm text-leaf-600">{message}</p>}
           <button
             type="submit"
             disabled={busy || !email || !password || (mode === 'signup' && (!username || !name))}
-            className="rounded-full bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-slate-600">
-          <span className="h-px flex-1 bg-slate-800" />
+        <div className="my-5 flex items-center gap-3 text-xs text-body">
+          <span className="h-px flex-1 bg-line" />
           or
-          <span className="h-px flex-1 bg-slate-800" />
+          <span className="h-px flex-1 bg-line" />
         </div>
 
         <button
           type="button"
           disabled={busy}
           onClick={google}
-          className="w-full rounded-full border border-slate-600 px-5 py-2 text-sm font-semibold text-slate-200 transition-colors hover:bg-slate-800 disabled:opacity-40"
+          className="w-full rounded-full border border-line px-5 py-2 text-sm font-semibold text-body transition-colors hover:bg-line disabled:opacity-40"
         >
           Continue with Google
         </button>

@@ -1,15 +1,10 @@
 import ResultTable from '../quiz/ResultTable.jsx'
 import Console from './Console.jsx'
 
-/**
- * Step-by-step table transformation. Each step shows the rows as they stand
- * after one clause has been applied, so you can watch a query narrow, widen or
- * rearrange a grid instead of taking the result on trust.
- */
-export default function FlowDiagram({ steps, caption, accent = '#38bdf8' }) {
+export default function FlowDiagram({ steps, caption, accent = '#1554c7', ink = accent }) {
   return (
     <div className="space-y-2.5">
-      <Console title="row flow" badge={`${steps.length} steps`} badgeClass="bg-slate-800 text-slate-400">
+      <Console title="row flow" badge={`${steps.length} steps`} badgeClass="bg-line text-body">
         <div className="space-y-1">
           {steps.map((step, i) => (
             <div key={i}>
@@ -33,18 +28,18 @@ export default function FlowDiagram({ steps, caption, accent = '#38bdf8' }) {
                 </div>
               )}
 
-              <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-2.5">
+              <div className="rounded-lg border border-line bg-white/40 p-2.5">
                 <div className="mb-2 flex items-start gap-2">
                   <span
                     className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded font-mono text-[9px] font-black"
-                    style={{ background: `${accent}26`, color: accent }}
+                    style={{ background: '#fff', color: ink, boxShadow: `inset 0 0 0 1px ${accent}66` }}
                   >
                     {i + 1}
                   </span>
-                  <code className="font-mono text-[12px] leading-snug text-slate-200">
+                  <code className="font-mono text-[12px] leading-snug text-body">
                     {step.label}
                   </code>
-                  <span className="ml-auto shrink-0 font-mono text-[9px] uppercase tracking-wider text-slate-600">
+                  <span className="ml-auto shrink-0 font-mono text-[9px] uppercase tracking-wider text-body">
                     {step.rows.length} {step.rows.length === 1 ? 'row' : 'rows'}
                   </span>
                 </div>
@@ -52,7 +47,7 @@ export default function FlowDiagram({ steps, caption, accent = '#38bdf8' }) {
                 <ResultTable columns={step.columns} rows={step.rows} />
 
                 {step.note && (
-                  <p className="mt-2 border-t border-slate-800 pt-2 text-[12px] leading-relaxed text-slate-400">
+                  <p className="mt-2 border-t border-line pt-2 text-[12px] leading-relaxed text-muted">
                     {step.note}
                   </p>
                 )}
@@ -63,7 +58,7 @@ export default function FlowDiagram({ steps, caption, accent = '#38bdf8' }) {
       </Console>
 
       {caption && (
-        <p className="px-0.5 text-[13px] leading-relaxed text-slate-600 italic">{caption}</p>
+        <p className="px-0.5 text-[13px] leading-relaxed text-body italic">{caption}</p>
       )}
     </div>
   )

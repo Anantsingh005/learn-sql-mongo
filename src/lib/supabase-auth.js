@@ -262,14 +262,3 @@ function friendlyAuthError(err) {
   if (map[code]) return map[code]
   return code ? `${code}: ${fallback}` : fallback
 }
-
-export default {
-  onAuthChange,
-  supabaseSignUp,
-  supabaseSignIn,
-  supabaseSignInWithGoogle,
-  supabaseSignOut,
-  supabaseGetSession,
-  supabaseResetPasswordRequest,
-  supabaseCompleteReset,
-}

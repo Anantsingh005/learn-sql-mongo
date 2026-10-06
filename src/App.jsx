@@ -11,6 +11,8 @@ import AuthPage from './pages/Auth.jsx'
 import AdminPage from './pages/Admin.jsx'
 import ProfilePage from './pages/Profile.jsx'
 import LevelReport from './pages/LevelReport.jsx'
+import Privacy from './pages/Privacy.jsx'
+import Terms from './pages/Terms.jsx'
 
 function App() {
   return (
@@ -19,6 +21,7 @@ function App() {
         <Route index element={<Home />} />
         <Route path="quiz/sql" element={<SqlQuiz />} />
         <Route path="practice" element={<Practice />} />
+        <Route path="more-practice" element={<Practice />} />
         <Route path="academy" element={<Academy />} />
         <Route path="academy/sql" element={<Academy />} />
         <Route path="academy/sql/:chapterSlug" element={<Chapter />} />
@@ -28,6 +31,8 @@ function App() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="profile/report/:mode/:level" element={<LevelReport />} />
         <Route path="admin" element={<AdminPage />} />
+        <Route path="privacy" element={<Privacy />} />
+        <Route path="terms" element={<Terms />} />
       </Route>
     </Routes>
   )

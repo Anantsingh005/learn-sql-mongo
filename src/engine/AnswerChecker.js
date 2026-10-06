@@ -31,7 +31,7 @@ function rowsEqual(actual, expected, epsilon) {
   )
 }
 
-export function checkAnswer(actual, expected, options = {}) {
+function checkAnswer(actual, expected, options = {}) {
   const {
     orderMatters = false,
     ignoreColumnOrder = false,

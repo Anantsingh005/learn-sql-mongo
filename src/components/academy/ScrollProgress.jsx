@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 
-/** Fixed reading-progress bar across the top of the viewport while a chapter is open. */
 export default function ScrollProgress({ accent = '#38bdf8' }) {
   const [pct, setPct] = useState(0)
 
@@ -32,7 +31,7 @@ export default function ScrollProgress({ accent = '#38bdf8' }) {
   }, [])
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px] bg-slate-900/70">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px] bg-ink/70">
       <div
         className="h-full origin-left transition-[width] duration-150 ease-out"
         style={{

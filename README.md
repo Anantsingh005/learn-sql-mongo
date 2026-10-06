@@ -53,7 +53,7 @@ npm install
 1. Create a Supabase project at [supabase.com](https://supabase.com).
 2. Enable **Email/Password** under *Authentication → Providers* (and **Google** for social sign-in).
 3. Create the schema by applying the migrations in the Supabase SQL editor:
-   - `profiles`, `scores`, `user_progress` tables with Row-Level Security and grants
+   - `profiles`, `scores`, `user_progress`, `question_attempts`, and `admins` tables with Row-Level Security and grants. `question_attempts` is what backs the per-level progress reports and `admins` gates the admin dashboard through `private.is_admin()` — omit either and those features fail at runtime, not at build time.
    - a `handle_new_user` trigger that auto-creates a profile on sign-up
    - a `scores_set_username` trigger that fills `scores.username` from the profile, so a score never lands as `Anonymous`
    - `password_resets` (single-use, hashed reset codes) with restrictive deny policies
@@ -92,7 +92,30 @@ npm run dev
 | `node scripts/browser-routes.mjs`     | Check every route loads without a console error |
 | `node scripts/browser-signup.mjs`     | Check the signup flow in headless Chrome |
 
-The `browser-*.mjs` scripts start their own dev server and drive Chrome over the DevTools protocol. They expect Chrome at the default Windows path and port 5173 to be free, so adjust the constants at the top before running them elsewhere.
+### Design regression scripts
+
+These check the light theme. The first four exit non-zero on failure, so they
+work as a pre-commit gate; `browser-shots.mjs` is the exception, since capturing
+PNGs cannot fail on a design problem. All five need a dev server already running
+on port 5173.
+
+| Command                                  | What it asserts |
+| ---------------------------------------- | --------------- |
+| `node scripts/browser-contrast.mjs`      | Every text node meets WCAG AA, per route, at desktop and mobile |
+| `node scripts/browser-design.mjs`        | 13 routes × 4 widths: heading order, no horizontal overflow, header presence and height, no console errors |
+| `node scripts/browser-hero.mjs`          | Home fits 1080p without scrolling *above the footer*, plus typewriter and `prefers-reduced-motion` |
+| `node scripts/browser-visual.mjs`        | Gradients that are secretly flat, cards with no edge, elements with nothing painted, transparent text separated from its `background-clip: text` painter by an atomic inline, and classes with no generated CSS. **Needs `npm run build` first** — it reads `dist/assets/*.css` |
+| `node scripts/browser-shots.mjs`         | Writes a PNG per route per width to `%TEMP%/opencode/shots` for human review |
+
+`browser-visual.mjs` exists because the other three are blind to a specific
+failure: a class can exist, compile, and pass contrast while rendering nothing
+visible. A gradient whose three stops are all the same colour is the case that
+mattered — it is a flat rectangle wearing a gradient's clothes, and it survived
+325 passing assertions until this check looked for it.
+
+The `browser-*.mjs` scripts drive Chrome over the DevTools protocol. They expect
+Chrome at the default Windows path and port 5173 to be free, so adjust the
+constants at the top before running them elsewhere.
 
 `verify-lessons.mjs` is the book check. It runs each chapter's SQL on a fresh database per block, asserts the expected rows, confirms documented failures really fail, and verifies the section quizzes: every answer key, every option listed in `distractorIndices` (which must error), and the requirement that **all 40 sections have questions**. Run it from the repo root so it can resolve `sql.js` and the ESM source.
 
@@ -133,4 +156,5 @@ src/
 - Question bank metadata lives in `src/data/sql/index.js`; the current default schema is `store`.
 - The book's quizzes are plain data keyed by section id, so chapter files stay prose. A question may carry a `check` (proved by the verifier, never rendered) and `distractorIndices` (options that must fail to run). Both are machine-checked, so an answer key or a trap that stops being true fails the build rather than teaching a falsehood.
 - Book progress is local-only under `dbquiz:academy-progress`; section keys are namespaced as `${chapterSlug}--${sectionId}`.
-- `QA` and `wdata/` contain scratch/QA material — not part of the app. `wdata/*.mjs` have syntax errors and will make a repo-wide lint fail; lint `src` and `scripts` instead.
+- `QA` and `wdata/` contain scratch/QA material — not part of the app, and nothing under `src/` imports them. Three of the `wdata/*.mjs` files (`w-hardE.mjs`, `wHardB.mjs`, `w-openA.mjs`) are committed with syntax errors, so they fail a repo-wide lint; run `npx oxlint src scripts` for a clean signal. They are harmless to the build.
+- A `public.feedback` table and its migration (`supabase/migrations/`) exist, but no code currently reads or writes it — it is an unused leftover. The app does not need it.

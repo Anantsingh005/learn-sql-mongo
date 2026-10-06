@@ -4,8 +4,6 @@ const PROGRESS_KEY = 'dbquiz.progress'
 
 export const COMPLETE_THRESHOLD = 75
 
-export const MODES = ['mc', 'write', 'bug']
-
 export function levelKey(mode, difficulty) {
   return `${mode}_${difficulty}`
 }
@@ -107,12 +105,4 @@ export function isLevelUnlocked(difficulty, progress, mode = 'mc') {
   }
   if (difficulty !== 'hard') return true
   return completed.includes(levelKey(mode, 'easy')) && completed.includes(levelKey(mode, 'medium'))
-}
-
-export default {
-  COMPLETE_THRESHOLD,
-  getProgress,
-  recordLevelResult,
-  clearLocalProgress,
-  isLevelUnlocked,
 }

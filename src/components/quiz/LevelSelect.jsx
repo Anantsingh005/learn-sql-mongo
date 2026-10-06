@@ -11,40 +11,40 @@ const levels = [
 
 const accents = {
   all: {
-    glow: 'from-cyan-500/50 via-fuchsia-400/25 to-indigo-400/50',
-    strip: 'from-cyan-400 to-fuchsia-400',
-    tag: 'text-cyan-400/90',
-    badge: 'border-cyan-500/40 bg-cyan-500/15 text-cyan-300',
-    bar: 'from-cyan-400 to-fuchsia-400',
-    barGlow: 'shadow-[0_0_10px_rgba(34,211,238,0.7)]',
-    btn: 'bg-cyan-500 text-cyan-950 hover:bg-cyan-400 hover:shadow-[0_0_28px_rgba(34,211,238,0.6)] shadow-[0_0_14px_rgba(34,211,238,0.35)]',
+    glow: 'from-brand-100/70 via-plum-50/60 to-transparent',
+    strip: 'from-brand-500 to-plum-400',
+    tag: 'text-brand-600',
+    badge: 'border-brand-200 bg-brand-50 text-brand-700',
+    bar: 'from-brand-500 to-plum-400',
+    barGlow: 'shadow-[0_0_10px_rgba(#1554c7,0.22)]',
+    btn: 'bg-brand-100 text-brand-700 hover:bg-brand-100 hover:shadow-[0_2px_10px_rgba(#1554c7,0.22)] shadow-[0_2px_10px_rgba(#1554c7,0.22)]',
   },
   easy: {
-    glow: 'from-emerald-500/50 via-emerald-400/25 to-teal-400/50',
-    strip: 'from-emerald-400 to-teal-400',
-    tag: 'text-emerald-400/90',
-    badge: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
-    bar: 'from-emerald-400 to-teal-400',
-    barGlow: 'shadow-[0_0_10px_rgba(16,185,129,0.7)]',
-    btn: 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400 hover:shadow-[0_0_28px_rgba(16,185,129,0.6)] shadow-[0_0_14px_rgba(16,185,129,0.35)]',
+    glow: 'from-leaf-100/70 via-leaf-50/60 to-transparent',
+    strip: 'from-leaf-500 to-leaf-400',
+    tag: 'text-leaf-600',
+    badge: 'border-leaf-200 bg-leaf-50 text-leaf-700',
+    bar: 'from-leaf-500 to-leaf-400',
+    barGlow: 'shadow-[0_0_10px_rgba(#3d7f55,0.22)]',
+    btn: 'bg-leaf-100 text-leaf-700 hover:bg-leaf-100 hover:shadow-[0_2px_10px_rgba(#3d7f55,0.22)] shadow-[0_2px_10px_rgba(#3d7f55,0.22)]',
   },
   medium: {
-    glow: 'from-amber-500/50 via-amber-400/25 to-orange-400/50',
-    strip: 'from-amber-400 to-orange-400',
-    tag: 'text-amber-400/90',
-    badge: 'border-amber-500/40 bg-amber-500/15 text-amber-300',
-    bar: 'from-amber-400 to-orange-400',
-    barGlow: 'shadow-[0_0_10px_rgba(245,158,11,0.7)]',
-    btn: 'bg-amber-500 text-amber-950 hover:bg-amber-400 hover:shadow-[0_0_28px_rgba(245,158,11,0.6)] shadow-[0_0_14px_rgba(245,158,11,0.35)]',
+    glow: 'from-amber-100/70 via-amber-50/60 to-transparent',
+    strip: 'from-amber-500 to-amber-400',
+    tag: 'text-amber-700',
+    badge: 'border-amber-200 bg-amber-50 text-amber-700',
+    bar: 'from-amber-500 to-amber-400',
+    barGlow: 'shadow-[0_0_10px_rgba(#a5680f,0.22)]',
+    btn: 'bg-amber-50 text-amber-700 hover:bg-amber-50 hover:shadow-[0_2px_10px_rgba(#a5680f,0.22)] shadow-[0_2px_10px_rgba(#a5680f,0.22)]',
   },
   hard: {
-    glow: 'from-rose-500/50 via-rose-400/25 to-pink-500/50',
-    strip: 'from-rose-400 to-pink-400',
-    tag: 'text-rose-400/90',
-    badge: 'border-rose-500/40 bg-rose-500/15 text-rose-300',
-    bar: 'from-rose-400 to-pink-400',
-    barGlow: 'shadow-[0_0_10px_rgba(244,63,94,0.7)]',
-    btn: 'bg-rose-500 text-rose-950 hover:bg-rose-400 hover:shadow-[0_0_28px_rgba(244,63,94,0.6)] shadow-[0_0_14px_rgba(244,63,94,0.35)]',
+    glow: 'from-danger-100/70 via-plum-50/60 to-transparent',
+    strip: 'from-danger-500 to-plum-400',
+    tag: 'text-danger-600',
+    badge: 'border-danger-200 bg-danger-50 text-danger-700',
+    bar: 'from-danger-500 to-plum-400',
+    barGlow: 'shadow-[0_0_10px_rgba(#b03333,0.22)]',
+    btn: 'bg-danger-100 text-danger-700 hover:bg-danger-100 hover:shadow-[0_2px_10px_rgba(#b03333,0.22)] shadow-[0_2px_10px_rgba(#b03333,0.22)]',
   },
 }
 
@@ -66,13 +66,13 @@ function LevelCard({ mode, lv, index, bank, progress, onPick, isGuest }) {
       />
       <div
         className={`relative overflow-hidden rounded-2xl border p-5 transition-all duration-300 ${
-          unlocked ? 'border-slate-700 bg-slate-900/95 group-hover:-translate-y-1' : 'border-slate-800 bg-slate-900/60'
-        } ${isCompleted ? 'shadow-[0_0_24px_rgba(16,185,129,0.15)]' : ''}`}
+          unlocked ? 'border-line bg-white group-hover:-translate-y-1' : 'border-line bg-white/60'
+        } ${isCompleted ? 'shadow-[0_2px_10px_rgba(#3d7f55,0.15)]' : ''}`}
       >
         <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${a.strip} opacity-80`} />
         <div
           className={`absolute right-4 top-3.5 font-mono text-[10px] font-bold tracking-[0.2em] ${
-            unlocked ? a.tag : 'text-slate-600'
+            unlocked ? a.tag : 'text-body'
           }`}
         >
           {lv.code} · {count}Q
@@ -84,29 +84,29 @@ function LevelCard({ mode, lv, index, bank, progress, onPick, isGuest }) {
               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border font-mono text-lg font-black transition-transform duration-300 ease-out ${
                 unlocked
                   ? `${a.badge} group-hover:rotate-12 group-hover:scale-110`
-                  : 'border-slate-700 bg-slate-800 text-slate-600'
+                  : 'border-line bg-line text-body'
               }`}
             >
               {index + 1}
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <span className="text-lg font-bold tracking-tight text-white">{lv.label}</span>
+                <span className="text-lg font-bold tracking-tight text-ink">{lv.label}</span>
                 {isCompleted && (
-                  <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.35)]">
+                  <span className="rounded-full bg-leaf-100 px-2.5 py-0.5 text-[11px] font-bold text-leaf-700 shadow-[0_0_12px_rgba(#3d7f55,0.22)]">
                     ✔ {best[levelKey(mode.key, lv.key)] ?? 100}%
                   </span>
                 )}
               </div>
-              <div className="text-xs text-slate-400">{lv.desc}</div>
+              <div className="text-xs text-muted">{lv.desc}</div>
             </div>
           </div>
 
           <div className="flex flex-col items-start gap-2 sm:ml-auto sm:items-end">
             {unlocked && (
               <div className="flex w-full items-center gap-2 sm:w-36">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-slate-500">best</span>
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-800">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted">best</span>
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
                   <div
                     className={`h-full rounded-full bg-gradient-to-r ${a.bar} ${a.barGlow} transition-all duration-500`}
                     style={{ width: `${pct}%` }}
@@ -122,7 +122,7 @@ function LevelCard({ mode, lv, index, bank, progress, onPick, isGuest }) {
               className={`rounded-lg px-5 py-2 text-sm font-bold transition-all ${
                 unlocked
                   ? a.btn
-                  : 'cursor-not-allowed border border-slate-700 bg-slate-800/60 text-slate-500'
+                  : 'cursor-not-allowed border border-line bg-line/60 text-muted'
               }`}
             >
               {isCompleted ? 'Replay' : unlocked ? 'Play' : authLocked ? '🔒 Sign in' : '🔒 Locked'}
@@ -141,16 +141,16 @@ function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPic
         <div className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-gradient">
           Pick your level
         </div>
-        <h1 className="mt-2 bg-gradient-to-r from-indigo-300 via-sky-300 to-fuchsia-300 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent sm:text-4xl">
+        <h1 className="mt-2 bg-gradient-to-r from-brand-700 via-brand-600 to-plum-600 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent sm:text-4xl">
           {mode.title}
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-muted">
           Finish{' '}
-          <span className="font-semibold text-emerald-300">Easy</span> and{' '}
-          <span className="font-semibold text-amber-300">Medium</span> with at least{' '}
-          <span className="font-semibold text-rose-300">{COMPLETE_THRESHOLD}%</span> to unlock{' '}
-          <span className="font-semibold text-rose-300">Hard</span> — then complete all three to unlock{' '}
-          <span className="font-semibold text-cyan-300">All Levels</span>.
+          <span className="font-semibold text-leaf-700">Easy</span> and{' '}
+          <span className="font-semibold text-amber-700">Medium</span> with at least{' '}
+          <span className="font-semibold text-danger-700">{COMPLETE_THRESHOLD}%</span> to unlock{' '}
+          <span className="font-semibold text-danger-700">Hard</span> — then complete all three to unlock{' '}
+          <span className="font-semibold text-brand-700">All Levels</span>.
         </p>
       </div>
 
@@ -174,7 +174,7 @@ function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPic
       <button
         type="button"
         onClick={onBack}
-        className="group mt-6 text-sm text-slate-400 transition-colors hover:text-slate-200"
+        className="group mt-6 text-sm text-muted transition-colors hover:text-body"
       >
         <span className="mr-1 inline-block transition-transform group-hover:-translate-x-1">←</span> Back to modes
       </button>

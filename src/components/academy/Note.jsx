@@ -1,32 +1,28 @@
 import { Inline } from './Prose.jsx'
 
-// The note backgrounds are tinted, so the code marks inside them get a neutral
-// chip rather than the paper-background one `Prose` uses by default. `strong`
-// borrows the tone's own heading colour so a bolded phrase still reads as part
-// of the note rather than as body text.
 const NOTE_CODE =
-  'rounded bg-slate-900/[0.08] px-1.5 py-0.5 font-mono text-[0.82em] text-slate-900 ring-1 ring-slate-900/10'
+  'rounded bg-mist px-1.5 py-0.5 font-mono text-[0.82em] text-ink ring-1 ring-brand-200'
 
 const TONES = {
   tip: {
-    box: 'border-emerald-600/25 bg-emerald-50/80',
-    bar: 'bg-emerald-500',
-    title: 'text-emerald-900',
-    body: 'text-emerald-900/75',
+    box: 'border-leaf-200 bg-leaf-100',
+    bar: 'bg-leaf-100',
+    title: 'text-leaf-700',
+    body: 'text-leaf-700',
     icon: '✦',
   },
   warn: {
-    box: 'border-amber-600/30 bg-amber-50/80',
-    bar: 'bg-amber-500',
-    title: 'text-amber-900',
-    body: 'text-amber-900/75',
+    box: 'border-amber-200 bg-amber-100',
+    bar: 'bg-amber-50',
+    title: 'text-amber-700',
+    body: 'text-amber-800',
     icon: '!',
   },
   info: {
-    box: 'border-sky-600/25 bg-sky-50/80',
-    bar: 'bg-sky-500',
-    title: 'text-sky-900',
-    body: 'text-sky-900/75',
+    box: 'border-brand-200 bg-brand-100',
+    bar: 'bg-brand-100',
+    title: 'text-brand-700',
+    body: 'text-brand-700',
     icon: 'i',
   },
 }

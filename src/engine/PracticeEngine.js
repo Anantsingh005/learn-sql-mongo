@@ -1,4 +1,4 @@
-import { checkPracticeAnswer } from './practiceChecker.js'
+﻿import { checkPracticeAnswer } from './practiceChecker.js'
 import { selectPracticeQuestions, PRACTICE_POINTS } from '../data/practice/practiceQuestions.js'
 
 export const PRACTICE_STATUS = {
@@ -246,4 +246,3 @@ export class PracticeEngine {
   }
 }
 
-export default PracticeEngine

@@ -12,10 +12,10 @@ function formatTime(seconds) {
 
 function StatCard({ label, value, sub }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-      <div className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-1 text-2xl font-bold text-white">{value}</div>
-      {sub && <div className="mt-0.5 text-xs text-slate-500">{sub}</div>}
+    <div className="rounded-xl border border-line bg-white p-4">
+      <div className="text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1 text-2xl font-bold text-ink">{value}</div>
+      {sub && <div className="mt-0.5 text-xs text-muted">{sub}</div>}
     </div>
   )
 }
@@ -35,7 +35,7 @@ export default function OverviewPanel() {
   }, [])
 
   if (!stats) {
-    return <p className="py-10 text-center text-sm text-slate-500">Loading overview…</p>
+    return <p className="py-10 text-center text-sm text-muted">Loading overview…</p>
   }
 
   return (
@@ -49,19 +49,19 @@ export default function OverviewPanel() {
         <StatCard label="Question bank" value="SQL" sub="static, in src/data/sql" />
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-slate-900">
-        <h3 className="border-b border-slate-800 px-4 py-3 text-sm font-semibold text-white">Leaderboard topline (SQL)</h3>
+      <div className="rounded-xl border border-line bg-white">
+        <h3 className="border-b border-line px-4 py-3 text-sm font-semibold text-ink">Leaderboard topline (SQL)</h3>
         {stats.top.length === 0 ? (
-          <p className="px-4 py-6 text-center text-sm text-slate-500">No scores yet.</p>
+          <p className="px-4 py-6 text-center text-sm text-muted">No scores yet.</p>
         ) : (
-          <ul className="divide-y divide-slate-800">
+          <ul className="divide-y divide-line">
             {stats.top.map((row, i) => (
               <li key={row.id} className="flex items-center justify-between px-4 py-2 text-sm">
                 <span className="flex items-center gap-3">
-                  <span className="w-5 text-slate-500">{i + 1}</span>
-                  <span className="font-medium text-slate-200">{row.username || 'Anonymous'}</span>
+                  <span className="w-5 text-muted">{i + 1}</span>
+                  <span className="font-medium text-body">{row.username || 'Anonymous'}</span>
                 </span>
-                <span className="text-slate-400">
+                <span className="text-muted">
                   {row.score} · {i === 0 ? 'best' : `${formatTime(row.time_seconds)}`}
                 </span>
               </li>

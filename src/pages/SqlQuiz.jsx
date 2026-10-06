@@ -184,14 +184,14 @@ function SqlQuiz() {
       <HUD snapshot={snapshot} />
 
       {snapshot.extraTimePending && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/50 bg-amber-500/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="text-xl">⏰</span>
             <div>
-              <div className="text-sm font-bold text-amber-200">
+              <div className="text-sm font-bold text-amber-700">
                 Only {snapshot.timeLeft}s left!
               </div>
-              <div className="text-xs text-amber-200/80">
+              <div className="text-xs text-amber-800">
                 Add {snapshot.extraTimeSeconds} more seconds to keep working on this question?
               </div>
             </div>
@@ -200,14 +200,14 @@ function SqlQuiz() {
             <button
               type="button"
               onClick={() => engine.grantExtraTime()}
-              className="rounded-lg bg-amber-500 px-4 py-1.5 text-sm font-bold text-amber-950 transition-colors hover:bg-amber-400"
+              className="rounded-lg bg-amber-50 px-4 py-1.5 text-sm font-bold text-amber-700 transition-colors hover:bg-amber-50"
             >
               Add {snapshot.extraTimeSeconds}s
             </button>
             <button
               type="button"
               onClick={() => engine.declineExtraTime()}
-              className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-700"
+              className="rounded-lg border border-line bg-line px-4 py-1.5 text-sm font-medium text-body transition-colors hover:bg-line"
             >
               No thanks
             </button>
@@ -230,8 +230,8 @@ function SqlQuiz() {
         )}
         {(question.type === 'write' || question.type === 'bug') && isFeedback && (
           <div className="mt-4">
-            <p className="mb-1 text-xs font-medium text-slate-400">Your query:</p>
-            <pre className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-[13px] text-emerald-200">
+            <p className="mb-1 text-xs font-medium text-muted">Your query:</p>
+            <pre className="overflow-x-auto rounded-lg border border-line bg-white px-3 py-2 font-mono text-[13px] text-leaf-700">
               {snapshot.answers[snapshot.answers.length - 1]?.answer}
             </pre>
           </div>
@@ -240,14 +240,14 @@ function SqlQuiz() {
 
       {question.type === 'mc' && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-muted">
             {selectedIndex === null ? 'Select an answer above' : 'Ready to submit'}
           </span>
           <button
             type="button"
             disabled={selectedIndex === null || isFeedback}
             onClick={submitMc}
-            className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Submit
           </button>

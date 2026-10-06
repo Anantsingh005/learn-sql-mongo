@@ -21,7 +21,7 @@ async function messageFrom(error) {
   return GENERIC
 }
 
-export async function callAuth(action, payload = {}, token = null) {
+async function callAuth(action, payload = {}, token = null) {
   if (!supabase) return { data: null, error: { message: 'Supabase is not configured.' } }
   try {
     const { data, error } = await supabase.functions.invoke('auth', {
@@ -57,5 +57,3 @@ export async function authRequestReset(email) {
 export async function authCompleteReset({ email, code, password }) {
   return callAuth('complete-reset', { email, code, password })
 }
-
-export default { callAuth, authSignUp, authUpdateEmail, authDeleteAccount, authRequestReset, authCompleteReset }

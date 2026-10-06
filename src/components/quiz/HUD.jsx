@@ -7,8 +7,8 @@ function Lives({ lives }) {
           key={i}
           className={`inline-block h-3 w-3 rounded-full transition-all duration-300 ${
             i < lives
-              ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.8)]'
-              : 'bg-slate-700'
+              ? 'bg-danger-100 shadow-[0_0_10px_rgba(#b03333,0.22)]'
+              : 'bg-line'
           }`}
         />
       ))}
@@ -26,15 +26,15 @@ function ProgressDots({ snapshot }) {
         const isCurrent = i === index
         const cls = answered
           ? correct
-            ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]'
-            : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]'
-          : 'bg-slate-700'
+            ? 'bg-leaf-100 shadow-[0_0_8px_rgba(#3d7f55,0.22)]'
+            : 'bg-danger-100 shadow-[0_0_8px_rgba(#b03333,0.22)]'
+          : 'bg-line'
         return (
           <span
             key={i}
             title={answered ? `Q${i + 1} — ${correct ? 'correct' : 'wrong'}` : `Q${i + 1} — unanswered`}
             className={`inline-block h-2.5 w-2.5 rounded-sm transition-all duration-300 ${
-              isCurrent && !answered ? 'ring-2 ring-indigo-400 ring-offset-1 ring-offset-slate-900' : ''
+              isCurrent && !answered ? 'ring-2 ring-brand-600 ring-offset-1 ring-offset-slate-900' : ''
             } ${cls}`}
           />
         )
@@ -49,8 +49,8 @@ function Timer({ timeLeft }) {
     <span
       className={`rounded-md px-2 py-1 font-mono text-sm font-bold tabular-nums ${
         danger
-          ? 'animate-pulse bg-rose-500/20 text-rose-300 shadow-[0_0_12px_rgba(244,63,94,0.6)]'
-          : 'bg-slate-800 text-slate-200'
+          ? 'animate-pulse bg-danger-100 text-danger-700 shadow-[0_0_12px_rgba(#b03333,0.22)]'
+          : 'bg-line text-body'
       }`}
     >
       {timeLeft}s
@@ -63,34 +63,34 @@ function HUD({ snapshot }) {
   const pct = total > 0 ? Math.round((index / total) * 100) : 0
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/90 px-5 py-4">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 opacity-70" />
+    <div className="relative overflow-hidden rounded-2xl border border-line bg-white px-5 py-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-100 via-plum-100 to-brand-100 opacity-70" />
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <span className="font-mono text-sm text-slate-400">
-            Q <span className="font-bold text-indigo-300">{Math.min(index + 1, total)}</span>/{total}
+          <span className="font-mono text-sm text-muted">
+            Q <span className="font-bold text-brand-700">{Math.min(index + 1, total)}</span>/{total}
           </span>
           <Lives lives={lives} />
         </div>
         <div className="w-full max-w-60">
-          <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
+          <div className="h-1.5 overflow-hidden rounded-full bg-line">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 shadow-[0_0_10px_rgba(129,140,248,0.8)] transition-all duration-300"
+              className="h-full rounded-full bg-gradient-to-r from-brand-100 via-plum-100 to-brand-100 shadow-[0_0_10px_rgba(#2f6ad0,0.22)] transition-all duration-300"
               style={{ width: `${pct}%` }}
             />
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm text-slate-400">
+          <span className="font-mono text-sm text-muted">
             Score{' '}
-            <span className="text-lg font-bold text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]">
+            <span className="text-lg font-bold text-amber-700 drop-shadow-[0_0_10px_rgba(#a5680f,0.22)]">
               {score}
             </span>
           </span>
           <Timer timeLeft={timeLeft} />
         </div>
       </div>
-      <div className="mt-3 border-t border-slate-800 pt-3">
+      <div className="mt-3 border-t border-line pt-3">
         <ProgressDots snapshot={snapshot} />
       </div>
     </div>

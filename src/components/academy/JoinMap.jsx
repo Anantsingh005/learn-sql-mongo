@@ -31,16 +31,10 @@ const TYPES = [
 
 const SIDES = ['left', 'right']
 
-/**
- * The join-types map. Chapter 4's whole argument is that a join is a promise
- * about which rows survive, so the map shows that promise for each type instead
- * of another grid of results — the numbers live in the verified examples
- * beside it.
- */
-export default function JoinMap({ accent = '#38bdf8' }) {
+export default function JoinMap({ accent = '#1554c7', ink = accent }) {
   return (
-    <div className="rounded-xl border border-slate-700/80 bg-slate-950 p-4">
-      <div className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+    <div className="rounded-xl border border-line/80 bg-white p-4">
+      <div className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
         Join types · which rows survive
       </div>
 
@@ -48,14 +42,14 @@ export default function JoinMap({ accent = '#38bdf8' }) {
         {TYPES.map((t) => (
           <div
             key={t.sql}
-            className="rounded-lg border border-slate-800 bg-slate-900/40 p-2.5"
+            className="rounded-lg border border-line bg-white/40 p-2.5"
           >
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <code className="font-mono text-[12px] font-bold" style={{ color: accent }}>
+              <code className="font-mono text-[12px] font-bold" style={{ color: ink }}>
                 {t.sql}
               </code>
               {t.alias && (
-                <span className="font-mono text-[10px] text-slate-600">{t.alias}</span>
+                <span className="font-mono text-[10px] text-body">{t.alias}</span>
               )}
             </div>
 
@@ -67,13 +61,13 @@ export default function JoinMap({ accent = '#38bdf8' }) {
                     <div
                       className={`h-6 flex-1 rounded border ${
                         lost
-                          ? 'border-rose-500/40 bg-rose-500/5'
-                          : 'border-slate-700 bg-slate-800/60'
+                          ? 'border-danger-200 bg-danger-50'
+                          : 'border-line bg-line/60'
                       }`}
                     />
                     <span
                       className={`shrink-0 font-mono text-[9px] uppercase tracking-wider ${
-                        lost ? 'text-rose-400' : 'text-emerald-400'
+                        lost ? 'text-danger-600' : 'text-leaf-600'
                       }`}
                     >
                       {side}
@@ -83,15 +77,15 @@ export default function JoinMap({ accent = '#38bdf8' }) {
               })}
             </div>
 
-            <p className="mt-1.5 text-[11px] leading-snug text-slate-400">{t.keeps}</p>
-            <p className="mt-0.5 text-[11px] leading-snug text-slate-600">
-              <span className="text-rose-400/90">Drops:</span> {t.drops}
+            <p className="mt-1.5 text-[11px] leading-snug text-muted">{t.keeps}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-body">
+              <span className="text-danger-600/90">Drops:</span> {t.drops}
             </p>
           </div>
         ))}
       </div>
 
-      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+      <p className="mt-3 text-[11px] leading-relaxed text-muted">
         Red means those rows disappear. A red side is how a join quietly loses
         data you did not know was there.
       </p>

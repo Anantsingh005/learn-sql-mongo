@@ -3,23 +3,20 @@ import { COMPLETE_THRESHOLD, levelKey } from '../../lib/progress.js'
 import { quizModes } from './ModeSelect.jsx'
 
 function grade(percent) {
-  if (percent >= 90) return { letter: 'A', color: 'text-emerald-300', msg: 'Outstanding!' }
-  if (percent >= 75) return { letter: 'B', color: 'text-indigo-300', msg: 'Great job!' }
-  if (percent >= 60) return { letter: 'C', color: 'text-sky-300', msg: 'Solid work.' }
-  if (percent >= 40) return { letter: 'D', color: 'text-amber-300', msg: 'Keep practicing.' }
-  return { letter: 'F', color: 'text-rose-300', msg: 'Review the explanations below.' }
+  if (percent >= 90) return { letter: 'A', color: 'text-leaf-700', msg: 'Outstanding!' }
+  if (percent >= 75) return { letter: 'B', color: 'text-brand-700', msg: 'Great job!' }
+  if (percent >= 60) return { letter: 'C', color: 'text-brand-700', msg: 'Solid work.' }
+  if (percent >= 40) return { letter: 'D', color: 'text-amber-700', msg: 'Keep practicing.' }
+  return { letter: 'F', color: 'text-danger-700', msg: 'Review the explanations below.' }
 }
 
 function saveMessage(status, { modeLabel, username } = {}) {
   switch (status) {
     case 'saving':
-      return <span className="text-slate-400">Saving score…</span>
+      return <span className="text-muted">Saving score…</span>
     case 'saved':
-      // A brand-new player has never seen themselves on the board, so "Score
-      // saved" alone leaves the most important part unsaid: which board, and
-      // under what name. This is the one moment we can tell them.
       return (
-        <span className="text-emerald-400">
+        <span className="text-leaf-600">
           Saved — you&apos;re on the {modeLabel ?? 'leaderboard'}
           {username ? (
             <>
@@ -31,11 +28,11 @@ function saveMessage(status, { modeLabel, username } = {}) {
         </span>
       )
     case 'error':
-      return <span className="text-rose-400">Couldn’t save score. Try again later.</span>
+      return <span className="text-danger-600">Couldn’t save score. Try again later.</span>
     case 'guest':
       return (
-        <span className="text-slate-500">
-          <Link to="/auth" className="text-indigo-300 underline-offset-2 hover:underline">
+        <span className="text-muted">
+          <Link to="/auth" className="text-brand-700 underline-offset-2 hover:underline">
             Sign in
           </Link>{' '}
           to save your score to the leaderboard.
@@ -57,8 +54,6 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
   const hardUnlocked =
     completedLevels.includes(levelKey(mode, 'easy')) && completedLevels.includes(levelKey(mode, 'medium'))
 
-  // The board a finished run lands on, phrased the way the leaderboard phrases
-  // it, so the confirmation and the board the player visits agree.
   const modeTitle = quizModes.find((m) => m.key === mode)?.title
   const boardLabel = modeTitle ? `${modeTitle}${difficulty ? ` · ${difficulty}` : ''}` : null
 
@@ -77,20 +72,20 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
-        <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">Quiz complete</div>
+      <div className="rounded-2xl border border-line bg-white p-8 text-center">
+        <div className="text-xs font-semibold uppercase tracking-widest text-muted">Quiz complete</div>
         {levelMessage && (
-          <div className="mt-3 rounded-lg border border-emerald-600/50 bg-emerald-500/10 px-4 py-2.5 text-sm font-medium text-emerald-200">
+          <div className="mt-3 rounded-lg border border-leaf-200 bg-leaf-50 px-4 py-2.5 text-sm font-medium text-leaf-700">
             {levelMessage}
           </div>
         )}
-        <div className="mt-2 text-6xl font-black text-white">{g.letter}</div>
+        <div className="mt-2 text-6xl font-black text-ink">{g.letter}</div>
         <div className={`mt-1 text-lg font-semibold ${g.color}`}>{g.msg}</div>
-        <div className="mt-1 text-sm text-slate-400">{percent}% correct</div>
-        <div className="mt-4 flex items-center justify-center gap-6 font-mono text-sm text-slate-300">
-          <span>Score <span className="text-lg font-bold text-indigo-300">{snapshot.score}</span></span>
+        <div className="mt-1 text-sm text-muted">{percent}% correct</div>
+        <div className="mt-4 flex items-center justify-center gap-6 font-mono text-sm text-muted">
+          <span>Score <span className="text-lg font-bold text-brand-700">{snapshot.score}</span></span>
           <span>{correct} / {total} correct</span>
-          <span className={snapshot.lives <= 0 ? 'text-rose-300' : ''}>
+          <span className={snapshot.lives <= 0 ? 'text-danger-700' : ''}>
             {snapshot.lives}/{3} lives
           </span>
           <span className="font-sans text-xs">
@@ -102,13 +97,13 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
           <button
             type="button"
             onClick={onReplay}
-            className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500"
+            className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700"
           >
             Play again
           </button>
           <Link
             to="/"
-            className="rounded-lg border border-slate-600 px-5 py-2 font-semibold text-slate-200 transition-colors hover:bg-slate-800"
+            className="rounded-lg border border-line px-5 py-2 font-semibold text-body transition-colors hover:bg-line"
           >
             Home
           </Link>
@@ -117,30 +112,30 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
 
       {total > 0 && (
         <div className="mt-6">
-          <div className="mb-2 text-sm font-semibold text-slate-300">Answer review</div>
+          <div className="mb-2 text-sm font-semibold text-muted">Answer review</div>
           <div className="flex flex-col gap-2">
             {answers.map((a, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-slate-800 bg-slate-900 px-4 py-3"
+                className="rounded-lg border border-line bg-white px-4 py-3"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span className="text-sm text-slate-300">
-                    <span className="mr-2 font-mono text-xs text-slate-500">Q{i + 1}</span>
+                  <span className="text-sm text-muted">
+                    <span className="mr-2 font-mono text-xs text-muted">Q{i + 1}</span>
                     {a.question.question.split('\n')[0]}
                   </span>
                   <span
                     className={`shrink-0 rounded-md px-2 py-0.5 font-mono text-xs font-bold ${
-                      a.correct ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'
+                      a.correct ? 'bg-leaf-50 text-leaf-700' : 'bg-danger-50 text-danger-700'
                     }`}
                   >
                     {a.correct ? 'CORRECT' : 'WRONG'}
                   </span>
                 </div>
                 {!a.correct && (
-                  <div className="mt-2 text-xs text-slate-500">
+                  <div className="mt-2 text-xs text-muted">
                     {a.question.type === 'mc' ? (
-                      <>Correct: <code className="text-emerald-300">{a.question.options[a.question.answerIndex]}</code></>
+                      <>Correct: <code className="text-leaf-700">{a.question.options[a.question.answerIndex]}</code></>
                     ) : (
                       <span>Expected result shown with explanation above.</span>
                     )}

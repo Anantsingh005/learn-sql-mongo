@@ -1,18 +1,5 @@
 import { allSqlQuestions } from '../data/sql/index.js'
 
-export const DIFFICULTY_LEVELS = {
-  all: 'All levels',
-  easy: 'Easy',
-  medium: 'Medium',
-  hard: 'Hard',
-}
-
-export const QUESTION_TYPE_LABELS = {
-  mc: 'Multiple choice',
-  write: 'Write a query',
-  bug: 'Fix the bug',
-}
-
 export const GUEST_QUESTION_LIMIT = 10
 
 function normalizeTypes(types) {
@@ -33,9 +20,4 @@ export function selectQuestions({ types = { mc: true, write: true, bug: true }, 
   })
   if (Number.isFinite(limit) && limit > 0) return questions.slice(0, limit)
   return questions
-}
-
-export function countByDifficulty(questions, difficulty) {
-  if (difficulty === 'all') return questions.length
-  return questions.filter((q) => q.difficulty === difficulty).length
 }

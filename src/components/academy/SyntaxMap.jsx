@@ -8,16 +8,12 @@ const CLAUSES = [
   { key: 'limit', sql: 'LIMIT', what: 'Cut off the end' },
 ]
 
-/**
- * The clause-order map: a vertical rail through the fixed slots of a SELECT
- * query. Pass `highlight` to light up the clauses under discussion and dim the rest.
- */
-export default function SyntaxMap({ highlight, accent = '#38bdf8' }) {
+export default function SyntaxMap({ highlight, accent = '#1554c7', ink = accent }) {
   const lit = Array.isArray(highlight) ? highlight : highlight ? [highlight] : null
 
   return (
-    <div className="rounded-xl border border-slate-700/80 bg-slate-950 p-4">
-      <div className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+    <div className="rounded-xl border border-line/80 bg-white p-4">
+      <div className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
         Clause order · fixed by the grammar
       </div>
 
@@ -33,27 +29,27 @@ export default function SyntaxMap({ highlight, accent = '#38bdf8' }) {
           return (
             <li
               key={c.key}
-              className={`relative flex items-center gap-3 rounded-lg px-1.5 py-1.5 transition-opacity ${
-                on ? 'opacity-100' : 'opacity-30'
+              className={`relative flex items-center gap-3 rounded-lg px-1.5 py-1.5 transition-colors ${
+                on ? 'bg-brand-50/60' : ''
               }`}
             >
               <span
                 className="z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border font-mono text-[10px] font-black"
                 style={{
-                  borderColor: on ? `${accent}88` : '#334155',
-                  background: on ? `${accent}1f` : '#0f172a',
-                  color: on ? accent : '#64748b',
+                  borderColor: on ? `${accent}88` : '#cbd5e1',
+                  background: on ? `${accent}1f` : '#eef2f7',
+                  color: on ? ink : '#4a6178',
                 }}
               >
                 {i + 1}
               </span>
               <code
                 className="w-20 shrink-0 font-mono text-[12px] font-bold"
-                style={{ color: on ? accent : '#94a3b8' }}
+                style={{ color: on ? ink : '#3d566e' }}
               >
                 {c.sql}
               </code>
-              <span className="text-[12px] leading-snug text-slate-400">{c.what}</span>
+              <span className="text-[12px] leading-snug text-muted">{c.what}</span>
             </li>
           )
         })}

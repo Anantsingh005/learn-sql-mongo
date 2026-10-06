@@ -26,7 +26,7 @@ function displayValue(col, value) {
 }
 
 function inputFor(col, value, onChange) {
-  const base = 'w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-sm text-slate-100 focus:border-indigo-500 focus:outline-none'
+  const base = 'w-full rounded border border-line bg-line px-2 py-1.5 text-sm text-body focus:border-brand-200 focus:outline-none'
   if (col.type === 'json') {
     return (
       <textarea
@@ -177,28 +177,28 @@ export default function AdminTable({ meta }) {
   const renderRow = (row) => {
     const isEditing = !inserting && editingKey === row[rowKey]
     return (
-      <tr key={row[rowKey]} className="border-t border-slate-800">
+      <tr key={row[rowKey]} className="border-t border-line">
         {columns.map((c) => (
-          <td key={c.key} className="px-3 py-2 align-top text-xs text-slate-300">
+          <td key={c.key} className="px-3 py-2 align-top text-xs text-muted">
             {isEditing && c.editable ? inputFor(c, draft[c.key] ?? '', (v) => setDraft((d) => ({ ...d, [c.key]: v }))) : displayValue(c, row[c.key])}
           </td>
         ))}
         <td className="px-3 py-2 align-middle text-right">
           {isEditing ? (
             <div className="flex justify-end gap-1">
-              <button type="button" onClick={saveEdit} disabled={saving} className="rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-50">
+              <button type="button" onClick={saveEdit} disabled={saving} className="rounded bg-leaf-600 px-2 py-1 text-xs font-medium text-white hover:bg-leaf-700 disabled:opacity-50">
                 Save
               </button>
-              <button type="button" onClick={cancelEdit} className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-600">
+              <button type="button" onClick={cancelEdit} className="rounded bg-line px-2 py-1 text-xs font-medium text-body hover:bg-line-soft">
                 Cancel
               </button>
             </div>
           ) : (
             <div className="flex justify-end gap-1">
-              <button type="button" onClick={() => startEdit(row)} disabled={saving} className="rounded bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50">
+              <button type="button" onClick={() => startEdit(row)} disabled={saving} className="rounded bg-brand-600 px-2 py-1 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-50">
                 Edit
               </button>
-              <button type="button" onClick={() => removeRow(row)} disabled={saving} className="rounded bg-rose-700 px-2 py-1 text-xs font-medium text-white hover:bg-rose-600 disabled:opacity-50">
+              <button type="button" onClick={() => removeRow(row)} disabled={saving} className="rounded bg-danger-600 px-2 py-1 text-xs font-medium text-white hover:bg-danger-700 disabled:opacity-50">
                 Delete
               </button>
             </div>
@@ -209,11 +209,11 @@ export default function AdminTable({ meta }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-4 py-3">
-        <h3 className="text-sm font-semibold text-white">
+    <div className="rounded-xl border border-line bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+        <h3 className="text-sm font-semibold text-ink">
           {label}
-          <span className="ml-2 font-normal text-slate-500">{rows.length} row{rows.length === 1 ? '' : 's'}</span>
+          <span className="ml-2 font-normal text-muted">{rows.length} row{rows.length === 1 ? '' : 's'}</span>
         </h3>
         <div className="flex items-center gap-2">
           <input
@@ -224,10 +224,10 @@ export default function AdminTable({ meta }) {
               setPage(0)
             }}
             placeholder={`Filter ${label.toLowerCase()}…`}
-            className="w-52 rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+            className="w-52 rounded border border-line bg-line px-2 py-1.5 text-sm text-body placeholder-muted focus:border-brand-200 focus:outline-none"
           />
           {canInsert && !inserting && (
-            <button type="button" onClick={startInsert} className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500">
+            <button type="button" onClick={startInsert} className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
               Add row
             </button>
           )}
@@ -235,26 +235,26 @@ export default function AdminTable({ meta }) {
       </div>
 
       {opError && (
-        <div className="border-b border-rose-900 bg-rose-950/40 px-4 py-2 text-xs text-rose-300">
+        <div className="border-b border-line bg-white/40 px-4 py-2 text-xs text-danger-700">
           {opError}
         </div>
       )}
       {error && (
-        <div className="border-b border-rose-900 bg-rose-950/40 px-4 py-2 text-xs text-rose-300">
+        <div className="border-b border-line bg-white/40 px-4 py-2 text-xs text-danger-700">
           Failed to load rows: {error.message ?? String(error)}
         </div>
       )}
 
       {loading ? (
-        <p className="p-6 text-center text-sm text-slate-500">Loading…</p>
+        <p className="p-6 text-center text-sm text-muted">Loading…</p>
       ) : visible.length === 0 && !inserting ? (
-        <p className="p-6 text-center text-sm text-slate-500">
+        <p className="p-6 text-center text-sm text-muted">
           {query ? 'No matching rows.' : 'No rows yet.'}
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-max text-left text-sm">
-            <thead className="bg-slate-800/60 text-xs text-slate-400">
+            <thead className="bg-line/60 text-xs text-muted">
               <tr>
                 {columns.map((c) => (
                   <th key={c.key} className="px-3 py-2 font-medium">
@@ -266,18 +266,18 @@ export default function AdminTable({ meta }) {
             </thead>
             <tbody>
               {inserting && (
-                <tr className="border-t border-indigo-900 bg-indigo-950/30">
+                <tr className="border-t border-line bg-white/30">
                   {columns.map((c) => (
                     <td key={c.key} className="px-3 py-2 align-top">
-                      {c.editable ? inputFor(c, insertDraft[c.key] ?? '', (v) => setInsertDraft((d) => ({ ...d, [c.key]: v }))) : <span className="text-xs text-slate-600">{c.label} (auto)</span>}
+                      {c.editable ? inputFor(c, insertDraft[c.key] ?? '', (v) => setInsertDraft((d) => ({ ...d, [c.key]: v }))) : <span className="text-xs text-body">{c.label} (auto)</span>}
                     </td>
                   ))}
                   <td className="px-3 py-2 align-middle">
                     <div className="flex justify-end gap-1">
-                      <button type="button" onClick={saveInsert} disabled={saving} className="rounded bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-50">
+                      <button type="button" onClick={saveInsert} disabled={saving} className="rounded bg-leaf-600 px-2 py-1 text-xs font-medium text-white hover:bg-leaf-700 disabled:opacity-50">
                         Save
                       </button>
-                      <button type="button" onClick={cancelInsert} className="rounded bg-slate-700 px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-600">
+                      <button type="button" onClick={cancelInsert} className="rounded bg-line px-2 py-1 text-xs font-medium text-body hover:bg-line-soft">
                         Cancel
                       </button>
                     </div>
@@ -291,15 +291,15 @@ export default function AdminTable({ meta }) {
       )}
 
       {!loading && pageCount > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-800 px-4 py-2 text-xs text-slate-400">
+        <div className="flex items-center justify-between border-t border-line px-4 py-2 text-xs text-muted">
           <span>
             Page {page + 1} of {pageCount}
           </span>
           <div className="flex gap-1">
-            <button type="button" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="rounded bg-slate-800 px-2 py-1 disabled:opacity-40">
+            <button type="button" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0} className="rounded bg-line px-2 py-1 disabled:opacity-40">
               Prev
             </button>
-            <button type="button" onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1} className="rounded bg-slate-800 px-2 py-1 disabled:opacity-40">
+            <button type="button" onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))} disabled={page >= pageCount - 1} className="rounded bg-line px-2 py-1 disabled:opacity-40">
               Next
             </button>
           </div>

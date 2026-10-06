@@ -1,8 +1,102 @@
 # Project Status
 
-Last updated: 2026-09-26
+Last updated: 2026-10-04
 
-## Current session (2026-09-26 - committed): Academy rebuild (SQL book reader)
+## Current session (2026-10-04): full-app light theme, then a visual-risk audit that found real defects
+
+A whole-app dark→light conversion, then a rendering audit of the result. **Still uncommitted — nothing was committed or pushed, and both stashes are retained.**
+
+### The theme work
+
+**No behaviour, route, schema, quiz or scoring change.** Styling and semantics only. The tokens live in `src/index.css`: `--color-brand-600 #1554c7`, `--color-ink #102a43`, `--color-body #243b53`, `--color-muted #556d85`, plus per-family 50/100/200/400/500/600/700 scales for brand, leaf, plum, amber, danger, warning and success. Typography is `@fontsource-variable/{inter,source-serif-4,jetbrains-mono}`.
+
+**Converted via three documented, re-runnable codemods** (`scripts/codemod-light.mjs`, `-pass2.mjs`, `-pass3.mjs`): dark/neon Tailwind palette classes, arbitrary hex and RGBA literals, translucent tints, glow shadows, dark card surfaces, and contextual `text-white`. Every accent family got its dark-theme shades retuned rather than dropped.
+
+**Home is a distinct layout**, not a recolour: cards are **299px** at ≥1280w (325px at 834w, 317px at 390w). It carries the same `site/Footer.jsx` as every other route, so Home is **no longer a single-screen page** — it scrolls **39 / 119 / 219 / 219px** at 1920 / 1600 / 1440 / 1280w (293px at 834w, 958px at 390w, where everything stacks). The header is 70px with five items (Home, SQL Quiz, Academy, More Practice, Leaderboard).
+
+**The game cards were rescaled up (2026-10-04).** They were the smallest thing on the page — a 239px card between a 367px hero and a 270px footer, holding one line of 14px copy in a 532px-wide box, i.e. wide, empty and vertically cramped. Everything moved together rather than one dimension: icon `h-12`→`h-16` (glyph 24→32), title 18→22px, copy 14→16px, arrow `h-9`→`h-11` (glyph 17→20), padding `p-6`→`p-7 sm:p-8`, gap `gap-5`→`gap-6`, "Soon" badge inset `right-7 top-7`→`right-8 top-8`. Card 239→299px, band 352→412px. The card's height is content-driven — there is no `min-height` and no slack to reclaim — so the two cards are equal because their copy is the same length and the badge is absolutely positioned; `browser-design.mjs` asserts that equality.
+
+**Semantics fixed while in there:** `<h1>` added to all three `/auth` views and to `/quiz/mongo` (`QuizPlaceholder.jsx` was a `div`); `Privacy.jsx`'s `/settings` link pointed at no declared route and now goes to `/profile`. A link audit confirms every discovered internal link resolves.
+
+**Footer on the landing page (deliberate trade).** The footer was originally suppressed on `/` so the landing page could stay a single screen. It now renders there too, because a footer that exists on most of the site is worse than a landing page that scrolls. The landing page therefore scrolls, and its total scroll is now **39 / 119 / 219 / 219px** at 1920 / 1600 / 1440 / 1280w — the footer's 270px plus whatever the card band adds. The hero budget was not abandoned — `browser-hero.mjs` now asserts `scrollHeight - footerH <= innerHeight`, i.e. that everything *above* the footer still fits one screen, so the hero and cards are still held to their original screen. `Layout.jsx` keeps `isLanding` for the full-bleed `main` only; that flag is about horizontal inset and was never about the footer.
+
+**Correcting an arithmetic error made during the card rescale.** The rescale was first reported as adding *zero* scroll, on the reasoning that 111px remained between the content and the viewport bottom at 1440x900. That was wrong, and it is recorded here because it is the kind of confident mistake that survives review: `overflow = above + footerH - innerHeight`, so the footer's 270px already occupies that gap, and growing the band by 60px necessarily adds 60px of scroll. The band was never free to grow -- only the *hero-budget assertion* was satisfied. Home's scroll went **159px -> 219px** at 1440w/1280w and **0px -> 39px** at 1920w. The assertion still passes (849px of a 900px viewport) and the cards are now correctly scaled, so the trade stands; the "free" framing was simply an error. If the scroll ever needs reclaiming, the lever is the band's own vertical padding in `Home.jsx` (`py-12 sm:py-14`, 112px in total), not the cards.
+
+**The hero's second headline line was invisible, and four gates passed it (2026-10-04).** "database skills" rendered as nothing at all, on every route load, at every viewport. `Hero.jsx` puts `grad-text` on the line wrapper and wraps each glyph in a `.type-char` span; `.grad-text` paints text with `background-clip: text` plus `color: transparent`, and `.type-char` was `display: inline-block`. That combination cannot work: `background-clip: text` clips to the **text run** of the element it is on, which includes ordinary inline descendants but **not** an atomic inline. An `inline-block` forms its own paint box, so its glyphs leave the clipper's text run, never receive the clipped background, and inherit the transparent colour with nothing painting them. The comment in `Hero.jsx` asserted the opposite ("clips across an element *and its descendants*"), and that assumption was the bug.
+
+Fixed by making `.type-char` `display: inline` and reducing `@keyframes type-char` to opacity only. The per-glyph rise was the casualty: a transform needs a transformable box, which needs `inline-block`, which is what breaks the gradient. Opacity animates on a non-atomic inline, so the typing stagger and the brand gradient both survive. `prefers-reduced-motion` was never a workaround — it resets `animation`/`opacity`/`transform` but leaves `display: inline-block`, so the line was blank there too.
+
+**Proof, because "it looks right now" is not a measurement.** There is no image library in this project, so the page was made to decode its own screenshot into a canvas and count ink pixels per headline line. Line 1 (a solid colour) is the control. Result: line 2 went from **1231px of ink (5.4%) to 9860px (38.9%)**, an 86% collapse when the old `inline-block` was re-applied by an injected stylesheet and an exact return when removed — same rendered page, no source edit. Line 1 held steady at ~4700px throughout. The darkest pixel on line 2 is `rgb(17,44,72)` ≈ `#102a43`, the gradient's end stop.
+
+**Why no gate caught it, and the new check that does.**
+- `browser-contrast.mjs` **skips** `background-clip: text` on purpose, reasoning that the transparent colour reports 1:1 against the page.
+- `browser-visual.mjs`'s "nothing painted" rule only fires on leaves with no background **and** no content; a `.type-char` has content.
+- `browser-hero.mjs` explicitly disclaims readability in its own header comment and checks per-glyph opacity.
+- `browser-design.mjs` checks the `h1`'s text **content**, which is present in the DOM regardless of paint.
+
+`browser-visual.mjs` gained a fifth check for this: transparent text must be painted by something. For each element with a fully transparent computed colour, walk up to the nearest `background-clip: text` ancestor; if the element itself or anything strictly between them is an atomic inline (`inline-block`/`inline-flex`/`inline-grid`/`inline-table`), fail. Two subtleties cost a rewrite each and are documented at the rule. The clipper must be tested **before** atomic, because `.grad-text` also matches `.enter-word`, which sets `display: inline-block` — testing in the other order makes the painter register as its own blocker and the rule fires on correct code. And dedupe by the clipping ancestor, *not* by skipping elements whose parent is also transparent: that skips the run entirely, since the outermost transparent element is precisely the legitimate clipper.
+
+The rule was negative-tested by reintroducing `display: inline-block` in the source and running the real script: `unpainted-text 1`, naming `display:inline-block on "type-char"` as blocking the paint from `enter-word grad-text`. It exits 0 either way — it reports risk, it does not assert, so it is a review aid, not a build gate.
+
+**And then the fix appeared not to work.** After the change was verified green, the text was reported as still invisible. It was not: the dev server and `dist/` both already served `display: inline`, and ink-counting across 4 viewports × both motion settings showed line 2 painted at 39–42%. The browser tab predated the edit and was still running the old `inline-block` rule; `Ctrl+Shift+R` cleared it. The lesson worth keeping is that this headline has **no fallback** — `color: transparent` plus `background-clip: text` means every failure mode is total invisibility, with nothing to fall back to, so both "did the CSS update" and "is the clip still reaching the glyphs" have to be checked mechanically rather than by looking.
+
+`browser-design.mjs` now asserts that structurally on every run (333 checks): the glyph spans must be non-atomic, must reach full opacity after the stagger settles, and the `h1` must have real area. This is the check that would have caught the original bug, since the sweep previously only asked whether the `h1` had text *content* — which is present in the DOM whether or not one glyph is painted. Negative-tested by restoring `inline-block`: it fails with `headline glyph is atomic (inline-block): background-clip:text cannot paint it, the text is invisible`.
+
+**Header: scrolled state.** `Header.jsx` gained a rAF-throttled passive scroll listener (`scrollY > 8`). At rest the bar keeps `bg-white/95`; scrolled it goes fully opaque plus `shadow-[0_10px_30px_-18px_rgba(16,42,67,0.35)]`. `backdrop-blur-sm` stays mounted in **both** states on purpose — toggling `backdrop-filter` during a scroll is visibly janky and a blur behind an opaque background costs nothing, so only `background-color` and `box-shadow` transition. Height stays 70px, so the per-route header assertion holds.
+
+`browser-design.mjs` now asserts that transition (5 new checks, 330 total): translucent at rest, opaque once scrolled, a shadow that actually carries ink, height unchanged, and full reversion at the top. The shadow test cannot match the literal string — Chrome expands one Tailwind shadow into a four-layer list with transparent leading layers — so it checks whether any layer has non-zero alpha. Negative-tested by raising the threshold to 100000, which produced 2 failures naming both the translucency and the missing shadow.
+
+
+
+### Phase 8 — screenshots, and what the audit actually caught
+
+Screenshots are captured by `scripts/browser-shots.mjs` (26 PNGs: 13 routes × desktop/mobile, in `%TEMP%/opencode/shots`). **The agent cannot view images**, so a full page-by-page visual review is still owed by a human — though the ink-counting technique above does give a numeric substitute for "is there anything drawn here", which is the one question a screenshot cannot answer without eyes. What replaced eyeballing was `scripts/browser-visual.mjs`, which asserts five things a contrast or layout check structurally cannot: a gradient whose stops are all the same colour, a card with no edge against its backdrop, an element with nothing to paint, transparent text that no `background-clip: text` ancestor can reach, and a class with no generated CSS.
+
+It found **three classes of real defect, all invisible to the 325 assertions that were already green**:
+
+1. **42 gradients had been flattened to a single colour.** The pass-2 rule rewrote `from-brand-100/50 via-brand-100/25 to-brand-100/50` into `from-brand-50 via-brand-50 to-brand-50`. Correct for a wash, wrong for everything else — it turned every 2px accent strip and progress bar into an invisible pale line and every card halo into a flat tint. `scripts/fix-flattened-gradients.mjs` rebuilt them **by role**, because they need opposite treatment: `glow` fades to transparent so it reads as depth behind the card, `strip`/`bar` are saturated because at 2px that is the only way to be seen, `accent` keeps a real gradient but stays subtle. This exposed 5 undefined tokens (`leaf-400/500`, `plum-400`, `amber-400/500`, `danger-500`), now defined.
+2. **Eight `border-ink/NaN` in `Chapter.jsx`.** The codemod computed an alpha modifier from `ink`, which has no numeric shade, so it emitted the literal string `NaN`. Those borders did not exist. All now `border-line`.
+3. **Six leftover dark-theme `bg-white/[0.04…0.08]` panels** (`Chapter.jsx`, `Note.jsx`, `Prose.jsx`) — translucent white on a white page, i.e. no surface at all. Now `bg-mist`.
+
+Two of the audit's own bugs are worth recording, because both produced confident nonsense: in a **RegExp**, `\:` collapses to `:`, so the backslash Tailwind puts in selectors was discarded by the pattern compiler and all 242 variant classes were reported dead (the fix is a plain `indexOf` on the literal selector); and SVG internals plus the hero's whitespace-only typewriter spans are not "unpainted elements" — `<path>` paints via `fill`, and `whitespace-pre` makes an empty span load-bearing.
+
+### Verified
+
+`npm run build` → success, **177 modules** · `npx oxlint src scripts` → **no errors** (pre-existing `set-state-in-effect` / `exhaustive-deps` warnings remain, plus the 3 committed `wdata/*.mjs` parse errors, which are byte-identical to `HEAD`) · `browser-contrast.mjs` → **0 failures**, 12 routes × desktop/mobile · `browser-design.mjs` → **325 passed, 0 failed**, no console errors, no overflow, no heading gaps · `browser-hero.mjs` → **49 passed, 0 failed** · `browser-visual.mjs` → **0 findings, 0 dead classes**, exit 0.
+
+**Not done:** authenticated admin/feedback states were never exercised in a browser (every sweep above is guest-side), and no one has looked at the 26 screenshots. Both need doing before this is called finished.
+
+## Previous session (2026-10-03): uncommitted work discarded, tree pinned to `f7dd20d`
+
+No feature work this session — a cleanup. The working tree was carrying a large body of uncommitted work (87 modified tracked files, `+1874 / -3037`, plus 19 untracked files). It was backed up to a stash and the tree reset to `HEAD` (`f7dd20d`). **Nothing was committed and no destructive SQL was run.**
+
+**Discarded:**
+- All 87 modified tracked files reverted. The bulk of it was a light-theme shell rewrite: `src/components/site/` (11 files — `Footer.jsx`, `Header.jsx`, `Hero.jsx`, `Logo.jsx`, `AcademyCard`, `SQLCard`, `MongoDBCard`, `DatabaseCard`, `ProgressCard`, `WorkspaceVisual`, `ui.jsx`, `icons.jsx`), plus `src/pages/Privacy.jsx`, `src/pages/Terms.jsx`, `src/lib/feedback.js`, `src/components/admin/FeedbackPanel.jsx`, `src/hooks/useInView.js`, `jsconfig.json`, and `scripts/browser-verify-fixes.mjs`.
+- 19 files that had been **staged for deletion** were restored to their committed versions: `wbuild.mjs`, all 15 `wdata/*.mjs`, `qa/src/hard-a.mjs`, `src/components/quiz/StartScreen.jsx`, `public/icons.svg`. These were committed scratch files whose removal had never been committed, so the reset undid the deletion — see Known Deviations for the three that still do not parse.
+
+**The footer is committed code and was kept.** `HEAD:src/components/Layout.jsx:136` renders its own inline `<footer>` ("DBQuiz — learn SQL & MongoDB by playing"). The discarded work had *replaced* that with `<Footer />` imported from the untracked `src/components/site/Footer.jsx`, so reverting `Layout.jsx` restored the committed footer automatically — no special-casing was needed. The richer footer design (product / legal / social columns, a "Send Feedback" modal, and a version + "Built with Supabase + React" bottom bar) went with the rest of the stash.
+
+**`supabase/migrations/20261003014700_create_feedback_table.sql` was deliberately kept** — the only untracked file left in the tree. The migration has already been applied to the live database (`public.feedback` verified present), so deleting the file would have orphaned the table and broken `supabase db push` / `db reset` reproducibility. Recovered from the stash's untracked-files parent via `git restore --source="stash@{0}^3" -- supabase/migrations/`.
+
+**Recoverable:** everything discarded is in `stash@{0}` ("wip: pre-wipe backup"), untracked files included. `git stash pop` to restore, `git stash show -p stash@{0}` to inspect, `git stash drop` to discard. It is retained until dropped deliberately — do not `git stash clear` before deciding.
+
+**Verified:** `git status --porcelain --untracked-files=all` → exactly one line, the kept migration · `git grep "<footer" src/components/Layout.jsx` → the committed inline footer at line 136, and no file imports `site/Footer` · all 19 restored staged-deletion files present on disk · `.env`, `dist/`, `node_modules/` untouched (all gitignored, and `git clean -x` was deliberately avoided) · `npm run build` → success, 163 modules.
+
+## Previous session (2026-09-28 - committed): paid reveal removed, highlight parity, board/profile/admin restyle
+
+Three commits landed on 2026-09-28 that were never written up here. The net effect of the paid-reveal experiment is **zero** — it was added and removed within the same day.
+
+**`c2b5135` Hide multiple-choice options behind a paid reveal** — MC options were masked behind a paid unmask, `QuizEngine` charged time to reveal, and `ResultScreen`/`SqlQuiz.jsx`/`leaderboard.js` grew the supporting path. Superseded the same day.
+
+**`4f2f0e1` Restyle leaderboard, profile cards, and admin tabs** — a visual pass over `Leaderboard.jsx`, `Profile.jsx` and the admin tabs. Layout and styling only; no schema, engine, or ranking change.
+
+**`f7dd20d` Remove paid option reveals and match quiz highlights** (current `HEAD`) — reverted the whole paid-reveal path: options are visible again and one tap selects an answer, the engine no longer charges time to reveal anything, and the `.reveal-on` keyframes came out of `src/index.css`. Two behaviour fixes shipped alongside it:
+- `SectionQuiz.jsx` now uses the same app-wide pre-submit highlight as `QuestionCard.jsx`/`Practice.jsx` (`pop-on pop-on-indigo` + indigo fill), so picking an answer looks identical wherever it happens. The *graded* branches deliberately stay the book's own emerald/rose, because a book wants the verdict to read as a verdict rather than as a selection. The option letter badge was pinned to `#6366f1`/`#334155` to match, and the button gained `relative` so the badge anchors to it.
+- `Feedback.jsx` shows the "Correct answer" box **only on a timeout**. The engine's reason already names the right option for an answered question, and a correct answer has nothing to reveal — but a timeout records no answer, so that box is the only place the right option is ever stated.
+
+README picked up the score-name trigger, the leaderboard empty-state callout, the `browser-*.mjs` scripts, and the Vercel deploy section in this commit.
+
+## Previous session (2026-09-26 - committed): Academy rebuild (SQL book reader)
 
 **Old learning system removed:**
 - Deleted `src/pages/Learn.jsx`, `src/pages/Lesson.jsx`, `src/pages/Course.jsx`, `src/components/learn/`, `src/data/learn/`, and `src/components/quiz/SqlHighlight.jsx`.
@@ -245,8 +339,8 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 ## Work State
 
 ### Completed (fully verified)
-- Academy SQL book reader (see Current session): **8 chapters / 40 sections**, `/academy` gate + `/academy/sql` book + `/academy/sql/:slug` chapter, localStorage progress, **section quizzes on all 40 sections (87 questions, every answer key and 6 distractors machine-verified against sql.js, coverage a hard failure)**, quiz/practice cross-links (976/978 questions), static verified DML after-state, and `scripts/verify-lessons.mjs` (123 queries, 30 tables, 40 sections pass). **Committed.**
-- More Practice hub + MC tables + skip/results + circular progress rings (see Current session — committed & deployed): `GameSelect`/`MongoComingSoon` in `Practice.jsx`, nav rename, inline datasets embedded for all 450 generated MC practice questions (450/450 answer-verified), Skip for all question types, `wrong`/`graded` snapshot metrics, practiced/correct/wrong/skipped results + HUD, and `ProgressRing` on the Profile SQL progress grid.
+- Academy SQL book reader (see previous 2026-09-26 session): **8 chapters / 40 sections**, `/academy` gate + `/academy/sql` book + `/academy/sql/:slug` chapter, localStorage progress, **section quizzes on all 40 sections (87 questions, every answer key and 6 distractors machine-verified against sql.js, coverage a hard failure)**, quiz/practice cross-links (976/978 questions), static verified DML after-state, and `scripts/verify-lessons.mjs` (123 queries, 30 tables, 40 sections pass). **Committed.**
+- More Practice hub + MC tables + skip/results + circular progress rings (see previous 2026-09-26 session — committed & deployed): `GameSelect`/`MongoComingSoon` in `Practice.jsx`, nav rename, inline datasets embedded for all 450 generated MC practice questions (450/450 answer-verified), Skip for all question types, `wrong`/`graded` snapshot metrics, practiced/correct/wrong/skipped results + HUD, and `ProgressRing` on the Profile SQL progress grid.
 - Level progress reports + leaderboard card (see previous 2026-09-24 session): `question_attempts` table + RLS, `attempts.js`, `LevelReport.jsx`, deep-link quiz start, Profile matrix links, top-10 leaderboard with your overall rank.
 - Profile screen + custom auth control plane + password-resets table (see previous 2026-09-24 session): function `auth` v6, client `auth-api.js`, two-step reset UI; live E2E signup → reset → complete-reset → sign-in verified on a throwaway user (cleaned up; DB back to 2 users, 0 resets).
 - Guest gating + progress dots + reset flow + debug logging + admin dashboard (see previous session section).
@@ -257,8 +351,9 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 - `src/data/sql/writeQuery.js`: easy placeholder prompts replaced; no placeholders remain.
 
 ### Verified since last change
-- `npm run build` → success (only chunk-size warning).
-- `npx oxlint src` → no new errors from this session (pre-existing warnings + unrelated `wdata/*.mjs` junk only).
+- `npm run build` → success, 163 modules (only chunk-size warning).
+- `npm run lint` → **3 pre-existing errors, all in committed `wdata/` scratch files**, plus the baseline `src` warnings. Confirmed byte-identical to `HEAD` (empty `git diff HEAD`), so this is committed breakage rather than anything the reset introduced.
+- Working tree matches `HEAD` except the one intentionally-kept untracked migration.
 
 ## Key Technical Facts
 - **SQLite silently accepts a missing comma as an alias:** `SELECT name city FROM customers` returns a column *named* `city` containing the names, with no error. Don't assume a typo in the select list will fail loudly.
@@ -280,7 +375,9 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 - `fetchTopScores` selects `user_id` so the Profile card can highlight "your" rows; the standalone `/leaderboard` page ignores the extra column.
 
 ## Known Deviations / To-Dos
-- `wdata/*.mjs` are leftover scratch files with syntax errors — ignore them.
+- **Uncommitted work is still parked in `stash@{0}`** ("wip: pre-wipe backup") from the 2026-10-03 wipe, including the whole `src/components/site/` light-theme shell and the Feedback feature. Nothing depends on it any more; drop it when you no longer want the option.
+- **The live `public.feedback` table is now orphaned.** The migration is kept on disk, but every line of code that used it (`src/lib/feedback.js`, the footer feedback modal, `FeedbackPanel.jsx`) was discarded on 2026-10-03. Either drop the table or rebuild the feature — right now it is a live table with no consumer.
+- `wdata/*.mjs` are leftover scratch files, and **three of them do not parse**, which fails a repo-wide lint: `w-hardE.mjs` (`Expected ] but found EOF`), `wHardB.mjs` (`Expected , or ] but found Identifier`), `w-openA.mjs` (`Unexpected token`). All three are committed at `HEAD` and one was mid-deletion in the working tree before the wipe, so the reset restored it. Harmless to the app — nothing in `src/` imports `wdata/` and the build passes — but the clean fix is to **commit their removal** rather than leave them staged, or exclude `wdata/` from lint.
 - `storeSchema` rows used by MC questions referencing schema `'store'`. In **More Practice** MC cards show the tables panel: quiz-bank MCs use `schema: 'store'`, while the 450 generated legacy MCs carry inline `schema` objects (fictional `employees`/`movies`/`products`/`books`/`students` + lookup tables) embedded in `src/data/practice/practice-questions.json`. The main quiz (`SqlQuiz.jsx`) MC cards intentionally still don't show the schema panel.
 - `StartScreen.jsx` is dead code (not imported anywhere).
 - Timer validated with a simulated-clock test; no automated test file exists.
@@ -292,3 +389,5 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 ## Bash/QoL Notes
 - This env is Windows PowerShell 5.1; use `;` or `if ($?)` (no `&&`). `rg` is NOT installed — use the Grep tool.
 - Lint: `npx oxlint src scripts`; Build: `npm run build`; Data validation: `node scripts/verify-answers.mjs`; Academy examples: `node scripts/verify-lessons.mjs` (must be run from the repo root so it can resolve `sql.js` and the ESM source).
+- A stash made with `-u` keeps untracked files in the **third** parent: recover one with `git restore --source="stash@{0}^3" -- <path>`. Files that were merely *staged for deletion* are **not** in `^3` — they are tracked, so read those from `stash@{0}` itself.
+- `npm run lint` exits non-zero because of the three broken `wdata/*.mjs` files. Lint `src scripts` to get a clean signal.

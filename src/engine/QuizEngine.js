@@ -1,7 +1,7 @@
 import { checkMultipleChoice } from './AnswerChecker.js'
 import { shuffleOptions } from './shuffleOptions.js'
 
-export const STATUS = {
+const STATUS = {
   READY: 'ready',
   QUESTION: 'question',
   FEEDBACK: 'feedback',
@@ -249,5 +249,3 @@ export class QuizEngine {
     return this._snapshot
   }
 }
-
-export default QuizEngine

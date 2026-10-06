@@ -2,13 +2,6 @@ import Console from './Console.jsx'
 import SqlCode from './SqlCode.jsx'
 import ResultTable from '../quiz/ResultTable.jsx'
 
-/**
- * A statement that changes the database. `INSERT`, `UPDATE` and `DELETE` hand
- * back no rows, so the block carries the query that shows the table afterwards —
- * the reader sees the actual consequence of the statement, not a promise about
- * it. `scripts/verify-lessons.mjs` runs the statement and asserts that same
- * table, so the grid cannot drift from the prose.
- */
 export default function DmlBlock({ code, caption, tone, expectError, after }) {
   const bad = tone === 'bad' || expectError
 
@@ -19,10 +12,10 @@ export default function DmlBlock({ code, caption, tone, expectError, after }) {
         badge={expectError ? 'Refused' : bad ? 'Careful' : 'Writes'}
         badgeClass={
           expectError || bad
-            ? 'bg-rose-500/15 text-rose-300'
-            : 'bg-amber-500/15 text-amber-300'
+            ? 'bg-danger-50 text-danger-700'
+            : 'bg-amber-50 text-amber-700'
         }
-        className={bad ? 'border-rose-500/35 shadow-[0_0_24px_rgba(244,63,94,0.12)]' : 'border-amber-500/30'}
+        className={bad ? 'border-danger-200 shadow-[0_2px_10px_rgba(#b03333,0.12)]' : 'border-amber-200'}
         bodyClass="p-3.5"
       >
         <pre className="overflow-x-auto font-mono text-[13px] leading-relaxed">
@@ -31,21 +24,21 @@ export default function DmlBlock({ code, caption, tone, expectError, after }) {
       </Console>
 
       {caption && (
-        <p className="px-0.5 text-[13px] leading-relaxed text-slate-600 italic">{caption}</p>
+        <p className="px-0.5 text-[13px] leading-relaxed text-body italic">{caption}</p>
       )}
 
       {expectError && (
-        <p className="px-0.5 text-[13px] leading-relaxed text-rose-700">
+        <p className="px-0.5 text-[13px] leading-relaxed text-danger-700">
           The database refuses this one, and no rows change.
         </p>
       )}
 
       {after && (
         <div>
-          <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
             {after.label ?? 'The table afterwards'}
           </div>
-          <pre className="mb-2 overflow-x-auto font-mono text-[12px] leading-relaxed text-slate-500">
+          <pre className="mb-2 overflow-x-auto font-mono text-[12px] leading-relaxed text-muted">
             <SqlCode code={after.query} />
           </pre>
           <ResultTable columns={after.columns} rows={after.rows} />

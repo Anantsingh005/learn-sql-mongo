@@ -3,7 +3,8 @@ export default {
   number: 3,
   title: 'Sorting & Limiting',
   subtitle: 'ORDER BY, LIMIT, OFFSET, and clause order',
-  accent: '#fbbf24',
+  accent: '#a5680f',
+  accentInk: '#8a550b',
   icon: '↕',
   practiceTopic: 'table-query',
   objectives: [

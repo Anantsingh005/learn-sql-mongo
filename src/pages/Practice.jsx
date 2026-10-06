@@ -20,9 +20,9 @@ const OPTION_LABELS = ['A', 'B', 'C', 'D']
 const CHAPTER_BY_SLUG = new Map(CHAPTERS.map((c) => [c.slug, c]))
 const TYPE_LABELS = { mc: 'Multiple choice', write: 'Write a query', bug: 'Fix the bug' }
 const TYPE_COLORS = {
-  mc: 'bg-sky-500/15 text-sky-300',
-  write: 'bg-emerald-500/15 text-emerald-300',
-  bug: 'bg-amber-500/15 text-amber-300',
+  mc: 'bg-brand-50 text-brand-700',
+  write: 'bg-leaf-50 text-leaf-700',
+  bug: 'bg-amber-50 text-amber-700',
 }
 
 const GAMES = [
@@ -32,9 +32,9 @@ const GAMES = [
     tagline: 'Queries, joins & aggregations',
     desc: 'Practice multiple choice, write real queries, and fix buggy SQL against a live in-browser database.',
     icon: '{ }',
-    accent: 'from-indigo-400 via-sky-400 to-cyan-400',
-    badge: 'border-indigo-500/40 bg-indigo-500/15 text-indigo-300',
-    hover: 'hover:border-indigo-500/60',
+    accent: 'from-brand-100 via-brand-50 to-brand-100',
+    badge: 'border-brand-200 bg-brand-50 text-brand-700',
+    hover: 'hover:border-brand-200',
   },
   {
     key: 'mongo',
@@ -42,9 +42,9 @@ const GAMES = [
     tagline: 'Documents & aggregation pipelines',
     desc: 'MongoDB practice is coming soon.',
     icon: 'DB',
-    accent: 'from-emerald-400 via-teal-400 to-cyan-400',
-    badge: 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
-    hover: 'hover:border-emerald-500/60',
+    accent: 'from-leaf-100 via-brand-50 to-brand-100',
+    badge: 'border-leaf-200 bg-leaf-50 text-leaf-700',
+    hover: 'hover:border-leaf-200',
     comingSoon: true,
   },
 ]
@@ -59,30 +59,30 @@ function Chip({ children, className }) {
 
 function PracticeHUD({ snapshot }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/90 px-5 py-4">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-400 opacity-70" />
+    <div className="relative overflow-hidden rounded-2xl border border-line bg-white px-5 py-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-100 via-plum-100 to-brand-100 opacity-70" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="rounded-md bg-slate-800 px-2 py-1 font-mono text-xs text-slate-300">
-            Q <span className="font-bold text-indigo-300">{snapshot.index + 1}</span>/{snapshot.total}
+          <span className="rounded-md bg-line px-2 py-1 font-mono text-xs text-muted">
+            Q <span className="font-bold text-brand-700">{snapshot.index + 1}</span>/{snapshot.total}
           </span>
           {snapshot.pass > 0 && (
-            <span className="rounded-md bg-fuchsia-500/15 px-2 py-1 font-mono text-xs font-bold text-fuchsia-300">
+            <span className="rounded-md bg-plum-50 px-2 py-1 font-mono text-xs font-bold text-plum-700">
               pass {snapshot.pass + 1}
             </span>
           )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-slate-400">
+          <span className="font-mono text-xs text-muted">
             {snapshot.correct}
-            <span className="mx-1 text-slate-600">/</span>
+            <span className="mx-1 text-body">/</span>
             {snapshot.graded} correct
           </span>
-          <span className="font-mono text-xs text-slate-400">{snapshot.wrong} wrong</span>
-          <span className="font-mono text-xs text-slate-400">{snapshot.answered} practiced</span>
-          <span className="font-mono text-sm text-slate-400">
+          <span className="font-mono text-xs text-muted">{snapshot.wrong} wrong</span>
+          <span className="font-mono text-xs text-muted">{snapshot.answered} practiced</span>
+          <span className="font-mono text-sm text-muted">
             Score{' '}
-            <span className="text-lg font-bold text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]">
+            <span className="text-lg font-bold text-amber-700 drop-shadow-[0_0_10px_rgba(#a5680f,0.22)]">
               {snapshot.score}
             </span>
           </span>
@@ -100,13 +100,13 @@ function PracticeButton({ option, label, selected, onSelect, disabled }) {
       disabled={disabled}
       className={`group relative flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed ${
         selected
-          ? 'pop-on pop-on-indigo border-indigo-500 bg-indigo-500/15 text-indigo-100'
-          : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
+          ? 'pop-on pop-on-indigo border-brand-200 bg-brand-50 text-brand-700'
+          : 'border-line bg-line/60 text-muted hover:border-line hover:bg-line'
       }`}
     >
       <span
         className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md font-mono text-xs font-bold ${
-          selected ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-300 group-hover:bg-slate-600'
+          selected ? 'bg-brand-600 text-white' : 'bg-line text-muted group-hover:bg-line-soft'
         }`}
       >
         {label}
@@ -119,37 +119,37 @@ function PracticeButton({ option, label, selected, onSelect, disabled }) {
 function QuestionView({ question, selected, onSelect, isFeedback }) {
   const diffColor =
     question.difficulty === 'easy'
-      ? 'bg-slate-700 text-slate-300'
+      ? 'bg-line text-muted'
       : question.difficulty === 'medium'
-        ? 'bg-indigo-500/15 text-indigo-300'
-        : 'bg-rose-500/15 text-rose-300'
+        ? 'bg-brand-50 text-brand-700'
+        : 'bg-danger-50 text-danger-700'
   const chapter = CHAPTER_BY_SLUG.get(chapterSlugForQuestion(question))
   return (
-    <article className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <article className="rounded-2xl border border-line bg-white p-6">
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        <Chip className={TYPE_COLORS[question.type] ?? 'bg-sky-500/15 text-sky-300'}>
+        <Chip className={TYPE_COLORS[question.type] ?? 'bg-brand-50 text-brand-700'}>
           {TYPE_LABELS[question.type] ?? 'Multiple choice'}
         </Chip>
         <Chip className={diffColor}>{question.difficulty}</Chip>
-        <span className="text-slate-500">{question.subtopic}</span>
+        <span className="text-muted">{question.subtopic}</span>
         {chapter && (
           <Link
             to={`/academy/sql/${chapter.slug}`}
-            className="rounded-full border border-slate-700 px-2.5 py-0.5 text-slate-300 transition-colors hover:border-indigo-500/60 hover:bg-indigo-500/10 hover:text-indigo-200"
+            className="rounded-full border border-line px-2.5 py-0.5 text-muted transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
           >
             📖 Ch {chapter.number} · {chapter.title}
           </Link>
         )}
       </div>
 
-      <h2 className="mt-3 whitespace-pre-wrap font-mono text-lg font-medium leading-relaxed text-slate-100">
+      <h2 className="mt-3 whitespace-pre-wrap font-mono text-lg font-medium leading-relaxed text-body">
         {question.question}
       </h2>
 
       {question.type === 'bug' && question.buggyQuery && (
         <div className="mt-4">
-          <div className="mb-1 text-xs font-medium text-slate-400">Buggy query — find the bug:</div>
-          <pre className="overflow-x-auto rounded-lg border border-amber-600/40 bg-amber-500/5 px-3 py-2.5 font-mono text-[13px] leading-relaxed text-amber-200">
+          <div className="mb-1 text-xs font-medium text-muted">Buggy query — find the bug:</div>
+          <pre className="overflow-x-auto rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 font-mono text-[13px] leading-relaxed text-amber-700">
             {question.buggyQuery}
           </pre>
         </div>
@@ -194,19 +194,19 @@ function Feedback({ answer, onNext }) {
     <div className="rounded-2xl border p-6">
       <div
         className={`mb-4 flex items-center gap-3 rounded-lg px-4 py-3 ${
-          correct ? 'border border-emerald-600/50 bg-emerald-500/10' : 'border border-rose-600/50 bg-rose-500/10'
+          correct ? 'border border-leaf-200 bg-leaf-50' : 'border border-danger-200 bg-danger-50'
         }`}
       >
-        <span className={`text-xl font-black ${correct ? 'text-emerald-300' : 'text-rose-300'}`}>
+        <span className={`text-xl font-black ${correct ? 'text-leaf-700' : 'text-danger-700'}`}>
           {answer.skipped ? 'Skipped' : correct ? 'Correct!' : 'Incorrect'}
         </span>
-        {answer.reason && <span className="text-sm text-slate-300">{answer.reason}</span>}
+        {answer.reason && <span className="text-sm text-muted">{answer.reason}</span>}
       </div>
 
       {isQuery && answer.answer != null && (
         <div className="mt-2">
-          <p className="mb-1 text-xs font-medium text-slate-400">Your query:</p>
-          <pre className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-[13px] text-emerald-200">
+          <p className="mb-1 text-xs font-medium text-muted">Your query:</p>
+          <pre className="overflow-x-auto rounded-lg border border-line bg-white px-3 py-2 font-mono text-[13px] text-leaf-700">
             {answer.answer}
           </pre>
         </div>
@@ -214,8 +214,8 @@ function Feedback({ answer, onNext }) {
 
       {isQuery && answer.actual && (
         <div className="mt-2">
-          <p className="mb-1 text-xs font-medium text-slate-400">Actual result (rows returned: {answer.actual.rows?.length ?? 0}):</p>
-          <pre className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-[13px] text-slate-300">
+          <p className="mb-1 text-xs font-medium text-muted">Actual result (rows returned: {answer.actual.rows?.length ?? 0}):</p>
+          <pre className="overflow-x-auto rounded-lg border border-line bg-white px-3 py-2 font-mono text-[13px] text-muted">
             {JSON.stringify(answer.actual, null, 2)}
           </pre>
         </div>
@@ -223,24 +223,24 @@ function Feedback({ answer, onNext }) {
 
       {isQuery && !answer.skipped && answer.question.fixedQuery && (
         <div className="mt-2">
-          <p className="mb-1 text-xs font-medium text-emerald-300">Fixed query:</p>
-          <pre className="overflow-x-auto rounded-lg border border-emerald-700/40 bg-emerald-500/5 px-3 py-2 font-mono text-[13px] text-emerald-200">
+          <p className="mb-1 text-xs font-medium text-leaf-700">Fixed query:</p>
+          <pre className="overflow-x-auto rounded-lg border border-leaf-200 bg-leaf-50 px-3 py-2 font-mono text-[13px] text-leaf-700">
             {answer.question.fixedQuery}
           </pre>
         </div>
       )}
 
       {answer.question.explanation && (
-        <div className="mt-3 rounded-lg border border-slate-700 bg-slate-800/50 px-4 py-3">
-          <div className="text-sm font-semibold text-slate-300">Why</div>
-          <p className="mt-1 text-sm leading-relaxed text-slate-400">{answer.question.explanation}</p>
+        <div className="mt-3 rounded-lg border border-line bg-line/50 px-4 py-3">
+          <div className="text-sm font-semibold text-muted">Why</div>
+          <p className="mt-1 text-sm leading-relaxed text-muted">{answer.question.explanation}</p>
         </div>
       )}
       <div className="mt-5 flex items-center justify-end">
         <button
           type="button"
           onClick={onNext}
-          className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500"
+          className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700"
         >
           Next question
         </button>
@@ -252,7 +252,7 @@ function Feedback({ answer, onNext }) {
 function ChoiceGroup({ label, options, value, onSelect }) {
   return (
     <div className="mt-4">
-      <div className="mb-2 text-sm font-semibold text-slate-300">{label}</div>
+      <div className="mb-2 text-sm font-semibold text-muted">{label}</div>
       <div className="flex flex-wrap gap-2">
         {Object.entries(options).map(([key, optionLabel]) => (
           <button
@@ -261,8 +261,8 @@ function ChoiceGroup({ label, options, value, onSelect }) {
             onClick={() => onSelect(key)}
             className={`relative rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
               value === key
-                ? 'pop-on pop-on-indigo border-indigo-500 bg-indigo-500/15 text-indigo-100'
-                : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:border-slate-500 hover:bg-slate-800'
+                ? 'pop-on pop-on-indigo border-brand-200 bg-brand-50 text-brand-700'
+                : 'border-line bg-line/60 text-muted hover:border-line hover:bg-line'
             }`}
           >
             {optionLabel}
@@ -277,10 +277,10 @@ function GameSelect({ onPick }) {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-8 text-center">
-        <h1 className="bg-gradient-to-r from-indigo-300 via-sky-300 to-fuchsia-300 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent">
+        <h1 className="bg-gradient-to-r from-brand-700 via-brand-600 to-plum-600 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent">
           More Practice
         </h1>
-        <p className="mt-2 text-sm text-slate-400">Unlimited practice, no lives, no timer. Pick a database to start.</p>
+        <p className="mt-2 text-sm text-muted">Unlimited practice, no lives, no timer. Pick a database to start.</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {GAMES.map((g) => (
@@ -294,8 +294,8 @@ function GameSelect({ onPick }) {
               className={`pointer-events-none absolute -inset-1 rounded-3xl bg-gradient-to-r ${g.accent} opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100`}
             />
             <div
-              className={`relative overflow-hidden rounded-2xl border bg-slate-900/95 p-6 transition-all duration-300 ${
-                g.comingSoon ? 'border-slate-800 opacity-70' : `${g.hover} group-hover:-translate-y-1`
+              className={`relative overflow-hidden rounded-2xl border bg-white p-6 transition-all duration-300 ${
+                g.comingSoon ? 'border-line grayscale' : `${g.hover} group-hover:-translate-y-1`
               }`}
             >
               <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${g.accent} opacity-80`} />
@@ -304,15 +304,15 @@ function GameSelect({ onPick }) {
               >
                 {g.icon}
               </div>
-              <div className="mt-4 font-mono text-lg font-bold text-white">{g.title}</div>
-              <div className="mt-1 text-sm font-medium text-slate-400">{g.tagline}</div>
-              <p className="mt-3 text-sm leading-relaxed text-slate-500">{g.desc}</p>
+              <div className="mt-4 font-mono text-lg font-bold text-ink">{g.title}</div>
+              <div className="mt-1 text-sm font-medium text-muted">{g.tagline}</div>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{g.desc}</p>
               {g.comingSoon ? (
-                <span className="mt-5 inline-block rounded-full bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-400">
+                <span className="mt-5 inline-block rounded-full bg-line px-3 py-1 text-xs font-semibold text-body">
                   Coming soon
                 </span>
               ) : (
-                <span className="mt-5 inline-block rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-semibold text-indigo-300">
+                <span className="mt-5 inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">
                   Select →
                 </span>
               )}
@@ -327,15 +327,15 @@ function GameSelect({ onPick }) {
 function MongoComingSoon({ onBack }) {
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-10 text-center">
-        <div className="font-mono text-2xl font-bold text-white">MongoDB Practice</div>
-        <p className="mt-4 text-slate-400">
+      <div className="rounded-2xl border border-line bg-white p-10 text-center">
+        <div className="font-mono text-2xl font-bold text-ink">MongoDB Practice</div>
+        <p className="mt-4 text-muted">
           MongoDB practice is coming soon. The same engine already powers SQL practice.
         </p>
         <button
           type="button"
           onClick={onBack}
-          className="mt-6 rounded-lg border border-slate-600 px-5 py-2 text-sm font-semibold text-slate-200 transition-colors hover:bg-slate-800"
+          className="mt-6 rounded-lg border border-line px-5 py-2 text-sm font-semibold text-body transition-colors hover:bg-line"
         >
           ← Back
         </button>
@@ -348,19 +348,19 @@ function Picker({ topic, difficulty, types, onTopic, onDifficulty, onTypes, bank
   const available = countPracticeQuestions(bank, topic, difficulty, types)
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-slate-500">More Practice · SQL</div>
+      <div className="rounded-2xl border border-line bg-white p-6">
+        <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted">More Practice · SQL</div>
         {onBack && (
           <button
             type="button"
             onClick={onBack}
-            className="mb-3 text-sm font-medium text-slate-400 transition-colors hover:text-slate-200"
+            className="mb-3 text-sm font-medium text-muted transition-colors hover:text-body"
           >
             ← SQL / MongoDB
           </button>
         )}
-        <h1 className="text-lg font-bold text-white">Pick your practice</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <h1 className="text-lg font-bold text-ink">Pick your practice</h1>
+        <p className="mt-1 text-sm text-muted">
           Choose the question type, topic, and level you want to drill.
         </p>
 
@@ -369,12 +369,12 @@ function Picker({ topic, difficulty, types, onTopic, onDifficulty, onTypes, bank
         <ChoiceGroup label="Level" options={PRACTICE_DIFFICULTIES} value={difficulty} onSelect={onDifficulty} />
 
         <div className="mt-6 flex items-center justify-between">
-          <span className="text-xs text-slate-500">{available} questions available</span>
+          <span className="text-xs text-muted">{available} questions available</span>
           <button
             type="button"
             onClick={onStart}
             disabled={available === 0}
-            className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Start practicing
           </button>
@@ -388,35 +388,35 @@ function Results({ snapshot, onReplay, onChangeSettings }) {
   const percent = snapshot.graded > 0 ? Math.round((snapshot.correct / snapshot.graded) * 100) : 0
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
-        <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">Practice session</div>
-        <div className="mt-2 text-5xl font-black text-white">{percent}%</div>
-        <div className="mt-2 text-sm text-slate-400">
+      <div className="rounded-2xl border border-line bg-white p-8 text-center">
+        <div className="text-xs font-semibold uppercase tracking-widest text-muted">Practice session</div>
+        <div className="mt-2 text-5xl font-black text-ink">{percent}%</div>
+        <div className="mt-2 text-sm text-muted">
           You practiced{' '}
-          <span className="font-bold text-white">
+          <span className="font-bold text-ink">
             {snapshot.answered} {snapshot.answered === 1 ? 'question' : 'questions'}
           </span>
         </div>
-        <div className="mt-3 flex items-center justify-center gap-4 font-mono text-sm text-slate-300">
+        <div className="mt-3 flex items-center justify-center gap-4 font-mono text-sm text-muted">
           <span>
-            <span className="font-bold text-emerald-300">{snapshot.correct}</span> correct
+            <span className="font-bold text-leaf-700">{snapshot.correct}</span> correct
           </span>
-          <span className="text-slate-600">·</span>
+          <span className="text-body">·</span>
           <span>
-            <span className="font-bold text-rose-300">{snapshot.wrong}</span> wrong
+            <span className="font-bold text-danger-700">{snapshot.wrong}</span> wrong
           </span>
           {snapshot.skipped > 0 && (
             <>
-              <span className="text-slate-600">·</span>
+              <span className="text-body">·</span>
               <span>
-                <span className="font-bold text-slate-200">{snapshot.skipped}</span> skipped
+                <span className="font-bold text-body">{snapshot.skipped}</span> skipped
               </span>
             </>
           )}
         </div>
-        <div className="mt-4 flex items-center justify-center gap-6 font-mono text-sm text-slate-300">
+        <div className="mt-4 flex items-center justify-center gap-6 font-mono text-sm text-muted">
           <span>
-            Score <span className="text-lg font-bold text-indigo-300">{snapshot.score}</span>
+            Score <span className="text-lg font-bold text-brand-700">{snapshot.score}</span>
           </span>
           <span className="font-sans text-xs">{snapshot.elapsedSeconds}s</span>
         </div>
@@ -424,20 +424,20 @@ function Results({ snapshot, onReplay, onChangeSettings }) {
           <button
             type="button"
             onClick={onReplay}
-            className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500"
+            className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700"
           >
             Practice again
           </button>
           <button
             type="button"
             onClick={onChangeSettings}
-            className="rounded-lg border border-slate-600 px-5 py-2 font-semibold text-slate-200 transition-colors hover:bg-slate-800"
+            className="rounded-lg border border-line px-5 py-2 font-semibold text-body transition-colors hover:bg-line"
           >
             Change settings
           </button>
           <Link
             to="/"
-            className="rounded-lg border border-slate-600 px-5 py-2 font-semibold text-slate-200 transition-colors hover:bg-slate-800"
+            className="rounded-lg border border-line px-5 py-2 font-semibold text-body transition-colors hover:bg-line"
           >
             Home
           </Link>
@@ -508,7 +508,7 @@ function Practice() {
   if (loadError) {
     return (
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl border border-rose-600/50 bg-rose-500/10 px-5 py-4 text-sm text-rose-200">
+        <div className="rounded-2xl border border-danger-200 bg-danger-50 px-5 py-4 text-sm text-danger-700">
           Couldn't load practice questions. Please try again later.
         </div>
       </div>
@@ -518,7 +518,7 @@ function Practice() {
   if (!bank) {
     return (
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-400">
+        <div className="rounded-2xl border border-line bg-white p-6 text-sm text-muted">
           Loading practice questions…
         </div>
       </div>
@@ -564,11 +564,11 @@ function Practice() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-medium text-slate-500">{summary}</span>
+        <span className="text-xs font-medium text-muted">{summary}</span>
         <button
           type="button"
           onClick={() => engine.end()}
-          className="rounded-lg border border-rose-600/50 px-4 py-1.5 text-sm font-semibold text-rose-300 transition-colors hover:bg-rose-500/10"
+          className="rounded-lg border border-danger-200 px-4 py-1.5 text-sm font-semibold text-danger-700 transition-colors hover:bg-danger-50"
         >
           End practice
         </button>
@@ -595,14 +595,14 @@ function Practice() {
       {!isFeedback && (
         isMc ? (
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-muted">
               {selected === null ? 'Select an answer above' : 'Ready to submit'}
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => engine.skip()}
-                className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-800"
+                className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted transition-colors hover:bg-line"
               >
                 Skip
               </button>
@@ -610,7 +610,7 @@ function Practice() {
                 type="button"
                 disabled={selected === null}
                 onClick={() => engine.submit(selected)}
-                className="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Submit
               </button>
@@ -618,11 +618,11 @@ function Practice() {
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-slate-500">Run your query above, then check it</span>
+            <span className="text-xs text-muted">Run your query above, then check it</span>
             <button
               type="button"
               onClick={() => engine.skip()}
-              className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-800"
+              className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted transition-colors hover:bg-line"
             >
               Skip
             </button>

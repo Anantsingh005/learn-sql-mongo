@@ -47,16 +47,16 @@ function SqlEditor({ question, onSubmit, disabled }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-950">
-        <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-3 py-2">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span className="h-2 w-2 rounded-full bg-slate-700" />
+      <div className="overflow-hidden rounded-xl border border-line bg-white">
+        <div className="flex items-center justify-between border-b border-line bg-white px-3 py-2">
+          <div className="flex items-center gap-2 text-xs text-muted">
+            <span className="h-2 w-2 rounded-full bg-line" />
             <span className="font-mono">query.sql</span>
           </div>
           <button
             type="button"
             onClick={() => textareaRef.current?.focus()}
-            className="rounded px-2 py-0.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300"
+            className="rounded px-2 py-0.5 text-xs text-muted hover:bg-line hover:text-muted"
           >
             focus
           </button>
@@ -74,7 +74,7 @@ function SqlEditor({ question, onSubmit, disabled }) {
           placeholder="Write your SQL here — try Ctrl/Cmd + Enter to submit…"
           spellCheck={false}
           disabled={disabled}
-          className="block min-h-28 w-full resize-y bg-transparent px-3 py-2 font-mono text-sm text-emerald-200 outline-none placeholder:text-slate-600 disabled:opacity-60"
+          className="block min-h-28 w-full resize-y bg-transparent px-3 py-2 font-mono text-sm text-leaf-700 outline-none placeholder:text-body disabled:opacity-60"
         />
       </div>
 
@@ -83,7 +83,7 @@ function SqlEditor({ question, onSubmit, disabled }) {
           type="button"
           onClick={handleRun}
           disabled={!sql.trim() || running || !schemaReady || disabled}
-          className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg border border-line bg-line px-4 py-1.5 text-sm font-medium text-body transition-colors hover:bg-line disabled:cursor-not-allowed disabled:opacity-40"
         >
           {running ? 'Running…' : 'Run'}
         </button>
@@ -91,24 +91,24 @@ function SqlEditor({ question, onSubmit, disabled }) {
           type="button"
           onClick={handleSubmit}
           disabled={!sql.trim() || submitting || running || !schemaReady || disabled}
-          className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {submitting ? 'Checking…' : 'Submit'}
         </button>
         {!schemaReady && !error && (
-          <span className="text-xs text-slate-500">Preparing database…</span>
+          <span className="text-xs text-muted">Preparing database…</span>
         )}
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-700/60 bg-red-500/10 px-3 py-2 font-mono text-xs text-red-300">
+        <div className="rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 font-mono text-xs text-danger-700">
           {error}
         </div>
       )}
 
       {result && !error && (
         <div>
-          <div className="mb-1 text-xs font-medium text-slate-400">
+          <div className="mb-1 text-xs font-medium text-muted">
             Query result{result.rows.length > 0 ? ` (${result.rows.length} rows)` : ''}:
           </div>
           <ResultTable columns={result.columns} rows={result.rows} />

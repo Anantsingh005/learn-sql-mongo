@@ -1,10 +1,6 @@
 import { Link } from 'react-router-dom'
 import { LEARNING_GAMES } from '../../data/academy/book.js'
 
-/**
- * First stop: pick a language. Mirrors the SQL / MongoDB card pair on the
- * Practice hub, so it reads as the same app rather than a new one.
- */
 export default function BookGate() {
   return (
     <div className="mx-auto max-w-4xl px-2 py-6">
@@ -12,10 +8,10 @@ export default function BookGate() {
         <div className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-gradient">
           Academy
         </div>
-        <h1 className="mt-2 bg-gradient-to-r from-indigo-300 via-sky-300 to-fuchsia-300 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent sm:text-4xl">
+        <h1 className="mt-2 bg-gradient-to-r from-brand-700 via-brand-600 to-plum-600 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent sm:text-4xl">
           What do you want to learn?
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-muted">
           Proper chapters, worked examples and reference tables — then play the game.
         </p>
       </div>
@@ -30,8 +26,8 @@ export default function BookGate() {
                 }`}
               />
               <div
-                className={`relative overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/95 p-6 transition-all duration-300 ${
-                  g.soon ? 'cursor-default opacity-60' : 'group-hover:-translate-y-1'
+                className={`relative overflow-hidden rounded-2xl border border-line bg-white p-6 transition-all duration-300 ${
+                  g.soon ? 'cursor-default grayscale' : 'group-hover:-translate-y-1'
                 }`}
               >
                 <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${g.accent}`} />
@@ -45,13 +41,13 @@ export default function BookGate() {
                 >
                   {g.key === 'sql' ? '{ }' : '◆'}
                 </div>
-                <div className="mt-4 font-mono text-lg font-bold text-white">{g.title}</div>
-                <p className="mt-1 text-sm text-slate-400">{g.tagline}</p>
-                <p className="mt-4 text-sm leading-relaxed text-slate-500">{g.desc}</p>
-                <div className="mt-6 flex items-center justify-between text-xs text-slate-400">
+                <div className="mt-4 font-mono text-lg font-bold text-ink">{g.title}</div>
+                <p className="mt-1 text-sm text-muted">{g.tagline}</p>
+                <p className="mt-4 text-sm leading-relaxed text-muted">{g.desc}</p>
+                <div className="mt-6 flex items-center justify-between text-xs text-muted">
                   <span
                     className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-                      g.soon ? 'bg-slate-800 text-slate-400' : 'bg-indigo-500/20 text-indigo-300'
+                      g.soon ? 'bg-line text-body' : 'bg-brand-100 text-brand-700'
                     }`}
                   >
                     {g.soon ? 'Coming soon' : 'Start reading'}

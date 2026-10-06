@@ -1,4 +1,4 @@
-export const storeSchema = {
+﻿export const storeSchema = {
   customers: {
     columns: ['id', 'name', 'city', 'signup_date'],
     rows: [
@@ -38,4 +38,3 @@ export const storeSchema = {
   },
 }
 
-export default storeSchema
