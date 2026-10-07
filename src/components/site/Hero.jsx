@@ -104,7 +104,7 @@ export default function Hero() {
               Practice · Learn · Improve
             </p>
 
-            <h1 className="mt-2 font-serif font-extrabold text-[2.6rem] leading-[1.05] tracking-[-0.02em] text-ink sm:text-[3rem] xl:text-[3.5rem] relative">
+            <h1 className="mt-2 font-serif font-extrabold text-[2.25rem] leading-[1.05] tracking-[-0.02em] text-ink sm:text-[3rem] xl:text-[3.5rem] relative">
               <span
                 className="enter-word block whitespace-pre text-body/90"
                 style={{ animationDelay: '90ms' }}

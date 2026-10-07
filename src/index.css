@@ -9,24 +9,24 @@
   --font-mono: "JetBrains Mono Variable", ui-monospace, Consolas, monospace;
   --font-serif: "Source Serif 4 Variable", "Iowan Old Style", Palatino, Georgia, serif;
 
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #d9e6ff;
-  --color-brand-200: #bcd2ff;
-  --color-brand-300: #8fb4ff;
-  --color-brand-400: #5b8dfa;
-  --color-brand-500: #2f6ad0;
-  --color-brand-600: #1554c7;
-  --color-brand-700: #1449a3;
-  --color-brand-800: #143c84;
-  --color-brand-900: #14346a;
+  --color-brand-50: #fdf0f8;
+  --color-brand-100: #f7d4ed;
+  --color-brand-200: #f0a8da;
+  --color-brand-300: #e46bbf;
+  --color-brand-400: #d4349e;
+  --color-brand-500: #b01f82;
+  --color-brand-600: #8c1568;
+  --color-brand-700: #6b0f50;
+  --color-brand-800: #4a0b38;
+  --color-brand-900: #2d0022;
 
-  --color-ink: #102a43;
-  --color-body: #243b53;
-  --color-muted: #4a6178;
+  --color-ink: #2d0022;
+  --color-body: #4a1040;
+  --color-muted: #7a4068;
 
-  --color-shell: #f4f8ff;
-  --color-mist: #f3f7ff;
-  --color-paper: #faf7f0;
+  --color-shell: #fdf0f8;
+  --color-mist: #fef5fb;
+  --color-paper: #fff8fc;
 
   /* The MongoDB side of the product gets a green, never a second blue. */
   --color-leaf: #4c9a68;
@@ -83,7 +83,7 @@ body,
 body {
   margin: 0;
   background: #ffffff;
-  color: #243b53;
+  color: #4a1040;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -105,7 +105,7 @@ body {
   }
 
   .grad-text {
-    background-image: linear-gradient(96deg, #1554c7 0%, #2f6ad0 42%, #102a43 100%);
+    background-image: linear-gradient(96deg, #8c1568 0%, #d4349e 42%, #2d0022 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -180,11 +180,11 @@ body {
   }
 
   .pop-on.pop-on-indigo::after {
-    box-shadow: 0 0 0 2px rgb(21 84 199 / 0.95);
+    box-shadow: 0 0 0 2px rgb(140 21 104 / 0.95);
   }
 
   .text-gradient {
-    background-image: linear-gradient(96deg, #1554c7, #2f6ad0 55%, #1449a3);
+    background-image: linear-gradient(96deg, #8c1568, #e8198b 55%, #6b0f50);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -228,7 +228,7 @@ body {
     height: 4px;
     width: 100%;
     border-radius: 9999px;
-    background: linear-gradient(90deg, #1554c7, #7ba7e8);
+    background: linear-gradient(90deg, #8c1568, #e8198b);
     transform: scaleX(0);
     transform-origin: left center;
     animation: headline-underline 620ms var(--ease-out-soft) 1500ms both;
