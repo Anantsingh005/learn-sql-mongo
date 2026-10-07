@@ -126,6 +126,19 @@ function info(m) {
 
 /* Probes evaluated in the page. `DARK` is the old page background; finding it
    anywhere means a route was missed. */
+/* The headline reveal is a JS typewriter that loops, so a snapshot taken right
+   after paint can read a half-erased line ("Ma..." rather than "Master Database
+   Skills"). Copy checks on `/` must wait for the end state -- every glyph of
+   the currently visible h1 shown -- exactly like browser-hero.mjs does. */
+const VISIBLE_FULL = `
+(() => {
+  const h1 = [...document.querySelectorAll('h1')].find(h => h.getBoundingClientRect().width > 0);
+  if (!h1) return false;
+  const cs = [...h1.querySelectorAll('.type-char')];
+  return cs.length > 0 && cs.every(c => c.style.visibility === 'visible');
+})()
+`
+
 const PROBES = `
 (() => {
   const q = (s) => document.querySelector(s);
@@ -228,6 +241,12 @@ try {
       await waitFor(ws, `document.readyState === 'complete' && document.querySelector('main, #root > div')?.children.length > 0`, `${route} painted`, 20000)
       await sleep(700)
 
+      // Copy check below reads the headline's end state; the typewriter cannot
+      // be snapshot mid-cycle. Only `/` has glyphs that loop, so hold here.
+      if (route === '/') {
+        await waitFor(ws, VISIBLE_FULL, `${route} headline fully visible`, 8000)
+      }
+
       const p = await ev(ws, PROBES)
       if (!p || p.__error) {
         fail(`${route} probe failed: ${p?.__error}`)
@@ -267,9 +286,16 @@ try {
       if (route === '/') {
         if (p.hasHero) pass(`${tag} — hero present`)
         else fail(`${tag} — hero MISSING`)
-        if (p.h1 && /Test your/i.test(p.text) && /database skills/i.test(p.text)) {
-          pass(`${tag} — hero headline copy intact`)
-        } else fail(`${tag} — hero headline copy wrong: ${p.h1}`)
+        // Width-aware: >= 1024px shows the desktop Hero ("Test your / database
+        // skills" — the body text check, because at desktop the first h1 in the
+        // DOM is MobileHome's, which is display:none there), below it the
+        // MobileHome headline. The typewriter end-state wait above guarantees
+        // the text reads complete, not half-erased.
+        const copyIntact = vp.w >= 1024
+          ? /Test your/i.test(p.text) && /database skills/i.test(p.text)
+          : /Master Database Skills/i.test(p.h1 ?? '')
+        if (copyIntact) pass(`${tag} — hero headline copy intact (${vp.w >= 1024 ? 'desktop' : 'mobile'})`)
+        else fail(`${tag} — hero headline copy wrong: ${p.h1}`)
       }
 
       if (p.headerSignature) {
@@ -365,12 +391,28 @@ try {
   // fully invisible. `.type-char` used to be `inline-block`, an atomic inline,
   // which drops the glyph out of the clipper's text run. That is the whole bug,
   // so assert it structurally on every run rather than trusting a screenshot.
+  // The reveal is now JS-driven (`visibility` from `useTypeLoop`) and loops, so
+  // a fixed sleep can land mid-erase; wait for the full end state instead -- it
+  // is reached and held every cycle (~35% of each ~5s loop) -- then read the
+  // paint properties off the complete headline. The wait itself is also a gate:
+  // glyphs that can never become visible hang it and fail the run.
   console.log('\n=== hero headline paint ===')
+  await send(ws, 'Emulation.setDeviceMetricsOverride', {
+    width: 1600,
+    height: 1000,
+    deviceScaleFactor: 1,
+    mobile: false,
+  })
   await ev(ws, `location.href = '${BASE}/'`)
-  await waitFor(ws, `document.readyState === 'complete' && !!document.querySelector('h1')`, 'home for headline')
-  await sleep(2600)  // past the last glyph's animation delay
+  await waitFor(ws, `document.readyState === 'complete' && !!document.querySelector('[data-hero] h1')`, 'home for headline')
+  await waitFor(
+    ws,
+    `(() => { const h1 = document.querySelector('[data-hero] h1'); if (!h1) return false; const cs = [...h1.querySelectorAll('.type-char')]; return cs.length > 0 && cs.every(c => c.style.visibility === 'visible'); })()`,
+    'headline typed to full',
+    8000,
+  )
   const hl = await ev(ws, `(() => {
-    const h1 = document.querySelector('h1')
+    const h1 = document.querySelector('[data-hero] h1')
     const chars = [...h1.querySelectorAll('.type-char')]
     const cs = chars.map((c) => getComputedStyle(c))
     const b = h1.getBoundingClientRect()
@@ -391,8 +433,8 @@ try {
   else if (hl.displays.length > 0) fail(`headline glyph is atomic (${hl.displays.join(', ')}): background-clip:text cannot paint it, the text is invisible`)
 
   if (hl.opacities.length > 0 && !hl.opacities.some((o) => parseFloat(o) < 0.99))
-    pass('every headline glyph reached full opacity')
-  else if (hl.opacities.length > 0) fail(`headline glyphs stuck at opacity ${hl.opacities.join(', ')}: the typing animation never settled`)
+    pass('every headline glyph is at full opacity')
+  else if (hl.opacities.length > 0) fail(`headline glyphs stuck at opacity ${hl.opacities.join(', ')}: dimmed by a leftover animation`)
 
   if (hl.w > 0 && hl.h > 0) pass(`headline box has area (${hl.w}x${hl.h})`)
   else fail(`headline box is collapsed (${hl.w}x${hl.h})`)

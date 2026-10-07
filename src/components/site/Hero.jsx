@@ -2,21 +2,23 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { clearLocalProgress } from '../../lib/progress.js'
 import { useAuth } from '../../context/AuthContext.jsx'
+import useTypeLoop from '../../hooks/useTypeLoop.js'
 import WorkspaceVisual from './WorkspaceVisual.jsx'
 import { ArrowRightIcon } from './icons.jsx'
 
 const PARALLAX_MAX = 8
 
-const TYPE_STEP = 55
-const LINE_TWO_START = 620
+const LINE_ONE = 'Test your'
+const LINE_TWO = 'database skills'
+const HEADLINE = LINE_ONE + LINE_TWO
 
-function typeChars(text, base) {
+function visibleChars(text, visible) {
   return [...text].map((char, i) => (
     <span
+      className="type-char"
       // eslint-disable-next-line react/no-array-index-key
       key={`${char}-${i}`}
-      className="type-char"
-      style={{ animationDelay: `${base + i * TYPE_STEP}ms` }}
+      style={{ visibility: i < visible ? 'visible' : 'hidden' }}
     >
       {char}
     </span>
@@ -27,6 +29,9 @@ export default function Hero() {
   const [cleared, setCleared] = useState(false)
   const { user } = useAuth()
   const sceneRef = useRef(null)
+  const typed = useTypeLoop(HEADLINE)
+  const typedOne = Math.min(typed, LINE_ONE.length)
+  const typedTwo = Math.max(0, Math.min(typed - LINE_ONE.length, LINE_TWO.length))
 
   const handleClearLocal = () => {
     if (!window.confirm('Clear locally saved quiz progress on this browser?')) return
@@ -109,7 +114,7 @@ export default function Hero() {
                 className="enter-word block whitespace-pre text-body/90"
                 style={{ animationDelay: '90ms' }}
               >
-                {typeChars('Test your', 0)}
+                {visibleChars(LINE_ONE, typedOne)}
               </span>
               <span
                 className="relative isolate block whitespace-pre"
@@ -119,10 +124,7 @@ export default function Hero() {
                   className="enter-word grad-text block whitespace-pre"
                   style={{ animationDelay: '0ms' }}
                 >
-                  {typeChars('database skills', LINE_TWO_START)}
-                  <span className="type-caret-window" aria-hidden="true">
-                    <span className="type-caret caret-blink" />
-                  </span>
+                  {visibleChars(LINE_TWO, typedTwo)}
                 </span>
               </span>
             </h1>

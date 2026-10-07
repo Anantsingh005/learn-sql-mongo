@@ -1,6 +1,38 @@
 # Project Status
 
-Last updated: 2026-10-04
+Last updated: 2026-10-08
+
+## Current session (2026-10-08): looping hero typewriter, and the gates that were stale for it
+
+The hero headline's reveal was replaced with a JS typewriter and, more importantly, every gate that asserted the old reveal was found stale — the CSS-animation probes had not been re-run since the mobile-home and academy commits shipped, and two of them were already wrong before this session began. **All uncommitted.**
+
+### The typewriter (`src/hooks/useTypeLoop.js`, new)
+
+Old reveal: `.type-char` spans animated `opacity` once per page load via CSS keyframes with a stagger. New reveal: `useTypeLoop` returns a count 0→`text.length` and each glyph's visibility is set inline (`visible`/`hidden`), looping forever — type → hold → erase → pause. `prefers-reduced-motion` returns the full length and never starts timers. Wired into `Hero.jsx` ("Test your database skills", two forced lines) and `MobileHome.jsx` ("Master Database Skills").
+
+- The glyph spans keep the class `type-char`, now purely as a marker: the CSS rule shrank to `display: inline` — a *paint contract*, not an animation. That one declaration is what guarantees every glyph stays inside the parent's `background-clip: text` text run (the rule that the invisible-line bug hinged on), and the comment in `index.css` documents exactly that. `@keyframes type-char`, the base `opacity: 0/1` animation, and the now-dead `headline-underline` rules + `@keyframes` are gone. `caret-blink` rules stay (still used by `WorkspaceVisual` and the MobileHome `WorkspaceCard`).
+- `browser-visual.mjs`'s dead-class check is why `.type-char` still needs a real rule rather than classless spans or a no-op rule: a class used in JSX with no generated CSS is a finding.
+
+### Why the gates were stale (and how they were wrong)
+
+`browser-hero.mjs` and `browser-design.mjs` both queried `.type-char` and asserted opacity settling — a measurement that no longer means anything. But the audit found they were stale in three *pre-existing* ways too, all from commits after the last verification (2026-10-04):
+
+1. **`lineSpanCount === 2` could never pass again.** The Hero's first line span is `enter-word block`, and `.enter-word { display: inline-block; }` lives in unlayered CSS in `index.css` — unlayered author CSS beats Tailwind's layered `block` utility, so that span computes to `inline-block`, not `block`, and the display-count probe read 1. The old check was already failing at HEAD; nobody had re-run the gate since the pink/mobile refactor. Replaced with a geometry probe: cluster the glyphs' `getBoundingClientRect().top` values (gap > 4px = a new row) and assert 2 rows on desktop.
+2. **The gate was desktop-only-written but the landing now has two heroes.** Below 1024px `MobileHome` renders instead of `Hero`, so at 834/390 the "Test your / database skills" copy, the 2-forced-lines count, and the clear-progress presence checks were all failing on the *mobile* layout. The gate is now width-aware: copy asserted is `Test your database skills` (desktop) or `Master Database Skills` (mobile), and the clear-progress control is desktop-only.
+3. **`headline-underline` was a dead check.** The underline element no longer exists in any JSX, so the probe's `underlineScale` was always null and both checks passed **vacuously** — the gate was reporting "underline drew in" for a non-existent element. Probe field and checks removed, along with the orphan CSS.
+
+### What the gates do now
+
+- **`browser-hero.mjs`** — per viewport: waits for the *full end state* (every glyph of the visible h1 shown; the loop means a snapshot can land mid-erase, so the wait is the assertion that the headline ever completes), then asserts glyph count, all-visible, width-correct copy, desktop 2-row geometry, and the fit/footer budget it always had. New dedicated pass at 1600w samples one full cycle and asserts it types up progressively, holds full, erases, and loops (changes/mid/full/dropped counts). Reduced-motion still asserts all-visible-without-animating.
+- **`browser-design.mjs`** — the `/` copy check now waits for the typewriter end state and is width-aware (body-text for desktop since the first h1 in the DOM is MobileHome's there; MobileHome copy below 1024px). The headline-paint section pins a 1600x1000 viewport, waits for full, and still asserts the structural invariants that catch the invisible-line bug: non-atomic glyphs, full opacity, box has area.
+
+### Verified
+
+`npm run build` → success · `npx oxlint src scripts` → no new warnings (only the pre-existing `set-state-in-effect`/`exhaustive-deps` and `wdata/*.mjs` baseline) · `browser-hero.mjs` → **42 passed, 0 failed** · `browser-design.mjs` → **332 passed, 0 failed**.
+
+**Pre-existing and unrelated to this session** (present since the 10-06/10-07 commits, unchecked since): `browser-visual.mjs` reports 9 `invisible` findings (three MobileHome ambient blur blobs + three `WorkspaceCard` traffic-light dots — translucent/`color-mix` backgrounds whose computed colour the probe's rgba regex can't read) and 2 dead classes (`page-title`, `page-sub` on Privacy/Terms); `browser-contrast.mjs` reports 4 failures — the gradient kicker on `/quiz/sql` and `/leaderboard` at 4.25:1 vs 4.5:1.
+
+**Not done:** nothing new committed; the typewriter is uncommitted along with the gate updates.
 
 ## Current session (2026-10-04): full-app light theme, then a visual-risk audit that found real defects
 

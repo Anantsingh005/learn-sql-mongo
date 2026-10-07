@@ -1,8 +1,26 @@
 import { Link } from 'react-router-dom'
 import { useInView } from '../../hooks/useInView.js'
 import useCountUp from '../../hooks/useCountUp.js'
+import useTypeLoop from '../../hooks/useTypeLoop.js'
 import WorkspaceVisual from './WorkspaceVisual.jsx'
 import { ArrowRightIcon, CodeIcon, LeafIcon } from './icons.jsx'
+
+const HEAD_PLAIN = 'Master '
+const HEAD_GRAD = 'Database Skills'
+const HEADLINE = HEAD_PLAIN + HEAD_GRAD
+
+function visibleChars(text, visible) {
+  return [...text].map((char, i) => (
+    <span
+      className="type-char"
+      // eslint-disable-next-line react/no-array-index-key
+      key={`${char}-${i}`}
+      style={{ visibility: i < visible ? 'visible' : 'hidden' }}
+    >
+      {char}
+    </span>
+  ))
+}
 
 /* -------------------------------------------------------------------------- */
 /* Phone + tablet home (max-width: 1024px), built from DBQuiz's existing      */
@@ -258,6 +276,10 @@ export default function MobileHome() {
 }
 
 function HeroSection() {
+  const typed = useTypeLoop(HEADLINE)
+  const typedPlain = Math.min(typed, HEAD_PLAIN.length)
+  const typedGrad = Math.max(0, Math.min(typed - HEAD_PLAIN.length, HEAD_GRAD.length))
+
   return (
     <section className="pb-2 pt-5 md:pt-12">
       <div className="md:grid md:grid-cols-[1.05fr_minmax(0,380px)] md:items-center md:gap-10 lg:grid-cols-[1.1fr_minmax(0,440px)] lg:gap-14">
@@ -274,7 +296,8 @@ function HeroSection() {
             className="enter-rise mt-3 font-serif text-[34px] font-extrabold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[40px] md:text-[44px]"
             style={{ animationDelay: '90ms' }}
           >
-            Master <span className="grad-text">Database Skills</span>
+            {visibleChars(HEAD_PLAIN, typedPlain)}
+            <span className="grad-text">{visibleChars(HEAD_GRAD, typedGrad)}</span>
           </h1>
 
           <p
