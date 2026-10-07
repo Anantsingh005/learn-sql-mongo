@@ -28,7 +28,7 @@ export default function FlowDiagram({ steps, caption, accent = '#1554c7', ink = 
                 </div>
               )}
 
-              <div className="rounded-lg border border-line bg-white/40 p-2.5">
+              <div className="rounded-xl border border-line bg-white/60 p-2.5 transition-colors hover:bg-white/80">
                 <div className="mb-2 flex items-start gap-2">
                   <span
                     className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded font-mono text-[9px] font-black"

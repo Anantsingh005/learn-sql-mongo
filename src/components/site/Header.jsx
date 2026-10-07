@@ -1,17 +1,30 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
+import { useIsAdmin } from '../../hooks/useIsAdmin.js'
 import Logo from './Logo.jsx'
 import { ENTER_POP, NAV } from './motion.js'
 
-export default function Header({ links = NAV }) {
+/**
+ * The site header: 70px height, translucent at rest with backdrop blur,
+ * crisp border, centered segmented navigation pill for desktop,
+ * and a fully opaque, clean mobile drawer for phone screens.
+ */
+export default function Header({ links: staticLinks }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
+  const { isAdmin } = useIsAdmin()
+
+  const links = useMemo(() => {
+    const base = staticLinks ?? NAV
+    return isAdmin ? [...base, { to: '/admin', label: 'Admin' }] : base
+  }, [staticLinks, isAdmin])
 
   const routeKey = location.pathname
   const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   const [scrolled, setScrolled] = useState(false)
+
   useEffect(() => {
     let frame = 0
     const measure = () => {
@@ -31,27 +44,32 @@ export default function Header({ links = NAV }) {
 
   return (
     <header
-      className={`sticky top-0 z-40 h-[70px] border-b border-line backdrop-blur-md transition-[background-color,box-shadow] duration-300 ${
+      className={`sticky top-0 z-40 h-[70px] border-b backdrop-blur-md transition-[background-color,box-shadow] duration-300 ${
         scrolled
-          ? 'bg-white shadow-[0_10px_30px_-18px_rgba(16,42,67,0.25)]'
-          : 'bg-white/90'
+          ? 'border-line bg-white shadow-[0_10px_30px_-18px_rgba(16,42,67,0.25)]'
+          : 'border-line bg-transparent lg:bg-white/90'
       }`}
     >
-      <div className="mx-auto grid h-[70px] max-w-6xl grid-cols-[1fr_auto] items-center gap-4 px-5 sm:px-8 lg:grid-cols-[1fr_auto_1fr]">
+      <div className="mx-auto grid h-[70px] max-w-6xl grid-cols-[1fr_auto] items-center gap-3 px-4 sm:gap-4 sm:px-8 lg:grid-cols-[1fr_auto_1fr]">
         <div className="flex justify-start">
           <Logo onClick={closeMenu} />
         </div>
 
+        {/* Desktop Navigation - UNCHANGED for desktop */}
         <DesktopNav links={links} />
 
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-2 sm:gap-3">
           <AuthControl />
           <button
             type="button"
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
-            className="-mr-1.5 flex h-9 w-9 items-center justify-center rounded-xl p-2 text-muted transition-colors duration-200 hover:bg-slate-100 hover:text-ink lg:hidden"
+            className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200 lg:hidden ${
+              menuOpen
+                ? 'border-brand-200 bg-brand-50 text-brand-600 shadow-xs'
+                : 'border-slate-200/80 bg-slate-50/80 text-slate-700 hover:bg-slate-100 hover:text-ink'
+            }`}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.9}>
               {menuOpen ? (
@@ -68,6 +86,10 @@ export default function Header({ links = NAV }) {
     </header>
   )
 }
+
+/* -------------------------------------------------------------------------- */
+/* Desktop nav + smooth gliding pill indicator (DESKTOP ONLY)                 */
+/* -------------------------------------------------------------------------- */
 
 function DesktopNav({ links }) {
   const navRef = useRef(null)
@@ -125,6 +147,7 @@ function DesktopNav({ links }) {
       className="relative hidden items-center rounded-full bg-slate-100/80 p-1 border border-slate-200/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] lg:flex"
       aria-label="Main"
     >
+      {/* Sliding pill indicator */}
       <span
         aria-hidden="true"
         className="pointer-events-none absolute h-[32px] rounded-full bg-white shadow-xs border border-slate-200/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
@@ -161,8 +184,13 @@ function DesktopNav({ links }) {
   )
 }
 
+/* -------------------------------------------------------------------------- */
+/* Auth control — sign in, or the profile dropdown                            */
+/* -------------------------------------------------------------------------- */
+
 function AuthControl() {
   const { user, profile, configured, signOut } = useAuth()
+  const { isAdmin } = useIsAdmin()
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const dropdownRef = useRef(null)
@@ -206,7 +234,7 @@ function AuthControl() {
     return (
       <Link
         to="/auth"
-        className="inline-flex h-[38px] items-center justify-center gap-1.5 rounded-full bg-brand-600 px-5 text-[13.5px] font-semibold text-white shadow-sm shadow-brand-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-md hover:shadow-brand-600/25 active:translate-y-0 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+        className="inline-flex h-[34px] sm:h-[38px] items-center justify-center gap-1 rounded-full bg-brand-600 px-3.5 sm:px-5 text-[12.5px] sm:text-[13.5px] font-semibold text-white shadow-sm shadow-brand-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-md hover:shadow-brand-600/25 active:translate-y-0 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
       >
         <span>Sign in</span>
       </Link>
@@ -220,12 +248,12 @@ function AuthControl() {
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((o) => !o)}
-        className="group/profile inline-flex h-[38px] items-center gap-2 rounded-full border border-slate-200/90 bg-white/90 py-1 pl-1.5 pr-3 text-[13.5px] font-medium text-slate-700 shadow-xs backdrop-blur-sm transition-all duration-200 hover:border-brand-200 hover:bg-brand-50/50 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+        className="group/profile inline-flex h-[34px] sm:h-[38px] items-center gap-1.5 sm:gap-2 rounded-full border border-slate-200/90 bg-white/90 py-1 pl-1.5 pr-2.5 sm:pr-3 text-[12.5px] sm:text-[13.5px] font-medium text-slate-700 shadow-xs backdrop-blur-sm transition-all duration-200 hover:border-brand-200 hover:bg-brand-50/50 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
       >
         {profile?.avatar_url ? (
-          <img src={profile.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover ring-1 ring-slate-200" />
+          <img src={profile.avatar_url} alt="" className="h-5 w-5 sm:h-6 sm:w-6 rounded-full object-cover ring-1 ring-slate-200" />
         ) : (
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 text-[11px] font-bold text-white shadow-xs">
+          <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 text-[10px] sm:text-[11px] font-bold text-white shadow-xs">
             {(profile?.username ?? user.email ?? '?').charAt(0).toUpperCase()}
           </span>
         )}
@@ -253,6 +281,12 @@ function AuthControl() {
             <p className="mt-0.5 truncate text-xs text-muted">{user.email}</p>
           </div>
           <div className="my-1 border-t border-slate-100" />
+          {isAdmin && (
+            <NavLink to="/admin" onClick={close} className={menuItem} role="menuitem">
+              <AdminIcon />
+              Admin
+            </NavLink>
+          )}
           <NavLink to="/profile" onClick={close} className={menuItem} role="menuitem">
             <UserIcon />
             Profile
@@ -285,6 +319,19 @@ function UserIcon() {
   )
 }
 
+function AdminIcon() {
+  return (
+    <svg className="h-4 w-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  )
+}
+
 function SignOutIcon() {
   return (
     <svg className="h-4 w-4 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
@@ -293,32 +340,133 @@ function SignOutIcon() {
   )
 }
 
+/* -------------------------------------------------------------------------- */
+/* Mobile Menu — dedicated overlay and solid drawer for phone screens         */
+/* -------------------------------------------------------------------------- */
+
 function MobileMenu({ links, onClose }) {
+  const { user, profile, signOut } = useAuth()
+  const [busy, setBusy] = useState(false)
+
+  // Prevent background body scroll when mobile menu is open
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = originalStyle
+    }
+  }, [])
+
+  const handleSignOut = async () => {
+    if (busy) return
+    setBusy(true)
+    onClose()
+    try {
+      await signOut()
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <div className="border-b border-line bg-white/95 backdrop-blur-md lg:hidden">
-      <nav
-        className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-4 sm:px-8"
-        aria-label="Mobile"
+    <>
+      {/* Backdrop scrim overlay */}
+      <div
+        className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-md transition-opacity duration-200 lg:hidden"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Solid slide-down mobile menu panel over the blurred screen */}
+      <div
+        className="fixed inset-x-0 top-[70px] z-50 max-h-[calc(100vh-70px)] overflow-y-auto border-b border-slate-200 bg-white shadow-2xl transition-all duration-200 lg:hidden"
+        role="dialog"
+        aria-label="Mobile navigation"
       >
-        {links.map((item, index) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={onClose}
-            className={({ isActive }) =>
-              `enter-rise flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[14.5px] font-medium transition-all duration-200 ${
-                isActive
-                  ? 'bg-brand-50 text-brand-600 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-ink'
-              }`
-            }
-            style={{ animationDelay: `${index * 45}ms` }}
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-    </div>
+        <div className="mx-auto max-w-lg px-4 py-4 sm:px-6">
+          <nav className="flex flex-col gap-1.5" aria-label="Mobile menu">
+            {links.map((item, index) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center justify-between rounded-xl px-4 py-3 text-[15px] font-medium transition-all duration-150 ${
+                    isActive
+                      ? 'bg-brand-50 text-brand-600 font-semibold ring-1 ring-brand-200/80 shadow-xs'
+                      : 'text-slate-700 hover:bg-slate-50 hover:text-ink active:bg-slate-100'
+                  }`
+                }
+                style={{ animationDelay: `${index * 30}ms` }}
+              >
+                {({ isActive }) => (
+                  <>
+                    <span className="flex items-center gap-3">
+                      <span
+                        className={`h-2 w-2 rounded-full transition-colors ${
+                          isActive ? 'bg-brand-600' : 'bg-slate-300'
+                        }`}
+                      />
+                      {item.label}
+                    </span>
+                    <svg
+                      className={`h-4 w-4 transition-transform ${
+                        isActive ? 'text-brand-600 translate-x-0.5' : 'text-slate-400'
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* User profile / Auth in mobile menu if logged in */}
+          {user && (
+            <div className="mt-4 border-t border-slate-100 pt-3">
+              <div className="flex items-center gap-3 px-3 py-2">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200" />
+                ) : (
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 text-xs font-bold text-white shadow-xs">
+                    {(profile?.username ?? user.email ?? '?').charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-ink">{profile?.username ?? user.email}</p>
+                  <p className="truncate text-xs text-muted">{user.email}</p>
+                </div>
+              </div>
+
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <NavLink
+                  to="/profile"
+                  onClick={onClose}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                >
+                  <UserIcon />
+                  Profile
+                </NavLink>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  disabled={busy}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2.5 text-xs font-semibold text-danger hover:bg-red-100"
+                >
+                  <SignOutIcon />
+                  {busy ? 'Signing out…' : 'Sign out'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   )
 }

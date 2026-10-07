@@ -1,5 +1,6 @@
 import ResultTable from '../quiz/ResultTable.jsx'
 import Console from './Console.jsx'
+import Reveal from './Reveal.jsx'
 
 function unwrap(row) {
   return row.map((cell) =>
@@ -13,14 +14,14 @@ export default function Cheatsheet({ cheatsheet, accent = '#1554c7', ink = accen
   if (!cheatsheet) return null
 
   return (
-    <section className="mt-10">
+    <Reveal as="section" delay={0} className="mt-10">
       <div
         className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.3em]"
         style={{ color: ink }}
       >
         Reference
       </div>
-      <h3 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+      <h3 className="font-serif text-xl font-semibold tracking-tight text-ink sm:text-2xl">
         {cheatsheet.title}
       </h3>
       <p className="mt-1.5 text-sm leading-relaxed text-body">
@@ -30,6 +31,6 @@ export default function Cheatsheet({ cheatsheet, accent = '#1554c7', ink = accen
       <Console title="cheat sheet" className="mt-4" bodyClass="p-3">
         <ResultTable columns={cheatsheet.columns} rows={cheatsheet.rows.map(unwrap)} />
       </Console>
-    </section>
+    </Reveal>
   )
 }

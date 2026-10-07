@@ -1,7 +1,7 @@
 const INLINE_RE = /(`[^`]+`|\*\*[^*]+\*\*)/g
 
 const CODE_CLASS =
-  'rounded bg-mist px-1.5 py-0.5 font-mono text-[0.82em] text-ink ring-1 ring-brand-200'
+  'rounded bg-mist px-1.5 py-0.5 font-mono text-[0.82em] text-ink ring-1 ring-brand-200 break-words'
 
 export function Inline({ text, codeClass = CODE_CLASS, strongClass = 'font-semibold text-ink' }) {
   const parts = String(text).split(INLINE_RE).filter(Boolean)

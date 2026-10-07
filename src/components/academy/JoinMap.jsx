@@ -33,16 +33,16 @@ const SIDES = ['left', 'right']
 
 export default function JoinMap({ accent = '#1554c7', ink = accent }) {
   return (
-    <div className="rounded-xl border border-line/80 bg-white p-4">
+    <div className="rounded-2xl border border-line/80 bg-white p-3.5 shadow-[0_2px_14px_-10px_rgba(16,42,67,0.25)] sm:p-4">
       <div className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
         Join types · which rows survive
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {TYPES.map((t) => (
           <div
             key={t.sql}
-            className="rounded-lg border border-line bg-white/40 p-2.5"
+            className="rounded-xl border border-line bg-white/60 p-2.5 transition-colors hover:border-line hover:bg-white"
           >
             <div className="flex flex-wrap items-baseline gap-x-2">
               <code className="font-mono text-[12px] font-bold" style={{ color: ink }}>

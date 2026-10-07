@@ -18,6 +18,7 @@ import ScrollProgress from '../components/academy/ScrollProgress.jsx'
 import PaperSheet from '../components/academy/PaperSheet.jsx'
 import ReadingBlock from '../components/academy/ReadingBlock.jsx'
 import Cheatsheet from '../components/academy/Cheatsheet.jsx'
+import Reveal from '../components/academy/Reveal.jsx'
 import { Inline } from '../components/academy/Prose.jsx'
 import ProgressBar from '../components/academy/ProgressBar.jsx'
 import SectionQuiz from '../components/academy/SectionQuiz.jsx'
@@ -28,16 +29,17 @@ const CHAPTER_DONE = '__chapter__'
 function Objectives({ items, accent, ink = accent }) {
   if (!items?.length) return null
   return (
-    <div
-      className="mb-8 rounded-xl border border-line bg-mist p-4"
+    <Reveal
+      delay={0}
+      className="mb-8 rounded-2xl border border-line bg-mist p-4 shadow-[0_2px_12px_-8px_rgba(16,42,67,0.2)] sm:p-5"
       style={{ borderLeft: `3px solid ${accent}` }}
     >
       <div className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-muted">
         In this chapter
       </div>
-      <ul className="mt-2 space-y-1.5">
+      <ul className="mt-2.5 space-y-1.5 sm:space-y-2">
         {items.map((o, i) => (
-          <li key={i} className="flex gap-2 text-[13px] leading-snug text-body">
+          <li key={i} className="flex gap-2 text-[13px] leading-snug text-body sm:text-[13.5px]">
             <span className="font-mono text-[11px]" style={{ color: ink }}>
               ▸
             </span>
@@ -45,25 +47,25 @@ function Objectives({ items, accent, ink = accent }) {
           </li>
         ))}
       </ul>
-    </div>
+    </Reveal>
   )
 }
 
 function Mistakes({ items }) {
   if (!items?.length) return null
   return (
-    <section className="mt-9">
+    <Reveal as="section" delay={0} className="mt-10">
       <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-danger-700">
         Common mistakes
       </div>
       <h3 className="font-serif text-xl font-semibold tracking-tight text-ink">
         What trips people up
       </h3>
-      <ul className="mt-3 space-y-2">
+      <ul className="mt-3 space-y-2 sm:space-y-2.5">
         {items.map((m, i) => (
           <li
             key={i}
-            className="flex gap-2.5 rounded-lg border border-danger-200 bg-danger-100 px-3.5 py-2.5 text-[13px] leading-relaxed text-danger-700/85"
+            className="flex gap-2.5 rounded-xl border border-danger-200 bg-danger-100 px-3.5 py-2.5 text-[13px] leading-relaxed text-danger-700/85 shadow-[0_2px_10px_-8px_rgba(176,51,51,0.35)] sm:px-4"
           >
             <span className="font-mono text-[12px] font-black text-danger-600">✗</span>
             <Inline
@@ -74,7 +76,7 @@ function Mistakes({ items }) {
           </li>
         ))}
       </ul>
-    </section>
+    </Reveal>
   )
 }
 
@@ -86,17 +88,17 @@ function ChapterNav({ chapter }) {
     target ? (
       <Link
         to={`/academy/sql/${target.slug}`}
-        className="group flex-1 rounded-xl border border-line bg-mist px-4 py-3 transition-colors hover:border-brand-600 hover:bg-white"
+        className="group flex-1 rounded-2xl border border-line bg-mist px-3.5 py-3 shadow-[0_2px_10px_-8px_rgba(16,42,67,0.25)] transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-600 hover:bg-white hover:shadow-[0_14px_26px_-18px_rgba(16,42,67,0.45)] sm:px-4"
       >
         <div className="font-mono text-[10px] uppercase tracking-widest text-muted">
           {dir === 'prev' ? '← Previous' : 'Next →'}
         </div>
-        <div className="mt-0.5 truncate text-[13px] font-semibold text-ink group-hover:text-ink">
+        <div className="mt-0.5 truncate text-[13px] font-semibold text-ink group-hover:text-brand-700">
           {target.title}
         </div>
       </Link>
     ) : (
-      <span className="flex-1" />
+      <span className="hidden flex-1 sm:block" />
     )
 
   return (
@@ -112,7 +114,7 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
   const next = neighbour(chapter.slug, 1)
 
   return (
-    <div className="mt-10 rounded-xl border border-line bg-mist p-5">
+    <Reveal delay={0} className="mt-10 rounded-2xl border border-line bg-mist p-4 shadow-[0_2px_14px_-10px_rgba(16,42,67,0.25)] sm:p-5">
       <div className="flex items-center gap-3">
         <ProgressBar
           pct={pct}
@@ -128,10 +130,10 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
         <button
           type="button"
           onClick={onToggleRead}
-          className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 ${
             chapterDone
               ? 'border border-leaf-200 bg-leaf-50 text-leaf-700 hover:bg-leaf-50'
-              : 'border border-line bg-white text-body hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700'
+              : 'border border-line bg-white text-body shadow-sm hover:-translate-y-0.5 hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700 hover:shadow-[0_10px_20px_-14px_rgba(16,42,67,0.4)]'
           }`}
         >
           {chapterDone ? '✓ Chapter read' : 'Mark chapter as read'}
@@ -140,7 +142,7 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
         <button
           type="button"
           onClick={onPractise}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-transform hover:brightness-110"
+          className="cta-sheen relative overflow-hidden rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_-14px_rgba(16,42,67,0.6)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110"
           style={{ background: chapter.accent }}
         >
           Practise this chapter →
@@ -149,7 +151,7 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
         {next ? (
           <Link
             to={`/academy/sql/${next.slug}`}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-transform hover:brightness-110"
+            className="cta-sheen relative overflow-hidden rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_-14px_rgba(16,42,67,0.6)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110"
             style={{ background: chapter.accent }}
           >
             Next chapter →
@@ -157,13 +159,13 @@ function ChapterFooter({ chapter, readSections, chapterDone, onToggleRead, onPra
         ) : (
           <Link
             to="/academy/sql"
-            className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-body transition-colors hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700"
+            className="rounded-xl border border-line px-4 py-2 text-sm font-medium text-body transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-600 hover:bg-brand-50 hover:text-brand-700"
           >
             ← Back to contents
           </Link>
         )}
       </div>
-    </div>
+    </Reveal>
   )
 }
 
@@ -259,16 +261,22 @@ export default function Chapter() {
   if (!chapter) {
     return (
       <div className="mx-auto max-w-2xl py-16 text-center">
-        <div className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-gradient">
+        <div
+          className="enter-rise font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-gradient"
+          style={{ animationDelay: '0ms' }}
+        >
           404
         </div>
-        <h1 className="mt-3 font-serif text-3xl font-semibold text-ink">Chapter not found</h1>
-        <p className="mt-2 text-sm text-muted">
+        <h1 className="enter-rise mt-3 font-serif text-3xl font-semibold text-ink" style={{ animationDelay: '80ms' }}>
+          Chapter not found
+        </h1>
+        <p className="enter-rise mt-2 text-sm text-muted" style={{ animationDelay: '160ms' }}>
           Nothing has been written at <span className="font-mono text-muted">/academy/sql/{chapterSlug}</span>.
         </p>
         <Link
           to="/academy/sql"
-          className="mt-6 inline-block rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700"
+          className="enter-rise mt-6 inline-block rounded-xl bg-brand-600 px-5 py-2 font-semibold text-white shadow-[0_12px_24px_-16px_rgba(21,84,199,0.9)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-700"
+          style={{ animationDelay: '240ms' }}
         >
           Back to the book
         </Link>
@@ -288,13 +296,14 @@ export default function Chapter() {
       <div className="mx-auto max-w-5xl px-2 pb-10">
         <Link
           to="/academy/sql"
-          className="group inline-flex items-center text-sm text-muted transition-colors hover:text-body"
+          className="enter-rise group inline-flex items-center text-sm text-muted transition-colors hover:text-body"
+          style={{ animationDelay: '0ms' }}
         >
           <span className="mr-1 inline-block transition-transform group-hover:-translate-x-1">←</span>
           All chapters
         </Link>
 
-        <div className="mt-4 grid gap-8 lg:grid-cols-[186px_minmax(0,1fr)]">
+        <div className="mt-4 grid gap-6 lg:grid-cols-[186px_minmax(0,1fr)] lg:gap-8">
           <ChapterOutline
             chapters={CHAPTERS}
             currentSlug={chapter.slug}
@@ -308,17 +317,28 @@ export default function Chapter() {
           <PaperSheet accent={chapter.accent}>
             <header>
               <div
-                className="font-mono text-[10px] font-bold uppercase tracking-[0.3em]"
-                style={{ color: chapter.accentInk }}
+                className="enter-rise font-mono text-[10px] font-bold uppercase tracking-[0.3em]"
+                style={{ color: chapter.accentInk, animationDelay: '60ms' }}
               >
                 Chapter {String(chapter.number).padStart(2, '0')}
               </div>
-              <h1 className="mt-2 font-serif text-4xl font-semibold leading-[1.1] tracking-tight text-ink">
+              <h1
+                className="enter-rise mt-2 font-serif text-3xl font-semibold leading-[1.1] tracking-tight text-ink sm:text-4xl"
+                style={{ animationDelay: '130ms' }}
+              >
                 {chapter.title}
               </h1>
-              <p className="mt-2 text-[15px] leading-relaxed text-body">{chapter.subtitle}</p>
+              <p
+                className="enter-rise mt-2 text-[15px] leading-relaxed text-body"
+                style={{ animationDelay: '200ms' }}
+              >
+                {chapter.subtitle}
+              </p>
 
-              <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
+              <div
+                className="enter-rise mt-5 flex items-center gap-3 border-t border-line pt-4"
+                style={{ animationDelay: '270ms' }}
+              >
                 <ProgressBar
                   pct={Math.round((readSections / chapter.sections.length) * 100)}
                   gradient={`linear-gradient(90deg, ${chapter.accent}, ${chapter.accent}66)`}
@@ -336,20 +356,22 @@ export default function Chapter() {
               const key = sectionKey(chapter.slug, section.id)
               const done = progress.sections.includes(key)
               return (
-                <section
+                <Reveal
+                  as="section"
                   key={section.id}
                   id={key}
                   data-section={section.id}
+                  delay={0}
                   className="scroll-mt-24 border-t border-line pt-8 mt-8 first:border-t-0"
                 >
-                  <div className="mb-3 flex items-baseline gap-3">
+                  <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     <span
                       className="font-mono text-sm font-black"
                       style={{ color: chapter.accentInk }}
                     >
                       {section.number}
                     </span>
-                    <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+                    <h2 className="min-w-0 font-serif text-xl font-semibold tracking-tight text-ink sm:text-2xl">
                       {section.title}
                     </h2>
                     <button
@@ -378,7 +400,7 @@ export default function Chapter() {
                     accent={chapter.accent}
                     ink={chapter.accentInk}
                   />
-                </section>
+                </Reveal>
               )
             })}
 

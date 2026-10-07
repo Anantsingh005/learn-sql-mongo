@@ -14,14 +14,14 @@ export function useIsAdmin() {
       setIsAdmin(false)
       return
     }
-    if (cached === true) {
-      setIsAdmin(true)
+    if (cached && cached.id === user.id) {
+      setIsAdmin(cached.ok)
       return
     }
     let active = true
     fetchIsAdmin().then((ok) => {
       if (!active) return
-      cached = ok
+      cached = { id: user.id, ok }
       setIsAdmin(ok)
     })
     return () => {

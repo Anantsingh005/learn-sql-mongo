@@ -8,15 +8,15 @@ export default function Console({
   className = '',
   bodyClass = 'p-3',
 }) {
-  const headerClass = noClip ? 'rounded-t-[calc(0.75rem-1px)]' : ''
+  const headerClass = noClip ? 'rounded-t-[calc(1rem-1px)]' : ''
 
   return (
     <div
-      className={`rounded-xl border border-line/80 bg-white ${noClip ? 'overflow-visible' : 'overflow-hidden'} ${className}`}
+      className={`rounded-2xl border border-line/80 bg-white shadow-[0_2px_14px_-10px_rgba(16,42,67,0.25)] ${noClip ? 'overflow-visible' : 'overflow-hidden'} ${className}`}
     >
       {(title || badge) && (
         <div
-          className={`flex items-center gap-2.5 border-b border-line/90 bg-white px-3 py-1.5 ${headerClass}`}
+          className={`flex items-center gap-2.5 border-b border-line/90 bg-mist/70 px-3 py-2 sm:px-3.5 ${headerClass}`}
         >
           {dots && (
             <span className="flex shrink-0 gap-1.5" aria-hidden="true">
