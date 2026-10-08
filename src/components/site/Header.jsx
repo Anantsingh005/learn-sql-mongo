@@ -150,7 +150,7 @@ function DesktopNav({ links }) {
       {/* Sliding pill indicator */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute h-[32px] rounded-full bg-white shadow-sm border border-slate-200/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        className="pointer-events-none absolute h-[32px] rounded-full bg-brand-700 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
         style={{
           left: indicator.left,
           width: indicator.width,
@@ -171,7 +171,7 @@ function DesktopNav({ links }) {
             data-nav-active={isActive ? 'true' : undefined}
             className={`enter-rise relative z-10 flex h-[32px] items-center rounded-full px-3.5 text-[13.5px] font-medium transition-colors duration-200 ${
               isActive
-                ? 'text-brand-600 font-semibold'
+                ? 'text-white font-semibold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
             style={{ animationDelay: `${index * 60}ms` }}
