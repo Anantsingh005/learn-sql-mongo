@@ -165,7 +165,7 @@ export default function WorkspaceVisual({ className = '' }) {
       </g>
 
       <g>
-        <rect x="468" y="292" width="118" height="28" rx="4" fill="#1554C7" />
+        <rect x="468" y="292" width="118" height="28" rx="4" fill="#8C1568" />
         <rect x="580" y="297" width="7" height="18" rx="2" fill="#E7EDF4" />
         <Label x="480" y="311">SQL</Label>
 
@@ -199,7 +199,7 @@ export default function WorkspaceVisual({ className = '' }) {
 
       <g transform="rotate(-5 520 380)">
         <rect x="436" y="330" width="170" height="96" rx="8" fill="#FFFFFF" stroke="#D9E2EC" strokeWidth="1.5" />
-        <rect x="452" y="344" width="46" height="6" rx="3" fill="#1554C7" />
+        <rect x="452" y="344" width="46" height="6" rx="3" fill="#8C1568" />
         <g stroke="#E7EDF4" strokeWidth="1.5">
           <line x1="452" y1="366" x2="590" y2="366" />
           <line x1="452" y1="382" x2="590" y2="382" />

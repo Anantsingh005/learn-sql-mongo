@@ -36,6 +36,22 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
 - [Tailwind CSS](https://tailwindcss.com) 4 for styling
 - [Oxlint](https://oxc.rs) for linting
 
+## Design
+
+The whole app is a light theme driven by the `@theme` block in `src/index.css` — no Tailwind config file. The tokens that matter:
+
+| Token                | Value     | Used for                                     |
+| -------------------- | --------- | -------------------------------------------- |
+| `brand-600`          | `#8c1568` | primary buttons, active nav, card icon tiles |
+| `brand-400`          | `#d4349e` | gradients and accents                        |
+| `brand-50`           | `#fdf0f8` | blush tints, card/hero washes                |
+| `ink` / `body` / `muted` | `#2d0022` / `#4a1040` / `#7a4068` | headings / body / secondary text |
+| `leaf-600`           | `#3d7f55` | everything MongoDB (never a second brand hue) |
+
+Typography is Inter Variable (`font-black` for the hero, `font-bold` for section headings, `font-normal`/`leading-relaxed` for body, uppercase `tracking-widest` for badges), with Source Serif 4 and JetBrains Mono for the book and code. The design system is deliberately small: **cards** are `rounded-2xl border border-slate-200/70 shadow-sm` lifting to `shadow-md` on `hover:-translate-y-0.5`; **buttons** are `rounded-full` pills (primary `bg-brand-600 hover:bg-brand-700`, ghost `border-slate-300 hover:bg-slate-50`, danger `bg-red-50 border-red-200 text-red-600`).
+
+The landing page has two builds of itself: `Hero.jsx` + the `SQLCard`/`MongoDBCard` row at ≥1024px, and a stacked `MobileHome.jsx` below that, both rendered by `Home.jsx`. Shared shell pieces live in `src/components/site/` (`Header`, `Logo`, `Footer`, `WorkspaceVisual`, icons). A few load-bearing CSS utilities in `index.css` are worth knowing about before editing: `.grad-text` / `.text-gradient` paint headlines with `background-clip: text` (so their text must never sit in an atomic inline — see `status.md` for the invisible-headline incident), `.type-char` is a `display: inline` paint contract for the typewriter, `.type-caret` appends the blinking caret, and `.parallax-scene`, `.badge-pulse`, `.cta-sheen`, `.reveal` carry the landing page's motion. `prefers-reduced-motion` disables all of them.
+
 ## Getting Started
 
 ### Prerequisites

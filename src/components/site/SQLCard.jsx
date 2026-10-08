@@ -9,7 +9,7 @@ export default function SQLCard({ baseDelay = 0 }) {
       Icon={CodeIcon}
       title="SQL Practice"
       description="Write and run real SQL queries with instant feedback."
-      action="Play now"
+      action="Start Now"
       baseDelay={baseDelay}
     />
   )

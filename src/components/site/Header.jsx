@@ -144,13 +144,13 @@ function DesktopNav({ links }) {
   return (
     <nav
       ref={navRef}
-      className="relative hidden items-center rounded-full bg-slate-100/80 p-1 border border-slate-200/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] lg:flex"
+      className="relative hidden items-center rounded-full bg-[#f1f0f0] p-1 border border-slate-200/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] lg:flex"
       aria-label="Main"
     >
       {/* Sliding pill indicator */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute h-[32px] rounded-full bg-white shadow-xs border border-slate-200/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        className="pointer-events-none absolute h-[32px] rounded-full bg-white shadow-sm border border-slate-200/80 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
         style={{
           left: indicator.left,
           width: indicator.width,
@@ -253,7 +253,7 @@ function AuthControl() {
         {profile?.avatar_url ? (
           <img src={profile.avatar_url} alt="" className="h-5 w-5 sm:h-6 sm:w-6 rounded-full object-cover ring-1 ring-slate-200" />
         ) : (
-          <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 text-[10px] sm:text-[11px] font-bold text-white shadow-xs">
+          <span className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 text-[10px] sm:text-[11px] font-bold text-white shadow-xs">
             {(profile?.username ?? user.email ?? '?').charAt(0).toUpperCase()}
           </span>
         )}
@@ -434,7 +434,7 @@ function MobileMenu({ links, onClose }) {
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200" />
                 ) : (
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-indigo-500 text-xs font-bold text-white shadow-xs">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 text-xs font-bold text-white shadow-xs">
                     {(profile?.username ?? user.email ?? '?').charAt(0).toUpperCase()}
                   </span>
                 )}

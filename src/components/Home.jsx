@@ -21,7 +21,7 @@ export default function Home() {
 
         <section
           ref={cardsRef}
-          className="border-t border-line bg-mist/60"
+          className="border-t border-slate-200/70 bg-mist/60"
           aria-labelledby="games-heading"
         >
           <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-14">

@@ -9,7 +9,7 @@ export default function MongoDBCard({ baseDelay = 0 }) {
       Icon={LeafIcon}
       title="MongoDB Practice"
       description="Work with MongoDB queries and real-time challenges."
-      action="See what's coming"
+      action="Start Now"
       comingSoon
       baseDelay={baseDelay}
     />

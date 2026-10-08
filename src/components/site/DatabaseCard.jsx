@@ -4,19 +4,19 @@ import { ArrowRightIcon } from './icons.jsx'
 
 const TONES = {
   sql: {
-    card: 'border-brand-100 bg-brand-50',
-    rest: 'shadow-[0_2px_10px_-6px_rgba(21,84,199,0.28)]',
-    hover:
-      'hover:border-brand-200 hover:bg-white hover:shadow-[0_26px_50px_-32px_rgba(21,84,199,0.45)]',
-    icon: 'bg-brand-100 text-brand-600',
+    card: 'tint-blush border-slate-200/60 bg-white',
+    rest: 'shadow-sm',
+    hover: 'hover:border-brand-200/70 hover:shadow-md',
+    icon: 'bg-brand-600 text-white shadow-md shadow-brand-600/20',
+    link: 'text-brand-600 group-hover:text-brand-700',
     arrow: 'bg-brand-100 text-brand-600 group-hover:bg-brand-200',
   },
   mongo: {
-    card: 'border-leaf-100 bg-leaf-50',
-    rest: 'shadow-[0_2px_10px_-6px_rgba(76,154,104,0.28)]',
-    hover:
-      'hover:border-leaf-200 hover:bg-white hover:shadow-[0_26px_50px_-32px_rgba(76,154,104,0.42)]',
-    icon: 'bg-leaf-100 text-leaf-600',
+    card: 'tint-leaf border-slate-200/60 bg-white',
+    rest: 'shadow-sm',
+    hover: 'hover:border-leaf-200 hover:shadow-md',
+    icon: 'bg-leaf-600 text-white shadow-md shadow-leaf-600/20',
+    link: 'text-leaf-600 group-hover:text-leaf-700',
     arrow: 'bg-leaf-100 text-leaf-600 group-hover:bg-leaf-200',
   },
   academy: {
@@ -26,6 +26,7 @@ const TONES = {
       'hover:border-plum-200 hover:bg-white hover:shadow-[0_26px_50px_-32px_rgba(#6b46c9,0.22)]',
     icon: 'bg-plum-100 text-plum-600',
     arrow: 'bg-plum-100 text-plum-600 group-hover:bg-plum-200',
+    link: 'text-plum-600',
   },
   progress: {
     card: 'border-amber-100 bg-amber-50',
@@ -34,6 +35,7 @@ const TONES = {
       'hover:border-amber-200 hover:bg-white hover:shadow-[0_26px_50px_-32px_rgba(207,133,36,0.42)]',
     icon: 'bg-amber-100 text-amber-600',
     arrow: 'bg-amber-100 text-amber-600 group-hover:bg-amber-200',
+    link: 'text-amber-600',
   },
 }
 
@@ -71,7 +73,7 @@ export default function DatabaseCard({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onClick={handleClick}
-      className={`group isolate relative flex h-full flex-col gap-6 rounded-[20px] border p-7 sm:p-8 outline-none transition-all duration-300 hover:-translate-y-1 ${t.card} ${t.rest} ${t.hover} focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isPressed ? 'scale-[0.98]' : ''} ${isLoading ? 'opacity-70 pointer-events-none' : ''}`}
+      className={`group isolate relative flex h-full flex-col gap-5 rounded-2xl border p-7 sm:p-8 outline-none transition-all duration-200 hover:-translate-y-0.5 ${t.card} ${t.rest} ${t.hover} focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${isPressed ? 'scale-[0.98]' : ''} ${isLoading ? 'opacity-70 pointer-events-none' : ''}`}
       style={{
         transform: isPressed 
           ? 'scale(0.98)' 
@@ -88,7 +90,7 @@ export default function DatabaseCard({
       )}
 
       <span
-        className={`card-icon card-part relative flex h-16 w-16 shrink-0 items-center justify-center rounded-[18px] transition-transform duration-300 ${t.icon}`}
+        className={`card-icon card-part relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 ${t.icon}`}
         style={{ animationDelay: `${baseDelay}ms` }}
       >
         <Icon 
@@ -106,19 +108,18 @@ export default function DatabaseCard({
       </h3>
 
       <p
-        className="card-part text-[16px] leading-[1.6] text-body"
+        className="card-part text-[15.5px] leading-[1.6] text-muted"
         style={{ animationDelay: `${baseDelay + 140}ms` }}
       >
         {description}
       </p>
 
       <span
-        className={`card-part mt-auto flex h-11 w-11 shrink-0 items-center justify-center self-end rounded-full transition-all duration-300 group-hover:translate-x-1 ${t.arrow}`}
+        className={`card-part mt-auto inline-flex items-center gap-1.5 self-start text-[15px] font-semibold transition-all duration-200 group-hover:gap-2.5 ${t.link}`}
         style={{ animationDelay: `${baseDelay + 210}ms` }}
       >
-        <ArrowRightIcon size={20} strokeWidth={2.2} className="text-body" />
-        {/* The click's meaning, kept for anyone who cannot see the circle. */}
-        <span className="sr-only">{action}</span>
+        {action}
+        <ArrowRightIcon size={16} strokeWidth={2.2} />
       </span>
     </Link>
   )

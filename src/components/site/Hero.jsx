@@ -97,21 +97,21 @@ export default function Hero() {
   }, [])
 
   return (
-    <section data-hero className="relative overflow-hidden bg-white">
+    <section data-hero className="relative overflow-hidden hero-tint">
       <div className="mx-auto max-w-6xl px-5 pb-3 pt-3 sm:px-8 sm:pb-5 sm:pt-5">
         <div className="grid items-center gap-6 md:gap-8 lg:grid-cols-2 lg:gap-6">
           <div>
             <p
-              className="enter-rise inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-600"
+              className="enter-rise inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-widest text-brand-600"
               style={{ animationDelay: '0ms' }}
             >
               <span aria-hidden="true" className="badge-pulse h-1.5 w-1.5 rounded-full bg-brand-500" />
               Practice · Learn · Improve
             </p>
 
-            <h1 className="mt-2 font-serif font-extrabold text-[2.25rem] leading-[1.05] tracking-[-0.02em] text-ink sm:text-[3rem] xl:text-[3.5rem] relative">
+            <h1 className="mt-4 font-sans text-5xl font-black leading-[1.03] tracking-tight text-ink sm:text-6xl xl:text-7xl relative">
               <span
-                className="enter-word block whitespace-pre text-body/90"
+                className="enter-word block whitespace-pre text-ink"
                 style={{ animationDelay: '90ms' }}
               >
                 {visibleChars(LINE_ONE, typedOne)}
@@ -130,7 +130,7 @@ export default function Hero() {
             </h1>
 
             <p
-              className="enter-rise mt-2 max-w-[30rem] text-[15px] leading-[1.5] text-body"
+              className="enter-rise mt-4 max-w-md text-[16px] leading-relaxed text-muted"
               style={{ animationDelay: '430ms' }}
             >
               Build, run, and fix real SQL queries — then take on MongoDB. Choose a game to start
@@ -138,12 +138,12 @@ export default function Hero() {
             </p>
 
             <div
-              className="enter-rise mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center"
+              className="enter-rise mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center"
               style={{ animationDelay: '560ms' }}
             >
               <Link
                 to="/quiz/sql"
-                className="cta-sheen group/cta relative inline-flex h-[46px] w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-brand-600 px-6 text-[15px] font-semibold text-white shadow-[0_14px_28px_-16px_rgba(21,84,199,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-[0_20px_34px_-16px_rgba(21,84,199,0.9)] focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-mist sm:w-auto ripple-magnetic"
+                className="cta-sheen group/cta relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-brand-600 px-6 py-3 text-[15px] font-semibold text-white shadow-[0_16px_30px_-16px_rgba(140,21,104,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-[0_22px_36px_-16px_rgba(140,21,104,0.9)] focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:w-auto ripple-magnetic"
                 onMouseMove={handleCtaMouseMove}
                 onMouseLeave={handleCtaMouseLeave}
                 onMouseDown={handleCtaMouseDown}
@@ -159,7 +159,7 @@ export default function Hero() {
 
               <Link
                 to="/leaderboard"
-                className="group/cta inline-flex h-[46px] w-full items-center justify-center gap-2 rounded-xl border border-line bg-white px-6 text-[15px] font-semibold text-ink transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 hover:shadow-[0_14px_26px_-18px_rgba(16,42,67,0.5)] focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-mist sm:w-auto ripple-magnetic"
+                className="group/cta inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-300 px-6 py-3 text-[15px] font-medium text-ink transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:w-auto ripple-magnetic"
                 onMouseMove={handleCtaMouseMove}
                 onMouseLeave={handleCtaMouseLeave}
                 onMouseDown={handleCtaMouseDown}
@@ -169,7 +169,7 @@ export default function Hero() {
                 <ArrowRightIcon
                   size={17}
                   strokeWidth={2.1}
-                  className="text-brand-500 transition-transform duration-200 group-hover/cta:translate-x-1"
+                  className="transition-transform duration-200 group-hover/cta:translate-x-1"
                 />
               </Link>
             </div>

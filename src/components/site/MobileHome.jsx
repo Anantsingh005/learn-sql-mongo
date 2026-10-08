@@ -249,7 +249,7 @@ function WorkspaceCard() {
 export default function MobileHome() {
   return (
     <div className="min-[1024px]:hidden overflow-x-clip">
-      <div className="relative isolate overflow-x-clip bg-gradient-to-b from-shell via-white to-white text-body">
+      <div className="relative isolate overflow-x-clip bg-gradient-to-b from-brand-50/40 via-white to-white text-body">
         {/* Soft ambient colour — restrained, not neon */}
         <div
           aria-hidden="true"
@@ -285,7 +285,7 @@ function HeroSection() {
       <div className="md:grid md:grid-cols-[1.05fr_minmax(0,380px)] md:items-center md:gap-10 lg:grid-cols-[1.1fr_minmax(0,440px)] lg:gap-14">
         <div>
           <p
-            className="enter-rise inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-600"
+            className="enter-rise inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-widest text-brand-600"
             style={{ animationDelay: '0ms' }}
           >
             <span aria-hidden="true" className="badge-pulse h-1.5 w-1.5 rounded-full bg-brand-500" />
@@ -293,15 +293,15 @@ function HeroSection() {
           </p>
 
           <h1
-            className="enter-rise mt-3 font-serif text-[34px] font-extrabold leading-[1.08] tracking-[-0.02em] text-ink sm:text-[40px] md:text-[44px]"
+            className="enter-rise mt-3 text-[34px] font-black leading-[1.06] tracking-tight text-ink sm:text-[40px] md:text-[44px]"
             style={{ animationDelay: '90ms' }}
           >
             {visibleChars(HEAD_PLAIN, typedPlain)}
-            <span className="grad-text">{visibleChars(HEAD_GRAD, typedGrad)}</span>
+            <span className="grad-text type-caret">{visibleChars(HEAD_GRAD, typedGrad)}</span>
           </h1>
 
           <p
-            className="enter-rise mt-3 max-w-[22rem] text-[15px] leading-relaxed text-body"
+            className="enter-rise mt-3 max-w-[22rem] text-[15px] leading-relaxed text-muted"
             style={{ animationDelay: '180ms' }}
           >
             Build, run, and fix real SQL and MongoDB queries from your phone or tablet — with
@@ -309,12 +309,12 @@ function HeroSection() {
           </p>
 
           <div
-            className="enter-rise mt-5 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap md:flex-col lg:flex-row"
+            className="enter-rise mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap md:flex-col lg:flex-row"
             style={{ animationDelay: '260ms' }}
           >
             <Link
               to="/quiz/sql"
-              className="flex h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-brand-600 text-[15px] font-semibold text-white shadow-[0_14px_28px_-16px_rgba(21,84,199,0.85)] transition-all duration-200 active:scale-[0.98] active:bg-brand-700 sm:max-w-[220px] md:max-w-none lg:max-w-[220px]"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-[15px] font-semibold text-white shadow-[0_16px_30px_-16px_rgba(140,21,104,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-700 active:scale-[0.98] sm:max-w-[220px] md:max-w-none lg:max-w-[220px]"
             >
               Start Learning
               <ArrowRightIcon size={17} strokeWidth={2.1} />
@@ -322,10 +322,10 @@ function HeroSection() {
 
             <Link
               to="/leaderboard"
-              className="flex h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-line bg-white text-[15px] font-semibold text-ink transition-all duration-200 active:scale-[0.98] active:border-brand-200 active:bg-brand-50 active:text-brand-700 sm:max-w-[230px] md:max-w-none lg:max-w-[230px]"
+              className="flex w-full items-center justify-center gap-2 rounded-full border border-slate-300 px-6 py-3 text-[15px] font-medium text-ink transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50 active:scale-[0.98] sm:max-w-[230px] md:max-w-none lg:max-w-[230px]"
             >
               View Leaderboard
-              <ArrowRightIcon size={17} strokeWidth={2.1} className="text-brand-500" />
+              <ArrowRightIcon size={17} strokeWidth={2.1} />
             </Link>
           </div>
         </div>

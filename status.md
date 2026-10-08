@@ -2,6 +2,40 @@
 
 Last updated: 2026-10-08
 
+## Current session (2026-10-08): premium UI pass on the header, hero and practice cards
+
+A visual-only refresh of the landing page against a written design spec. **ClassName strings in JSX plus three new CSS utilities — no animation, keyframe, hook, routing, Supabase or component-structure change**, and no `@theme` token was retouched (the spec took the existing palette as given). Ten source files modified, uncommitted at write time alongside this entry.
+
+### `src/index.css` (appended only — nothing existing edited)
+
+- **`.type-caret::after`** — the blinking `|` at the end of the gradient headline, which had no caret at all before. The pseudo-element paints its **own** colour (`#e8198b`) rather than inheriting: the parent carries `background-clip: text; color: transparent`, so an inheriting caret's glyph would only ever show the parent's clipped background, and an opacity animation on the pseudo-element would then be animating nothing (the pixels are painted by the *parent's* background). Giving it a colour makes the glyph its own paint, so `caret-blink` actually blinks. Guarded by a new `prefers-reduced-motion: reduce` block, since the existing guard names `.caret-blink` by class and this rule is `.type-caret::after`.
+- **`.tint-blush` / `.tint-leaf`** — `::before` radial washes anchored at the card's top-left corner, `border-radius: inherit` and `z-index: -1` inside the card's existing `isolate` stacking context, so they sit above the white background and below the content.
+- **`.hero-tint`** — `#fdf0f8` at 30% over white, the hero band's page tint.
+
+### Header, logo, nav (`Header.jsx`, `Logo.jsx`)
+
+Nav pill went `bg-slate-100/80` → `bg-[#f1f0f0]`, the sliding active pill `shadow-xs` → `shadow-sm`. The logo's icon gradient dropped its blue stop (`from-brand-600 to-blue-500` → `from-brand-600 to-brand-400`) and the glyph is now `</>` instead of a database cylinder; the wordmark is all-`text-ink`. Avatar gradients swapped `to-indigo-500` → `to-brand-400` in both the desktop dropdown and the mobile drawer — the last blue/indigo on the shell. Height, blur, scroll state, mobile-menu logic untouched.
+
+### Hero (`Hero.jsx`, `MobileHome.jsx`, `Home.jsx`)
+
+- H1 was **serif extrabold at `2.25rem → 3.5rem`**; it is now Inter `font-black tracking-tight text-5xl → 6xl → 7xl` per the spec's type rules, line 1 in `text-ink` (was `text-body/90`) and line 2 on the existing `grad-text` with the new `type-caret`. At 1440w the line measures 545px against a 532px column, i.e. 13px into the 24px grid gap — no clip (only the section's `overflow-hidden` bounds it) and no page scroll (`scrollWidth === innerWidth` verified at both widths).
+- Badge is `text-[10.5px] font-semibold uppercase tracking-widest`; subtitle `max-w-md text-muted` (was `max-w-[30rem] text-body`); section background `bg-white` → `.hero-tint`; the mobile hero band `from-shell` → `from-brand-50/40`.
+- Both CTAs: `rounded-xl` (and a fixed `h-[46px]`) → **`rounded-full px-6 py-3`**, primary shadow re-based on brand (`rgba(140,21,104,…)`, was the old blue `rgba(21,84,199,…)`), ghost simplified to `border-slate-300 text-ink hover:bg-slate-50`. `ripple-magnetic`, `cta-sheen`, and all four mouse handlers are byte-identical.
+
+### Practice cards (`DatabaseCard.jsx`, `SQLCard.jsx`, `MongoDBCard.jsx`)
+
+The spec called for white cards with slate edges rather than the tinted brand/leaf surfaces, so the `sql`/`mongo` tones were rewritten: `bg-brand-50`/`bg-leaf-50` → `bg-white` + `tint-blush`/`tint-leaf`, `border-*-100` → `border-slate-200/60`, bespoke coloured glows → `shadow-sm`, hover `shadow-md` on a `-translate-y-0.5` lift at `duration-200` (was `-translate-y-1` at 300). Icon tiles are now solid `bg-brand-600` / `bg-leaf-600` with white glyphs at `rounded-xl` (was pale tint + coloured glyph at `rounded-[18px]`), descriptions moved to `text-muted`, and the circular arrow button became a **visible "Start Now →" link** in the tone's colour — so both cards' `action` prop is now `"Start Now"`, and the `sr-only` label that duplicated it is gone (`t.arrow` is now unused by the render). The `academy`/`progress` tones gained a `link` key so the shared lookup stays total; nothing else renders those tones.
+
+`WorkspaceVisual.jsx` — two hex swaps only: the SQL book spine and the notepad accent were `#1554c7`, now `#8c1568`, matching the brand instead of the retired blue.
+
+### Verified
+
+`npm run build` → success · `npx oxlint` → no new findings (baseline only) · headless-Chromium DOM audit at 1440×900 and 390×844 → header 70px + `blur(12px)` + white/90, nav pill `rgb(241,240,240)`, H1 `Inter / 72px / 900 / -1.8px` in `rgb(45,0,34)`, caret `content: "|"` with `animation-name: caret-blink`, CTAs `9999px` radius at `12px 24px` padding, cards `rgb(255,255,255)` + 16px radius + `shadow-sm`, icon tiles `rgb(140,21,104)`/`rgb(61,127,85)`, links brand/leaf, **zero** same-colour text-on-background pairs, `scrollWidth === innerWidth` at both widths. The audit used `playwright-core` installed with `--no-save` (package.json/lock untouched).
+
+`node scripts/check-text-visibility.mjs` still reports **1 failure, `MobileHome.jsx:313` — pre-existing and a scanner artifact**: verified by running the same gate in a `git worktree` at `HEAD`, which fails identically (`text-white cannot be read on bg-white, active:bg-brand-50`). The regex pairs the *closing* quote of `animationDelay: '260ms'` as an opening quote and swallows both CTA class strings into one segment, so it grades the primary button's `text-white` against the ghost button's light hover. Both elements are correct as written.
+
+**Not done:** the redesign was verified numerically (computed styles, ink/visibility probes), not by eye — screenshots are in `%TEMP%/opencode/shots` and a human should still look at them. Only the landing page was in scope; inner routes (quiz, academy, profile, admin) keep their existing styling.
+
 ## Current session (2026-10-08): looping hero typewriter, and the gates that were stale for it
 
 The hero headline's reveal was replaced with a JS typewriter and, more importantly, every gate that asserted the old reveal was found stale — the CSS-animation probes had not been re-run since the mobile-home and academy commits shipped, and two of them were already wrong before this session began. **All uncommitted.**

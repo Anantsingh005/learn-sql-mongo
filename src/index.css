@@ -402,3 +402,44 @@ body {
     transform: scale(2.6);
   }
 }
+
+@layer utilities {
+  /* Blinking typing caret appended to the end of the gradient headline run.
+     The pseudo-element paints its own colour so it stays visible inside a
+     background-clip: text parent. */
+  .type-caret::after {
+    content: '|';
+    color: #e8198b;
+    animation: caret-blink 1.05s steps(1, end) infinite;
+  }
+
+  /* Very soft corner tints used by the practice cards. */
+  .tint-blush::before,
+  .tint-leaf::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .tint-blush::before {
+    background: radial-gradient(115% 85% at 0% 0%, #fdf0f8 0%, rgb(253 240 248 / 0) 62%);
+  }
+
+  .tint-leaf::before {
+    background: radial-gradient(115% 85% at 0% 0%, #f3faf5 0%, rgb(243 250 245 / 0) 62%);
+  }
+
+  /* Subtle page tint behind the hero band (brand-50 at ~30% over white). */
+  .hero-tint {
+    background-color: rgb(253 240 248 / 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .type-caret::after {
+    animation: none;
+  }
+}
