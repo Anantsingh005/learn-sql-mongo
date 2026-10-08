@@ -256,6 +256,9 @@ body {
   .enter-rise,
   .enter-fade,
   .enter-pop,
+  .menu-panel-3d,
+  .menu-flip,
+  .nav-pill-3d,
   .card-part {
     animation: none;
     opacity: 1;
@@ -377,6 +380,44 @@ body {
   }
 }
 
+/* Mobile menu: the panel folds down from its top hinge, then every row
+   flips in behind it like cards on a spiral. `backwards` fill (not `both`)
+   so the animation lets go of `transform` when it finishes — that keeps
+   hover tilt transforms working afterwards. */
+@keyframes menu-panel-in {
+  from {
+    opacity: 0;
+    transform: perspective(1100px) rotateX(-14deg) translateY(-26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes menu-flip-in {
+  from {
+    opacity: 0;
+    transform: perspective(760px) rotateX(-56deg) translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The nav pill folds down from a subtle top hinge with a shallow tilt. */
+@keyframes nav-pill-in {
+  from {
+    opacity: 0;
+    transform: perspective(1100px) rotateX(-12deg) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes caret-blink {
   0%,
   45% {
@@ -435,6 +476,59 @@ body {
   /* Subtle page tint behind the hero band (brand-50 at ~30% over white). */
   .hero-tint {
     background-color: rgb(253 240 248 / 0.3);
+  }
+
+  /* 3D entrance + hover depth for the mobile menu. */
+  .menu-panel-3d {
+    transform-origin: top center;
+    animation: menu-panel-in 460ms var(--ease-3d) backwards;
+  }
+
+  .menu-flip {
+    transform-origin: top center;
+    animation: menu-flip-in 480ms var(--ease-3d) backwards;
+  }
+
+  .menu-tile-3d {
+    transition: all 300ms var(--ease-3d);
+  }
+
+  /* The segmented navigation pill: raised glass chip with a glossy top light,
+     a soft under-shadow and a fold-in entrance so it reads as a 3D object. */
+  .nav-pill-3d {
+    transform-origin: top center;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.72), rgb(255 255 255 / 0.3) 46%, rgb(255 255 255 / 0.46));
+    border-color: rgb(255 255 255 / 0.85);
+    box-shadow:
+      inset 0 1px 1px rgb(255 255 255 / 0.9),
+      inset 0 -8px 14px -10px rgb(16 42 67 / 0.18),
+      0 1px 0 rgb(16 42 67 / 0.05),
+      0 10px 28px -14px rgb(16 42 67 / 0.28);
+    animation: nav-pill-in 600ms var(--ease-3d) backwards;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .menu-tilt {
+    transform-origin: center;
+  }
+
+  .menu-tilt:hover {
+    transform: perspective(700px) rotateX(-7deg) translateY(-1px);
+  }
+
+  .group:hover .menu-tile-3d {
+    transform: perspective(420px) rotateY(-16deg) rotateX(6deg);
+  }
+
+  /* Links inside the nav pill tilt up slightly on hover for 3D depth. */
+  .nav-link-tilt {
+    transform-origin: center;
+    transition: color 200ms ease, transform 200ms var(--ease-3d);
+  }
+
+  .nav-link-tilt:hover {
+    transform: perspective(520px) rotateX(-6deg) translateY(-1px);
   }
 }
 

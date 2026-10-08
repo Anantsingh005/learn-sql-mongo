@@ -50,12 +50,12 @@ export default function Header({ links: staticLinks }) {
           : 'border-line bg-transparent lg:bg-white/90'
       }`}
     >
-      <div className="mx-auto grid h-[70px] max-w-6xl grid-cols-[1fr_auto] items-center gap-3 px-4 sm:gap-4 sm:px-8 lg:grid-cols-[1fr_auto_1fr]">
+      <div className="mx-auto grid h-[70px] max-w-6xl grid-cols-[1fr_auto] items-center gap-3 px-4 sm:gap-4 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
         <div className="flex justify-start">
           <Logo onClick={closeMenu} />
         </div>
 
-        {/* Desktop Navigation - UNCHANGED for desktop */}
+        {/* Segmented navigation pill — visible on tablet and desktop */}
         <DesktopNav links={links} />
 
         <div className="flex items-center justify-end gap-2 sm:gap-3">
@@ -65,7 +65,7 @@ export default function Header({ links: staticLinks }) {
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
-            className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200 lg:hidden ${
+            className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200 md:hidden ${
               menuOpen
                 ? 'border-brand-200 bg-brand-50 text-brand-600 shadow-xs'
                 : 'border-slate-200/80 bg-slate-50/80 text-slate-700 hover:bg-slate-100 hover:text-ink'
@@ -144,13 +144,13 @@ function DesktopNav({ links }) {
   return (
     <nav
       ref={navRef}
-      className="relative hidden items-center rounded-full bg-[#f1f0f0] p-1 border border-slate-200/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] lg:flex"
+      className="nav-pill-3d relative hidden items-center rounded-full border p-1 backdrop-blur-md md:flex"
       aria-label="Main"
     >
       {/* Sliding pill indicator */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute h-[32px] rounded-full bg-brand-700 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        className="pointer-events-none absolute h-[32px] rounded-full bg-gradient-to-b from-brand-600 to-brand-700 shadow-[inset_0_1px_1px_rgba(255,255,255,0.28),inset_0_-2px_4px_rgba(0,0,0,0.12),0_2px_6px_-2px_rgba(16,42,67,0.35)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
         style={{
           left: indicator.left,
           width: indicator.width,
@@ -169,7 +169,7 @@ function DesktopNav({ links }) {
             to={item.to}
             end={item.end}
             data-nav-active={isActive ? 'true' : undefined}
-            className={`enter-rise relative z-10 flex h-[32px] items-center rounded-full px-3.5 text-[13.5px] font-medium transition-colors duration-200 ${
+            className={`nav-link-tilt relative z-10 flex h-[32px] items-center rounded-full px-2.5 text-[13.5px] font-medium sm:px-3.5 ${
               isActive
                 ? 'text-white font-semibold'
                 : 'text-slate-600 hover:text-slate-900'
@@ -372,19 +372,28 @@ function MobileMenu({ links, onClose }) {
     <>
       {/* Backdrop scrim overlay */}
       <div
-        className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-md transition-opacity duration-200 lg:hidden"
+        className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-md transition-opacity duration-200 md:hidden"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Solid slide-down mobile menu panel over the blurred screen */}
       <div
-        className="fixed inset-x-0 top-[70px] z-50 max-h-[calc(100vh-70px)] overflow-y-auto border-b border-slate-200 bg-white shadow-2xl transition-all duration-200 lg:hidden"
+        className={`menu-panel-3d fixed inset-x-0 top-[70px] z-50 max-h-[calc(100vh-70px)] overflow-y-auto rounded-b-3xl bg-white shadow-[0_30px_60px_-25px_rgba(16,42,67,0.45)] md:hidden`}
         role="dialog"
         aria-label="Mobile navigation"
       >
-        <div className="mx-auto max-w-lg px-4 py-4 sm:px-6">
-          <nav className="flex flex-col gap-1.5" aria-label="Mobile menu">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none sticky top-0 z-10 block h-px bg-gradient-to-r from-transparent via-brand-300 to-transparent"
+        />
+        <div className="mx-auto max-w-lg px-4 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6">
+          <div className="mb-2.5 flex items-center gap-3 px-1">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-muted">Menu</span>
+            <span className="h-px flex-1 bg-line-soft" />
+          </div>
+
+          <nav className="flex flex-col gap-1" aria-label="Mobile menu">
             {links.map((item, index) => (
               <NavLink
                 key={item.to}
@@ -392,32 +401,37 @@ function MobileMenu({ links, onClose }) {
                 end={item.end}
                 onClick={onClose}
                 className={({ isActive }) =>
-                  `flex items-center justify-between rounded-xl px-4 py-3 text-[15px] font-medium transition-all duration-150 ${
+                  `menu-flip menu-tilt group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[15px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                     isActive
-                      ? 'bg-brand-50 text-brand-600 font-semibold ring-1 ring-brand-200/80 shadow-xs'
-                      : 'text-slate-700 hover:bg-slate-50 hover:text-ink active:bg-slate-100'
+                      ? 'bg-brand-50 font-semibold text-brand-700 shadow-xs ring-1 ring-brand-200/70'
+                      : 'text-body hover:bg-mist hover:text-ink'
                   }`
                 }
-                style={{ animationDelay: `${index * 30}ms` }}
+                style={{ animationDelay: `${index * 40}ms` }}
               >
                 {({ isActive }) => (
                   <>
-                    <span className="flex items-center gap-3">
-                      <span
-                        className={`h-2 w-2 rounded-full transition-colors ${
-                          isActive ? 'bg-brand-600' : 'bg-slate-300'
-                        }`}
-                      />
-                      {item.label}
+                    <span
+                      className={`menu-tile-3d flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                        isActive
+                          ? 'bg-gradient-to-br from-brand-600 to-brand-400 text-white shadow-md shadow-brand-600/25'
+                          : 'bg-white text-muted ring-1 ring-line-soft group-hover:text-brand-600 group-hover:ring-brand-200'
+                      }`}
+                    >
+                      <NavIcon to={item.to} />
                     </span>
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
                     <svg
-                      className={`h-4 w-4 transition-transform ${
-                        isActive ? 'text-brand-600 translate-x-0.5' : 'text-slate-400'
+                      className={`h-4 w-4 shrink-0 transition-all duration-200 ${
+                        isActive
+                          ? 'translate-x-0.5 text-brand-600'
+                          : 'text-slate-300 group-hover:translate-x-0.5 group-hover:text-slate-400'
                       }`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
                       strokeWidth={2}
+                      aria-hidden="true"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
@@ -429,12 +443,19 @@ function MobileMenu({ links, onClose }) {
 
           {/* User profile / Auth in mobile menu if logged in */}
           {user && (
-            <div className="mt-4 border-t border-slate-100 pt-3">
-              <div className="flex items-center gap-3 px-3 py-2">
+            <div
+              className="menu-flip mt-4 overflow-hidden rounded-2xl border border-line bg-mist/60 shadow-xs"
+              style={{ animationDelay: `${links.length * 40 + 60}ms` }}
+            >
+              <div className="flex items-center gap-3 px-3.5 py-3">
                 {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200" />
+                  <img
+                    src={profile.avatar_url}
+                    alt=""
+                    className="h-10 w-10 rounded-full object-cover shadow-xs ring-2 ring-white"
+                  />
                 ) : (
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 text-xs font-bold text-white shadow-xs">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 text-sm font-bold text-white shadow-md shadow-brand-600/25 ring-2 ring-white">
                     {(profile?.username ?? user.email ?? '?').charAt(0).toUpperCase()}
                   </span>
                 )}
@@ -442,13 +463,16 @@ function MobileMenu({ links, onClose }) {
                   <p className="truncate text-sm font-semibold text-ink">{profile?.username ?? user.email}</p>
                   <p className="truncate text-xs text-muted">{user.email}</p>
                 </div>
+                <span className="shrink-0 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-brand-600">
+                  Signed in
+                </span>
               </div>
 
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="flex gap-2 border-t border-line-soft bg-white/70 p-2.5">
                 <NavLink
                   to="/profile"
                   onClick={onClose}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-line bg-white py-2.5 text-xs font-semibold text-slate-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
                 >
                   <UserIcon />
                   Profile
@@ -457,7 +481,8 @@ function MobileMenu({ links, onClose }) {
                   type="button"
                   onClick={handleSignOut}
                   disabled={busy}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2.5 text-xs font-semibold text-danger hover:bg-red-100"
+                  aria-busy={busy}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-danger-200 bg-danger-50 py-2.5 text-xs font-semibold text-danger transition-all duration-200 hover:-translate-y-0.5 hover:bg-danger-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   <SignOutIcon />
                   {busy ? 'Signing out…' : 'Sign out'}
@@ -468,5 +493,66 @@ function MobileMenu({ links, onClose }) {
         </div>
       </div>
     </>
+  )
+}
+
+/* Per-route glyphs for the mobile menu — no icon library, just inline SVG. */
+const NAV_ICONS = {
+  '/': (
+    <>
+      <path d="M3 11.4 12 3.6l9 7.8" />
+      <path d="M5.6 10v9.4a1 1 0 0 0 1 1H10v-5.6h4v5.6h3.4a1 1 0 0 0 1-1V10" />
+    </>
+  ),
+  '/quiz/sql': (
+    <>
+      <path d="M4.5 6.2C4.5 4.7 7.85 3.5 12 3.5s7.5 1.2 7.5 2.7-3.35 2.7-7.5 2.7S4.5 7.7 4.5 6.2Z" />
+      <path d="M4.5 6.2v11.6c0 1.5 3.35 2.7 7.5 2.7s7.5-1.2 7.5-2.7V6.2" />
+      <path d="M4.5 12c0 1.5 3.35 2.7 7.5 2.7s7.5-1.2 7.5-2.7" />
+    </>
+  ),
+  '/academy': (
+    <>
+      <path d="M12 6.6C10.4 5.1 8.2 4.4 5.4 4.4c-.8 0-1.5.1-2 .2v13.4c.5-.1 1.2-.2 2-.2 2.8 0 5 .7 6.6 2.2 1.6-1.5 3.8-2.2 6.6-2.2.8 0 1.5.1 2 .2V4.6c-.5-.1-1.2-.2-2-.2-2.8 0-5 .7-6.6 2.2Z" />
+      <path d="M12 6.6v13.4" />
+    </>
+  ),
+  '/practice': (
+    <>
+      <path d="M8.6 8.2 4.6 12l4 3.8" />
+      <path d="M15.4 8.2l4 3.8-4 3.8" />
+      <path d="M13.4 6.4l-2.8 11.2" />
+    </>
+  ),
+  '/leaderboard': (
+    <>
+      <path d="M7.5 4.5h9v4.6a4.5 4.5 0 0 1-9 0V4.5Z" />
+      <path d="M7.5 6H5.2v.8A3.2 3.2 0 0 0 8.4 10" />
+      <path d="M16.5 6h2.3v.8a3.2 3.2 0 0 1-3.2 3.2" />
+      <path d="M12 13.6v2.8M9.6 19.6h4.8M10.2 16.4h3.6v3.2h-3.6z" />
+    </>
+  ),
+  '/admin': (
+    <>
+      <path d="M12 3.6 5.2 6.1v5.2c0 4.1 2.8 7.4 6.8 9.1 4-1.7 6.8-5 6.8-9.1V6.1L12 3.6Z" />
+      <path d="M9.4 12.1l1.9 1.9 3.4-3.6" />
+    </>
+  ),
+}
+
+function NavIcon({ to }) {
+  return (
+    <svg
+      className="h-[18px] w-[18px]"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {NAV_ICONS[to] ?? <path d="M5 12h14" />}
+    </svg>
   )
 }

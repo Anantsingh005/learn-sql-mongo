@@ -23,5 +23,3 @@ export function useInView({ threshold = 0.12, rootMargin = '0px 0px -56px 0px' }
 
   return [ref, inView]
 }
-
-export default useInView

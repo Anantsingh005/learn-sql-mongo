@@ -31,5 +31,3 @@ export function useIsAdmin() {
 
   return { isAdmin, checking: isAdmin === null }
 }
-
-export default useIsAdmin

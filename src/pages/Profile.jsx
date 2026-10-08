@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
-import { getProgress, isLevelUnlocked, clearLocalProgress } from '../lib/progress.js'
+import { getProgress, clearLocalProgress } from '../lib/progress.js'
 import { fetchUserScores, resetUserProgress } from '../lib/profile.js'
 import { fetchPlayerSnapshot } from '../lib/leaderboard.js'
 import { isSupabaseConfigured } from '../lib/supabase.js'
+import ProfileSummaryCard from '../components/ProfileSummaryCard.jsx'
+import SqlProgressGrid from '../components/SqlProgressGrid.jsx'
+import RankBadge from '../components/RankBadge.jsx'
 
 const USERNAME_RE = /^[A-Za-z0-9_.-]{1,24}$/
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -22,18 +25,6 @@ const BOARD_MODES = [
 
 const MODE_TITLE = { mc: 'Multiple Choice', write: 'Write a Query', bug: 'Fix the Bug' }
 const LEVEL_TITLE = { easy: 'Easy', medium: 'Medium', hard: 'Hard', all: 'All Levels' }
-
-const LEVELS = [
-  { key: 'easy', label: 'Easy', desc: 'Warm up', short: 'E', bar: 'from-leaf-500 to-leaf-400', tag: 'text-leaf-700', ring: 'border-leaf-200', chip: 'bg-leaf-50 text-leaf-700', glow: 'shadow-[0_2px_10px_rgba(#3d7f55,0.22)]', hex: '#3d7f55' },
-  { key: 'medium', label: 'Medium', desc: 'Getting sharp', short: 'M', bar: 'from-amber-500 to-amber-400', tag: 'text-amber-700', ring: 'border-amber-200', chip: 'bg-amber-50 text-amber-700', glow: 'shadow-[0_2px_10px_rgba(#a5680f,0.22)]', hex: '#a5680f' },
-  { key: 'hard', label: 'Hard', desc: 'The real boss fight', short: 'H', bar: 'from-danger-500 to-plum-400', tag: 'text-danger-700', ring: 'border-danger-200', chip: 'bg-danger-50 text-danger-700', glow: 'shadow-[0_2px_10px_rgba(#b03333,0.22)]', hex: '#d24444' },
-  { key: 'all', label: 'All Levels', desc: 'Every question, mixed', short: 'A', bar: 'from-brand-500 to-plum-400', tag: 'text-brand-700', ring: 'border-brand-200', chip: 'bg-brand-50 text-brand-700', glow: 'shadow-[0_2px_10px_rgba(#1554c7,0.22)]', hex: '#1554c7' },
-]
-
-const LOCK_HINTS = {
-  hard: '75% on Easy+Medium',
-  all: '75% on all three',
-}
 
 const levelFilter = [
   { key: 'easy', label: 'Easy' },
@@ -66,25 +57,6 @@ const MODE_ACCENTS = {
     chip: 'border-brand-200 bg-brand-50 text-brand-700',
     glow: 'shadow-[0_2px_10px_rgba(#1554c7,0.22)]',
     tag: 'text-brand-700',
-  },
-}
-
-const LEVEL_ACCENTS = {
-  easy: {
-    chip: 'border-leaf-200 bg-leaf-50 text-leaf-700',
-    glow: 'shadow-[0_0_12px_rgba(#3d7f55,0.22)]',
-  },
-  medium: {
-    chip: 'border-amber-200 bg-amber-50 text-amber-700',
-    glow: 'shadow-[0_0_12px_rgba(#a5680f,0.22)]',
-  },
-  hard: {
-    chip: 'border-danger-200 bg-danger-50 text-danger-700',
-    glow: 'shadow-[0_0_12px_rgba(#b03333,0.22)]',
-  },
-  all: {
-    chip: 'border-brand-200 bg-brand-50 text-brand-700',
-    glow: 'shadow-[0_0_12px_rgba(#1554c7,0.22)]',
   },
 }
 
@@ -142,13 +114,6 @@ function gameStats(rows, game) {
   return { sessions: filtered.length, totalSeconds, averageScore: countPct ? Math.round(sumPct / countPct) : null, bestPct }
 }
 
-function rankStyle(rank) {
-  if (rank === 1) return 'border-amber-200 bg-amber-50 text-amber-700'
-  if (rank === 2) return 'border-line/50 bg-mist/15 text-body'
-  if (rank === 3) return 'border-amber-200 bg-amber-100 text-amber-700'
-  return 'border-line bg-line text-muted'
-}
-
 function BoardStats({ row, dense = false, className = '' }) {
   const correct = `${row.correct_count ?? 0}/${row.total_questions ?? 0}`
   const lives = `♥${row.lives_left ?? 0}`
@@ -172,43 +137,6 @@ function BoardStats({ row, dense = false, className = '' }) {
       <span className={`hidden shrink-0 sm:inline ${row.lives_left > 0 ? 'text-leaf-700/80' : 'text-body'}`}>{lives}</span>
       <span className="hidden w-10 shrink-0 text-right text-muted sm:inline">{time}</span>
     </>
-  )
-}
-
-function ProgressRing({ pct = 0, color = '#2f6ad0', locked = false, done = false, short = '', active = false, size = 52, stroke = 5 }) {
-  const radius = (size - stroke) / 2
-  const circumference = 2 * Math.PI * radius
-  const clamped = Math.max(0, Math.min(100, pct))
-  const offset = circumference * (1 - clamped / 100)
-  return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(#8fa8bf,0.14)" strokeWidth={stroke} />
-        {!locked && clamped > 0 && (
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-          />
-        )}
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        {locked ? (
-          <span className="text-sm">🔒</span>
-        ) : done ? (
-          <span className="text-sm font-black text-leaf-700">✔</span>
-        ) : (
-          <span className={`text-xs font-black ${active ? 'text-ink' : 'text-muted'}`}>{short}</span>
-        )}
-      </div>
-    </div>
   )
 }
 
@@ -245,6 +173,52 @@ function Feedback({ error, message }) {
 
 function avatarPreviewUrl(profile) {
   return profile?.avatar_url || ''
+}
+
+function StatIcon({ children }) {
+  return (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-brand-200/70 bg-gradient-to-br from-brand-50 to-plum-50 text-brand-700">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-[18px] w-[18px]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        {children}
+      </svg>
+    </span>
+  )
+}
+
+const STAT_ICONS = {
+  sessions: (
+    <>
+      <rect x="5" y="4" width="14" height="17" rx="2" />
+      <path d="M9 4h6v3H9z" />
+      <path d="M9 12h6M9 16h4" />
+    </>
+  ),
+  time: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
+  avg: (
+    <>
+      <path d="M4 20h16" />
+      <path d="M7 20v-5" />
+      <path d="M12 20V9" />
+      <path d="M17 20v-7" />
+    </>
+  ),
+  best: (
+    <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.8 6.6 19.9l1-6.1-4.4-4.3 6.1-.9z" />
+  ),
 }
 
 export default function Profile() {
@@ -501,49 +475,14 @@ export default function Profile() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="relative overflow-hidden rounded-[2rem] border border-line bg-white">
-        <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full border border-brand-200" />
-        <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full border border-plum-200" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 h-48 w-48 rounded-full border border-brand-200" />
-
-        <div className="relative flex flex-col items-center gap-4 px-6 py-8 sm:flex-row sm:gap-6">
-          {avatar ? (
-            <img
-              src={avatar}
-              alt="Your avatar"
-              className="h-20 w-20 shrink-0 rounded-full border border-brand-200 object-cover shadow-[0_2px_10px_rgba(#1554c7,0.22)]"
-            />
-          ) : (
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-brand-200 bg-gradient-to-br from-brand-100 to-plum-100 text-3xl font-black text-ink shadow-[0_2px_10px_rgba(#1554c7,0.22)]">
-              {initialFor({ profile, user })}
-            </div>
-          )}
-          <div className="text-center sm:text-left">
-            <h1 className="text-2xl font-bold text-ink">{profile?.username ?? 'player'}</h1>
-            {profile?.name && <div className="text-sm text-muted">{profile.name}</div>}
-            <div className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted sm:justify-start">
-              <span>{user.email}</span>
-              <span>Member since {formatDate(profile?.created_at)}</span>
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2 sm:ml-auto sm:flex-col sm:items-end">
-            <button
-              type="button"
-              onClick={() => setShowEdit((s) => !s)}
-              className="rounded-full border border-brand-200 px-4 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
-            >
-              {showEdit ? 'Close editor' : 'Edit profile'}
-            </button>
-            <button
-              type="button"
-              onClick={signOut}
-              className="rounded-full border border-danger-200 px-4 py-2 text-sm font-medium text-danger-700 transition-colors hover:bg-danger-50"
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </div>
+      <ProfileSummaryCard
+        user={user}
+        profile={profile}
+        avatar={avatar}
+        editLabel={showEdit ? 'Close editor' : 'Edit profile'}
+        onEdit={() => setShowEdit((s) => !s)}
+        onSignOut={signOut}
+      />
 
       {showEdit && (
         <div className="space-y-4">
@@ -774,64 +713,7 @@ export default function Profile() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">SQL game progress</h2>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-body">3 modes · 4 levels</span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {MODES.map((mode) => {
-            const a = MODE_ACCENTS[mode.key]
-            return (
-              <div key={mode.key} className="relative overflow-hidden rounded-2xl border border-line bg-white p-4">
-                <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${a.strip} opacity-80`} />
-                <div className="mb-3 flex items-center gap-2">
-                  <span className={`rounded-lg border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wider ${a.chip}`}>
-                    {mode.key.toUpperCase()}
-                  </span>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted">{mode.label}</span>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {LEVELS.map((lv) => {
-                    const key = `${mode.key}_${lv.key}`
-                    const pct = sqlProgress.best[key] ?? 0
-                    const done = (sqlProgress.completed ?? []).includes(key)
-                    const active = pct > 0
-                    const unlocked = isLevelUnlocked(lv.key, sqlProgress, mode.key)
-                    return (
-                      <Link
-                        key={lv.key}
-                        to={`/profile/report/${mode.key}/${lv.key}`}
-                        title={`View ${mode.label} · ${lv.label} report`}
-                        className="group flex items-center gap-3 rounded-xl border border-line bg-white/60 px-3 py-2.5 transition-all hover:-translate-y-0.5 hover:border-line hover:bg-line/60"
-                      >
-                        <ProgressRing
-                          pct={pct}
-                          color={lv.hex}
-                          locked={!unlocked}
-                          done={done}
-                          short={lv.short}
-                          active={unlocked && active}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className={`truncate text-sm font-semibold ${unlocked ? 'text-ink' : 'text-muted'}`}>{lv.label}</div>
-                          <div className="truncate text-[10px] text-muted">{unlocked ? lv.desc : LOCK_HINTS[lv.key] ?? 'locked'}</div>
-                          <div className="mt-1 text-[10px]">
-                            {done ? (
-                              <span className="font-semibold text-leaf-700">✔ completed</span>
-                            ) : active ? (
-                              <span className={`font-mono font-bold ${lv.tag}`}>{pct}%</span>
-                            ) : unlocked ? (
-                              <span className="text-body">not started</span>
-                            ) : (
-                              <span className="rounded-full border border-line bg-line/60 px-1.5 py-px font-semibold text-muted">locked</span>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-[10px] text-body transition-transform group-hover:translate-x-0.5" aria-hidden="true">›</span>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <SqlProgressGrid sqlProgress={sqlProgress} />
         {(mongoProgress.completed ?? []).length > 0 || Object.keys(mongoProgress.best ?? {}).length > 0 ? (
           <p className="mt-3 text-xs text-muted">
             Mongo progress saved: {mongoProgress.completed.length} completed level{(mongoProgress.completed.length === 1 ? '' : 's')}.
@@ -840,8 +722,13 @@ export default function Profile() {
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">Leaderboard</h2>
-        <div className="relative overflow-hidden rounded-2xl border border-line bg-white p-4 sm:p-5">
+        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted">
+          <svg viewBox="0 0 24 24" className="h-4 w-4 text-amber-500" fill="currentColor" aria-hidden="true">
+            <path d="M19 5h-2V3H7v2H5a2 2 0 0 0-2 2v1a3 3 0 0 0 3 3h.83A5.99 5.99 0 0 0 11 14.92V19H7v2h10v-2h-4v-4.08A5.99 5.99 0 0 0 18.17 11H19a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zM5 8V7h2v3.82A3.99 3.99 0 0 1 5 8zm14 0a3.99 3.99 0 0 1-2 1.82V7h2v1z" />
+          </svg>
+          Leaderboard
+        </h2>
+        <div className="relative overflow-hidden rounded-2xl border border-line bg-white p-4 shadow-[0_1px_3px_rgba(45,0,34,0.05)] sm:p-5">
           <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${(MODE_ACCENTS[boardTab] ?? MODE_ACCENTS.mc).strip} opacity-80`} />
           <div className="mb-3 flex items-center justify-between gap-2">
             <span className={`font-mono text-[10px] font-bold uppercase tracking-[0.2em] ${(MODE_ACCENTS[boardTab] ?? MODE_ACCENTS.mc).tag}`}>
@@ -850,7 +737,7 @@ export default function Profile() {
             </span>
             <Link
               to={`/leaderboard?game=sql&mode=${boardTab ?? 'mc'}&level=${boardLevel ?? 'easy'}`}
-              className="text-xs font-medium text-brand-700 transition-colors hover:text-brand-700"
+              className="text-xs font-semibold text-brand-700 transition-colors hover:text-brand-600"
             >
               View all →
             </Link>
@@ -858,10 +745,9 @@ export default function Profile() {
 
           {boardTab && (
             <>
-              <div className="mb-2 grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
+              <div className="mb-3 flex flex-wrap gap-1.5">
                 {BOARD_MODES.map((m) => {
                   const active = boardTab === m.key
-                  const a = MODE_ACCENTS[m.key]
                   return (
                     <button
                       key={m.key}
@@ -871,10 +757,10 @@ export default function Profile() {
                         setLevelsRevealed(true)
                       }}
                       className={
-                        'relative flex min-h-11 w-full items-center justify-center rounded-lg px-2.5 py-2.5 text-[11px] font-semibold transition-all sm:min-h-0 sm:w-auto sm:py-1 ' +
+                        'flex min-h-11 w-[calc(50%-0.1875rem)] items-center justify-center rounded-full px-4 py-2 text-[11px] font-semibold transition-colors sm:min-h-0 sm:w-auto sm:px-3.5 sm:py-1.5 ' +
                         (active
-                          ? `pop-on ${a.chip} ${a.glow}`
-                          : 'bg-line/70 text-muted hover:bg-line hover:text-muted')
+                          ? 'pop-on bg-brand-700 text-white'
+                          : 'text-muted hover:bg-mist hover:text-body')
                       }
                     >
                       {m.label}
@@ -886,26 +772,25 @@ export default function Profile() {
                 <div
                   className={
                     levelsRevealed
-                      ? 'reveal-levels mb-1.5 grid grid-cols-2 gap-1.5 sm:mb-3 sm:flex sm:flex-wrap'
+                      ? 'reveal-levels mb-1.5 flex flex-wrap gap-1.5 sm:mb-3'
                       : 'mb-3 hidden gap-1.5 sm:flex sm:flex-wrap'
                   }
                 >
-                  <div className="col-span-full mb-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-muted sm:hidden">
+                  <div className="col-span-full mb-1.5 w-full font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-muted sm:hidden">
                     Level
                   </div>
                   {levelFilter.map((lv) => {
                     const active = boardLevel === lv.key
-                    const a = LEVEL_ACCENTS[lv.key]
                     return (
                       <button
                         key={lv.key}
                         type="button"
                         onClick={() => setBoardLevel(lv.key)}
                         className={
-                          'relative flex min-h-11 w-full items-center justify-center rounded-lg px-2.5 py-2.5 text-[11px] font-semibold transition-all sm:min-h-0 sm:w-auto sm:py-1 ' +
+                          'flex min-h-11 w-[calc(50%-0.1875rem)] items-center justify-center rounded-full px-4 py-2 text-[11px] font-semibold transition-colors sm:min-h-0 sm:w-auto sm:px-3.5 sm:py-1.5 ' +
                           (active
-                            ? `pop-on ${a.chip} ${a.glow}`
-                            : 'bg-line/50 text-muted hover:bg-line hover:text-muted')
+                            ? 'pop-on bg-brand-700 text-white'
+                            : 'text-muted hover:bg-mist hover:text-body')
                         }
                       >
                         {lv.label}
@@ -931,7 +816,7 @@ export default function Profile() {
               {user && (
                 <Link
                   to={boardTab && boardTab !== 'global' ? `/quiz/sql?mode=${boardTab}&level=easy` : '/quiz/sql'}
-                  className="mt-3 inline-block rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+                  className="mt-3 inline-block rounded-full bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
                 >
                   Play a quiz
                 </Link>
@@ -947,9 +832,7 @@ export default function Profile() {
                     key={row.id ?? idx}
                     className={`flex items-center gap-2 px-2 py-1.5 ${isYou ? '-mx-1.5 rounded-lg bg-brand-50' : ''}`}
                   >
-                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-black ${rankStyle(rank)}`}>
-                      {rank}
-                    </span>
+                    <RankBadge rank={rank} />
                     <span className="min-w-0 flex-1">
                       <span className={`block truncate text-sm ${isYou ? 'font-semibold text-ink' : 'text-muted'}`}>
                         {row.username || 'Anonymous'}
@@ -965,9 +848,7 @@ export default function Profile() {
               })}
               {leaderboard.you && leaderboard.you.rank > leaderboard.top.length ? (
                 <li className="-mx-1.5 -mb-1 mt-1.5 flex items-center gap-2 rounded-lg bg-brand-50 px-2 py-1.5">
-                  <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] font-black ${rankStyle(leaderboard.you.rank)}`}>
-                    {leaderboard.you.rank}
-                  </span>
+                  <RankBadge rank={leaderboard.you.rank} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold text-ink">
                       {leaderboard.you.username || 'You'}
@@ -987,37 +868,36 @@ export default function Profile() {
 
       <div>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">Practice &amp; sessions</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {['sql', 'mongo'].map((gameId) => {
+        <div className="rounded-2xl border border-line bg-white p-4 shadow-[0_1px_3px_rgba(45,0,34,0.05)] sm:p-5">
+          {['sql', 'mongo'].map((gameId, gameIdx) => {
             const g = gameStats(scores?.rows, gameId)
             const label = gameId === 'sql' ? 'SQL' : 'Mongo'
+            const stats = [
+              { key: 'sessions', label: 'Sessions', value: scores ? String(g.sessions) : '…' },
+              { key: 'time', label: 'Total play time', value: scores ? formatDuration(g.totalSeconds) : '…' },
+              { key: 'avg', label: 'Average score', value: scores ? (g.averageScore === null ? '—' : `${g.averageScore}%`) : '…' },
+              { key: 'best', label: 'Best score', value: scores ? (g.bestPct === null ? '—' : `${g.bestPct}%`) : '…' },
+            ]
             return (
-              <div key={gameId} className="rounded-2xl border border-line bg-white p-4 sm:p-5">
+              <div key={gameId} className={gameIdx > 0 ? 'mt-4 border-t border-line/70 pt-4' : ''}>
                 <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">{label}</div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">Sessions</div>
-                    <div className="mt-1 text-lg font-bold text-ink">{scores ? String(g.sessions) : '…'}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">Total play time</div>
-                    <div className="mt-1 text-lg font-bold text-ink">{scores ? formatDuration(g.totalSeconds) : '…'}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">Average score</div>
-                    <div className="mt-1 text-lg font-bold text-ink">{scores ? (g.averageScore === null ? '—' : `${g.averageScore}%`) : '…'}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">Best score</div>
-                    <div className="mt-1 text-lg font-bold text-ink">{scores ? (g.bestPct === null ? '—' : `${g.bestPct}%`) : '…'}</div>
-                  </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-4 sm:gap-y-0">
+                  {stats.map((s, i) => (
+                    <div key={s.key} className={`flex min-w-0 items-center gap-2.5 ${i > 0 ? 'sm:border-l sm:border-line/70 sm:pl-4' : ''}`}>
+                      <StatIcon>{STAT_ICONS[s.key]}</StatIcon>
+                      <div className="min-w-0">
+                        <div className="text-lg font-bold tabular-nums text-ink">{s.value}</div>
+                        <div className="truncate text-[11px] text-muted">{s.label}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )
           })}
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-white">
+        <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_3px_rgba(45,0,34,0.05)]">
           <h3 className="border-b border-line px-4 py-3 text-sm font-semibold text-ink">Recent sessions</h3>
           {recentRows.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted">

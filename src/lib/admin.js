@@ -212,14 +212,3 @@ export function questionAnalytics() {
 
   return { total, byType, byDiff, matrix, topics, schemaRefs, dupIds, issues }
 }
-
-export default {
-  TABLE_META,
-  fetchIsAdmin,
-  fetchTableRows,
-  createRow,
-  updateRow,
-  deleteRow,
-  fetchStats,
-  questionAnalytics,
-}

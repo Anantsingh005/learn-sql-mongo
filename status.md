@@ -2,6 +2,32 @@
 
 Last updated: 2026-10-08
 
+## Current session (2026-10-08): Profile & Leaderboard redesign (16-section spec)
+
+A visual-only pass over `src/pages/Profile.jsx` and `src/components/Leaderboard.jsx` against a written design spec. The original chat copy of the spec was lost, so it was recovered verbatim from the opencode session database (extracted with `node:sqlite` into `%TEMP%/opencode/original-prompt.txt`) — every decision below is traceable to that text. **No route, hook, data-fetch, Supabase or ranking change; no `@theme` token retouched; the global footer untouched; existing animation utilities (`pop-on`, `reveal-levels`, `enter-rise`) kept.** Two files modified, three new files, all uncommitted at write time.
+
+### New shared components
+
+- **`src/components/ProfileSummaryCard.jsx`** — the profile hero card both pages share: concentric-ring decor on a soft pink/purple gradient, avatar/initial, username (`Heading` prop defaults to `h1`; Leaderboard passes `h2` so the page keeps exactly one `h1`), email, "Member since", and two pills: filled `bg-brand-700 text-white` **Edit** (button via `onEdit` on Profile — toggles the editor and its label to "Close editor" — or `Link to /profile` via `editTo` on Leaderboard) and an outline **Sign out**. Inline pencil/logout SVGs; no icon library exists in this project.
+- **`src/components/SqlProgressGrid.jsx`** — the 3-column SQL game-progress grid, moved out of `Profile.jsx` so Leaderboard can render it too (spec: shared progress on the leaderboard page). Carries `MODES`/`LEVELS`/`LOCK_HINTS`/`ProgressRing` with it. Mode badge colours per spec: MC = brand, Write = plum, Fix Bug = soft red. Level rows: completed = leaf ✔, not-started = plum ring letter, locked = 🔒 + "locked" badge. The `all` ring colour moved from blue `#1554c7` → brand `#8c1568` (last retired-blue accent in this area). Decorative gradient strips were dropped from these cards (badge carries the accent instead) — the spec's "subtle, no glow" rule.
+- **`src/components/RankBadge.jsx`** — rank #1 amber pill with crown SVG + `sr-only` "1" (used in Profile's board list **and** both of Leaderboard's rows; Leaderboard previously styled rank with classes only, so the crown is new there), #2 mist/line, #3 amber-50, else shell/muted.
+
+### `src/pages/Profile.jsx`
+
+Header card → `ProfileSummaryCard`; SQL progress → `SqlProgressGrid`; **stats became one card with two game rows** (SQL/Mongo), each showing the four existing stats horizontally with circular icon containers and `sm:border-l` dividers that collapse to none at mobile — stats shown exactly as before, only the frame changed. Board mode/level tabs restyled to the nav's pill convention (active = `bg-brand-700 text-white` + `pop-on`, inactive = `text-muted hover:bg-mist`); leaderboard card got a trophy SVG + subtle shadow; rows use `RankBadge`; "Play a quiz" → rounded-full. `LEVELS`, `LOCK_HINTS`, `LEVEL_ACCENTS`, `rankStyle`, `ProgressRing` and the `isLevelUnlocked` import all left with the moved code.
+
+### `src/components/Leaderboard.jsx`
+
+New hero "Leaderboard & Progress" (spec heading, `&amp;` in JSX) on a gradient card with ring decor; `ProfileSummaryCard` renders below it **only when signed in** (`editTo="/profile"`); a "SQL game progress" section renders `SqlProgressGrid` for everyone (guest gets the local-fallback progress, which the audit confirmed renders). Filter deck game/mode/level tabs got the same pill treatment (mode icon boxes go `border-white/30 bg-white/15 text-white` when active on the deck's brand surface). Premium table: container shadow de-glowed, `thead` on `mist/70`, headers renamed `#`→**Rank** and `Player`→**User** (columns otherwise identical), rows use `RankBadge` with a subtle pink highlight for your own row, rank #1 shows the crown, both "Play" buttons rounded-full. `getProgress('sql', user?.id)` added for the new section; `LEVEL_ACCENTS`/`rankClass` removed.
+
+### Verified
+
+`npm run build` → success · `npx oxlint` on the five touched files → only the 3 pre-existing `set-state-in-effect` warnings in `Profile.jsx` (confirmed at `HEAD` earlier via stash) · `node scripts/check-text-visibility.mjs` → only the known pre-existing `MobileHome.jsx:313` false positive · **headless-Chromium DOM audit → 55/55 passed** across six pages: harness Profile (1280×800 + 390×844) asserting the brand-700 Edit/Sign-out pills, edit-toggle label, all four stat labels, exactly 6 desktop dividers / 0 at mobile, 8 circular icon containers, progress cards with locked + not-started states, trophy icon, tab pill states, crown badge, level tabs; harness Leaderboard asserting the exact H1, profile card (email + member since, Edit as a `/profile` link), progress section, table headers `["Rank","User","Score","Correct","Lives","Time"]`, live rows, rank-1 crown, mode/game tab pill states and white active-tab icon; real-app guest `/profile` (sign-in prompt) and `/leaderboard` (hero, no profile card, progress, footer). No horizontal overflow and no console/page errors on any page.
+
+The audit used a temporary harness (memory-routed entries + `useAuth` mock, Vite alias) that was **fully deleted afterwards** — `git status` shows only the five intended files. Three harness findings worth keeping: the mock user id must be a valid UUID or Postgres rejects it (`22P02`) and everything downstream sticks on "Loading…"; Leaderboard's mode buttons include their icon glyph in the accessible name (`>_ Write`), so `button[title="Write the Query"]` is the stable selector; and `user_progress` is `SELECT`-granted to `authenticated` but not `anon` (verified in `information_schema.role_table_grants`), so a JWT-less mock gets 401s that were filtered as harness-only noise — real signed-in users are unaffected.
+
+**Not done:** nothing committed or pushed; screenshots are in `%TEMP%/opencode/shots` and, as before, the agent cannot view them — a human should look.
+
 ## Current session (2026-10-08): premium UI pass on the header, hero and practice cards
 
 A visual-only refresh of the landing page against a written design spec. **ClassName strings in JSX plus three new CSS utilities — no animation, keyframe, hook, routing, Supabase or component-structure change**, and no `@theme` token was retouched (the spec took the existing palette as given). Ten source files modified, uncommitted at write time alongside this entry.

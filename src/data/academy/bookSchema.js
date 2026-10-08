@@ -15,5 +15,3 @@ export const academySchema = {
       'FOREIGN KEY (product_id) REFERENCES products(id), CHECK (rating IS NULL OR rating BETWEEN 1 AND 5)',
   },
 }
-
-export default academySchema

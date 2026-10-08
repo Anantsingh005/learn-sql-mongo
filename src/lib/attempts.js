@@ -42,5 +42,3 @@ export async function fetchAttempts(userId, { game = 'sql', mode, difficulty }) 
     return []
   }
 }
-
-export default { saveAttempts, fetchAttempts }

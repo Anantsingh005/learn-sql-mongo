@@ -220,15 +220,19 @@ export default function Footer() {
     <footer className="border-t border-line bg-white" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">Footer</h2>
 
-      <div className="mx-auto max-w-6xl px-5 py-4 sm:px-8 lg:px-12">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 lg:gap-12">
-          <div className="lg:w-1/4 lg:flex-shrink-0">
+      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
+        <div
+          className={`grid gap-8 sm:grid-cols-2 lg:gap-10 xl:gap-12 ${
+            showFeedback ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
+          }`}
+        >
+          <div className="sm:col-span-2 lg:col-span-1">
             <Link
               to="/"
               className="inline-flex items-center gap-2 rounded-xl text-[20px] font-bold leading-none tracking-[-0.02em] text-ink focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
               aria-label="DBQuiz home"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-brand-600 to-blue-500 text-white shadow-xs">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-brand-600 to-brand-400 text-white shadow-xs">
                 <svg
                   className="h-4 w-4"
                   viewBox="0 0 24 24"
@@ -253,81 +257,77 @@ export default function Footer() {
             </p>
           </div>
 
-          <nav aria-label="Product" className="lg:flex-1 lg:flex lg:justify-center">
-            <div className="text-center lg:text-left">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Product</h3>
-              <ul className="space-y-2">
-                {FOOTER_LINKS.product.map((link) => (
-                  <li key={link.to}>
-                    <Link
-                      to={link.to}
-                      className="text-sm text-muted hover:text-ink transition-colors duration-150"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <nav aria-label="Product">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Product</h3>
+            <ul className="space-y-2">
+              {FOOTER_LINKS.product.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-sm text-muted hover:text-ink transition-colors duration-150"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
 
-          <div className="lg:w-1/4 lg:flex-shrink-0">
-            <nav aria-label="Legal & Social">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Legal & Social</h3>
-              <ul className="space-y-2">
-                {FOOTER_LINKS.legal.map((link) => (
-                  <li key={link.to}>
-                    <Link
-                      to={link.to}
-                      className="text-sm text-muted hover:text-ink transition-colors duration-150"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-                {FOOTER_LINKS.social.map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-muted hover:text-ink transition-colors duration-150 flex items-center gap-1.5"
-                    >
-                      {link.isEmail ? (
-                        <svg className="h-3.5 w-3.5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                        </svg>
-                      ) : null}
-                      <span>{link.label}</span>
-                      <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          <nav aria-label="Legal & Social">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Legal & Social</h3>
+            <ul className="space-y-2">
+              {FOOTER_LINKS.legal.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className="text-sm text-muted hover:text-ink transition-colors duration-150"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              {FOOTER_LINKS.social.map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted hover:text-ink transition-colors duration-150 flex items-center gap-1.5"
+                  >
+                    {link.isEmail ? (
+                      <svg className="h-3.5 w-3.5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                       </svg>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+                    ) : null}
+                    <span>{link.label}</span>
+                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-            {showFeedback && (
-              <div className="mt-6 lg:mt-8">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Help Us Improve</h3>
-                <p className="text-sm text-muted mb-2">Have a suggestion or found a bug?</p>
-                <button
-                  onClick={() => setFeedbackOpen(true)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-brand-600 rounded-lg hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 transition-colors duration-150"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  Send Feedback
-                </button>
-                <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
-              </div>
-            )}
-          </div>
+          {showFeedback && (
+            <div className="sm:col-span-2 lg:col-span-1">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Help Us Improve</h3>
+              <p className="text-sm text-muted mb-2">Have a suggestion or found a bug?</p>
+              <button
+                onClick={() => setFeedbackOpen(true)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-brand-600 rounded-lg hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 transition-colors duration-150"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Send Feedback
+              </button>
+              <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+            </div>
+          )}
         </div>
 
-        <div className="mt-6 pt-6 border-t border-line grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-8 pt-6 border-t border-line grid grid-cols-1 md:grid-cols-3 gap-4">
           <p className="text-xs text-muted text-center md:text-left">
             &copy; {new Date().getFullYear()} DBQuiz. All rights reserved.
           </p>

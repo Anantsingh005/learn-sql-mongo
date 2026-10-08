@@ -180,5 +180,3 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   return ctx ?? GUEST
 }
-
-export default AuthProvider
