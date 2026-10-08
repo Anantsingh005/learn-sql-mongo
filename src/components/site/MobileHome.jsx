@@ -297,7 +297,7 @@ function HeroSection() {
             style={{ animationDelay: '90ms' }}
           >
             {visibleChars(HEAD_PLAIN, typedPlain)}
-            <span className="grad-text type-caret">{visibleChars(HEAD_GRAD, typedGrad)}</span>
+            <span className="grad-text">{visibleChars(HEAD_GRAD, typedGrad)}</span>
           </h1>
 
           <p
