@@ -34,7 +34,7 @@ function ProgressDots({ snapshot }) {
             key={i}
             title={answered ? `Q${i + 1} — ${correct ? 'correct' : 'wrong'}` : `Q${i + 1} — unanswered`}
             className={`inline-block h-2.5 w-2.5 rounded-sm transition-all duration-300 ${
-              isCurrent && !answered ? 'ring-2 ring-brand-600 ring-offset-1 ring-offset-slate-900' : ''
+              isCurrent && !answered ? 'ring-2 ring-brand-600 ring-offset-1 ring-offset-white' : ''
             } ${cls}`}
           />
         )
@@ -75,7 +75,7 @@ function HUD({ snapshot }) {
         <div className="w-full max-w-60">
           <div className="h-1.5 overflow-hidden rounded-full bg-line">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-brand-100 via-plum-100 to-brand-100 shadow-[0_0_10px_rgba(#2f6ad0,0.22)] transition-all duration-300"
+              className="h-full rounded-full bg-gradient-to-r from-brand-100 via-plum-100 to-brand-100 shadow-[0_0_10px_rgba(#d4349e,0.22)] transition-all duration-300"
               style={{ width: `${pct}%` }}
             />
           </div>

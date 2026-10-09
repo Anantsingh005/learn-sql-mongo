@@ -15,6 +15,9 @@ import useQuizEngine from '../hooks/useQuizEngine.js'
 import SqlEditor from '../components/quiz/SqlEditor.jsx'
 import SchemaPanel from '../components/quiz/SchemaPanel.jsx'
 import HintReveal from '../components/quiz/HintReveal.jsx'
+import { useInView } from '../hooks/useInView.js'
+import { stagger } from '../components/site/motion.js'
+import { ArrowRightIcon, CodeIcon, LeafIcon } from '../components/site/icons.jsx'
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D']
 const CHAPTER_BY_SLUG = new Map(CHAPTERS.map((c) => [c.slug, c]))
@@ -25,29 +28,441 @@ const TYPE_COLORS = {
   bug: 'bg-amber-50 text-amber-700',
 }
 
-const GAMES = [
-  {
-    key: 'sql',
-    title: 'SQL',
-    tagline: 'Queries, joins & aggregations',
-    desc: 'Practice multiple choice, write real queries, and fix buggy SQL against a live in-browser database.',
-    icon: '{ }',
-    accent: 'from-brand-100 via-brand-50 to-brand-100',
-    badge: 'border-brand-200 bg-brand-50 text-brand-700',
-    hover: 'hover:border-brand-200',
-  },
-  {
-    key: 'mongo',
-    title: 'MongoDB',
-    tagline: 'Documents & aggregation pipelines',
-    desc: 'MongoDB practice is coming soon.',
-    icon: 'DB',
-    accent: 'from-leaf-100 via-brand-50 to-brand-100',
-    badge: 'border-leaf-200 bg-leaf-50 text-leaf-700',
-    hover: 'hover:border-leaf-200',
-    comingSoon: true,
-  },
-]
+function In({ size = 18, children, className = '', strokeWidth = 2, viewBox = '0 0 24 24' }) {
+  return (
+    <svg
+      viewBox={viewBox}
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+    >
+      {children}
+    </svg>
+  )
+}
+
+function BoltIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M13 2 4 13.5h6.5l-1 8.5L20 10.5h-6.5L13 2Z" />
+    </In>
+  )
+}
+
+function TargetIcon(props) {
+  return (
+    <In {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" />
+    </In>
+  )
+}
+
+function ChartIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M5 20v-6" />
+      <path d="M12 20V6" />
+      <path d="M19 20v-9" />
+      <path d="M4 20h16" />
+    </In>
+  )
+}
+
+function BookIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </In>
+  )
+}
+
+function DocumentIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="M16 13H8" />
+      <path d="M16 17H8" />
+    </In>
+  )
+}
+
+function PipelineIcon(props) {
+  return (
+    <In {...props}>
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="18" cy="12" r="2.5" />
+      <circle cx="6" cy="18" r="2.5" />
+      <path d="M8.5 6H14a4 4 0 0 1 4 4v2" />
+      <path d="M8.5 18H14a4 4 0 0 0 4-4v-1" />
+    </In>
+  )
+}
+
+function StarIcon({ className = '' }) {
+  return (
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12 2.3l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.6 6.2 20.1l1.6-6.6L2.6 9.1l6.8-.5L12 2.3Z" />
+    </svg>
+  )
+}
+
+function FeatureChip({ icon: Icon, label, style }) {
+  return (
+    <div className="enter-rise flex items-center gap-3" style={style}>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+        <Icon size={18} strokeWidth={2} />
+      </span>
+      <span className="text-sm font-semibold text-body">{label}</span>
+    </div>
+  )
+}
+
+// Sparkle star (4-point) used across the hero scene.
+const SPARK = 'M0 -13 C1.5 -4 4 -1.5 13 0 C4 1.5 1.5 4 0 13 C-1.5 4 -4 1.5 -13 0 C-4 -1.5 -1.5 -4 0 -13 Z'
+
+function SparkleDotIcon({ className = '' }) {
+  return (
+    <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" className={className} aria-hidden="true">
+      <path d={SPARK} />
+    </svg>
+  )
+}
+
+// Scoped to the practice hero. Every looping animation is disabled under
+// prefers-reduced-motion. Only transform and opacity are animated.
+const HERO_ANIM = `
+@keyframes mp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+@keyframes mp-spin { to { transform: rotate(360deg); } }
+@keyframes mp-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+@keyframes mp-scene-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes mp-type-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+@keyframes mp-blink { 0%, 55% { opacity: 1; } 60%, 100% { opacity: 0; } }
+.mp-float { animation: mp-float 6s ease-in-out infinite; }
+.mp-spin { animation: mp-spin 46s linear infinite; }
+.mp-twinkle { animation: mp-twinkle 3.2s ease-in-out infinite; }
+.mp-scene-in { animation: mp-scene-in 700ms var(--ease-out-soft) both; }
+.mp-type-line { animation: mp-type-in 360ms var(--ease-out-soft) both; }
+.mp-type-line-pending { opacity: 0; }
+.mp-caret { animation: mp-blink 1.1s steps(1, end) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .mp-float, .mp-spin, .mp-twinkle { animation: none; }
+  .mp-scene-in { animation: none; opacity: 1; transform: none; }
+  .mp-type-line, .mp-type-line-pending { animation: none; opacity: 1; transform: none; }
+  .mp-caret { animation: none; opacity: 1; }
+}
+`
+
+function PracticeHeroArt() {
+  return (
+    <svg
+      viewBox="0 0 520 480"
+      className="h-auto w-full"
+      role="img"
+      aria-label="A magenta SQL card and a green MongoDB card with a leaf floating inside a glowing orbit ring, with a stack of pink database discs and sparkles"
+    >
+      <defs>
+        <linearGradient id="mp-ring" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f0a8da" />
+          <stop offset="50%" stopColor="#9575e0" />
+          <stop offset="100%" stopColor="#6cae85" />
+        </linearGradient>
+        <linearGradient id="mp-sql" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#d4349e" />
+          <stop offset="100%" stopColor="#8c1568" />
+        </linearGradient>
+        <linearGradient id="mp-mongo" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#58a874" />
+          <stop offset="100%" stopColor="#2f7a4f" />
+        </linearGradient>
+        <radialGradient id="mp-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#f7d4ed" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#f7d4ed" stopOpacity="0" />
+        </radialGradient>
+        <filter id="mp-soft" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="9" />
+        </filter>
+      </defs>
+
+      <circle cx="245" cy="235" r="205" fill="url(#mp-glow)" />
+
+      <g className="mp-spin" style={{ transformBox: 'view-box', transformOrigin: '245px 235px' }}>
+        <g transform="rotate(-16 245 235)">
+          <ellipse cx="245" cy="235" rx="170" ry="124" fill="none" stroke="url(#mp-ring)" strokeWidth="3" opacity="0.55" filter="url(#mp-soft)" />
+          <ellipse cx="245" cy="235" rx="170" ry="124" fill="none" stroke="url(#mp-ring)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="1 12" opacity="0.9" />
+        </g>
+      </g>
+
+      <path className="mp-twinkle" style={{ animationDelay: '0s' }} transform="translate(96 96) scale(1.1)" d={SPARK} fill="#d4349e" />
+      <path className="mp-twinkle" style={{ animationDelay: '-0.8s', animationDuration: '2.6s' }} transform="translate(420 128) scale(0.9)" d={SPARK} fill="#9575e0" />
+      <path className="mp-twinkle" style={{ animationDelay: '-1.6s', animationDuration: '3.6s' }} transform="translate(120 360) scale(0.8)" d={SPARK} fill="#e46bbf" />
+      <path className="mp-twinkle" style={{ animationDelay: '-2.2s', animationDuration: '3s' }} transform="translate(300 66) scale(0.7)" d={SPARK} fill="#c98a2e" />
+      <path className="mp-twinkle" style={{ animationDelay: '-1.1s', animationDuration: '3.4s' }} transform="translate(452 300) scale(0.85)" d={SPARK} fill="#6cae85" />
+
+      <g className="mp-float" style={{ animationDelay: '0s' }}>
+        <g transform="translate(158 152) rotate(-11)">
+          <rect x="-70" y="-42" width="150" height="96" rx="18" fill="#4a0b38" opacity="0.22" transform="translate(8 10)" />
+          <rect x="-75" y="-48" width="150" height="96" rx="18" fill="url(#mp-sql)" />
+          <path d="M-75 -30 a18 18 0 0 1 18 -18 h114 a18 18 0 0 1 18 18 v4 h-150 z" fill="#ffffff" opacity="0.18" />
+          <text x="0" y="8" textAnchor="middle" fontFamily="'JetBrains Mono Variable', ui-monospace, monospace" fontSize="30" fontWeight="700" fill="#ffffff">{'</>'}</text>
+          <text x="0" y="34" textAnchor="middle" fontFamily="'Inter Variable', system-ui, sans-serif" fontSize="13" fontWeight="800" letterSpacing="0.16em" fill="#ffffff" opacity="0.92">SQL</text>
+        </g>
+      </g>
+
+      <g className="mp-float" style={{ animationDelay: '-3.1s', animationDuration: '7.2s' }}>
+        <g transform="translate(332 292) rotate(9)">
+          <rect x="-70" y="-42" width="150" height="96" rx="18" fill="#173a26" opacity="0.2" transform="translate(8 10)" />
+          <rect x="-75" y="-48" width="150" height="96" rx="18" fill="url(#mp-mongo)" />
+          <path d="M-75 -30 a18 18 0 0 1 18 -18 h114 a18 18 0 0 1 18 18 v4 h-150 z" fill="#ffffff" opacity="0.16" />
+          <g transform="translate(-52 -30) scale(0.72)" fill="none" stroke="#eafff2" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.5 3.5c-7 .5-11 4-12.5 8.5-1 3-.5 6 1 8" />
+            <path d="M9 20c-1.5-2-2-5-1-8 1.5-4.5 5.5-7 12.5-8.5" />
+            <path d="M4 21h7" />
+          </g>
+          <text x="12" y="12" textAnchor="middle" fontFamily="'JetBrains Mono Variable', ui-monospace, monospace" fontSize="26" fontWeight="700" fill="#ffffff">{'</>'}</text>
+          <text x="0" y="38" textAnchor="middle" fontFamily="'Inter Variable', system-ui, sans-serif" fontSize="11.5" fontWeight="800" letterSpacing="0.14em" fill="#ffffff" opacity="0.92">MongoDB</text>
+        </g>
+      </g>
+
+      <g transform="translate(414 372)">
+        <ellipse cx="0" cy="34" rx="44" ry="9" fill="#2d0022" opacity="0.08" />
+        <rect x="-32" y="-16" width="64" height="30" fill="#7a124f" />
+        <ellipse cx="0" cy="14" rx="32" ry="11" fill="#6b0f50" />
+        <ellipse cx="0" cy="-16" rx="32" ry="11" fill="#d4349e" />
+        <rect x="-32" y="-44" width="64" height="30" fill="#8c1568" />
+        <ellipse cx="0" cy="-14" rx="32" ry="11" fill="#7a124f" />
+        <ellipse cx="0" cy="-44" rx="32" ry="11" fill="#e46bbf" />
+        <rect x="-32" y="-72" width="64" height="30" fill="#b01f82" />
+        <ellipse cx="0" cy="-42" rx="32" ry="11" fill="#8c1568" />
+        <ellipse cx="0" cy="-72" rx="32" ry="11" fill="#f7d4ed" />
+      </g>
+    </svg>
+  )
+}
+
+function SqlCardArt({ active = false, className = '' }) {
+  return (
+    <svg viewBox="0 0 320 240" className={className} aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="mp-sql-term" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#38124f" />
+          <stop offset="100%" stopColor="#1b0930" />
+        </linearGradient>
+        <filter id="mp-sql-blob" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="12" />
+        </filter>
+      </defs>
+
+      <ellipse cx="70" cy="118" rx="98" ry="76" fill="#e9dffb" opacity="0.85" filter="url(#mp-sql-blob)" />
+      <ellipse cx="250" cy="76" rx="88" ry="62" fill="#f0a8da" opacity="0.45" filter="url(#mp-sql-blob)" />
+      <ellipse cx="232" cy="196" rx="94" ry="56" fill="#9575e0" opacity="0.28" filter="url(#mp-sql-blob)" />
+
+      <g transform="translate(58 118)">
+        <ellipse cx="0" cy="58" rx="46" ry="10" fill="#2d0022" opacity="0.1" />
+        {[
+          { y: 16, body: '#8c1568', top: '#f0a8da' },
+          { y: 31, body: '#b01f82', top: '#e46bbf' },
+          { y: 46, body: '#d4349e', top: '#fdf0f8' },
+        ].map((d, i) => (
+          <g key={i}>
+            <path d={`M-34 ${d.y + 15} a34 12 0 0 0 68 0 V${d.y} h-68 Z`} fill={d.body} />
+            <ellipse cx="0" cy={d.y} rx="34" ry="12" fill={d.top} />
+          </g>
+        ))}
+      </g>
+
+      <g transform="rotate(-6 196 128)">
+        <rect x="104" y="28" width="186" height="118" rx="12" fill="#2d1042" />
+        <rect x="112" y="36" width="170" height="100" rx="8" fill="url(#mp-sql-term)" />
+        <rect x="112" y="36" width="170" height="26" rx="8" fill="#2a0e40" />
+        <circle cx="126" cy="49" r="4" fill="#f0a8da" />
+        <circle cx="138" cy="49" r="4" fill="#9575e0" />
+        <circle cx="150" cy="49" r="4" fill="#6cae85" />
+        <text x="164" y="53" fontSize="9" fontFamily="'JetBrains Mono Variable', monospace" fill="#cbb3dd">
+          query.sql
+        </text>
+        <g className={active ? 'mp-type-line' : 'mp-type-line-pending'} style={{ animationDelay: '140ms' }}>
+          <text x="122" y="78" fontSize="11" fontFamily="'JetBrains Mono Variable', monospace" fontWeight="700">
+            <tspan fill="#f0a8da">SELECT</tspan>
+            <tspan fill="#9fe8c0"> * FROM users</tspan>
+          </text>
+        </g>
+        <g className={active ? 'mp-type-line' : 'mp-type-line-pending'} style={{ animationDelay: '320ms' }}>
+          <text x="122" y="97" fontSize="11" fontFamily="'JetBrains Mono Variable', monospace" fontWeight="700">
+            <tspan fill="#f0a8da">WHERE</tspan>
+            <tspan fill="#9fe8c0"> id = 1;</tspan>
+          </text>
+        </g>
+        {active && <rect className="mp-caret" x="126" y="83" width="6" height="11" rx="1" fill="#f0a8da" />}
+        <path d="M96 164 l12 32 h200 l20 -32 Z" fill="#3a1554" />
+        <rect x="102" y="150" width="220" height="14" rx="6" fill="#4d1c6e" />
+      </g>
+    </svg>
+  )
+}
+
+function MongoCardArt({ className = '' }) {
+  return (
+    <svg viewBox="0 0 320 240" className={className} aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="mp-mongo-blob" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="12" />
+        </filter>
+      </defs>
+
+      <ellipse cx="76" cy="116" rx="102" ry="78" fill="#c4e2d0" opacity="0.5" filter="url(#mp-mongo-blob)" />
+      <ellipse cx="252" cy="90" rx="88" ry="64" fill="#e3f2e9" opacity="0.9" filter="url(#mp-mongo-blob)" />
+      <ellipse cx="230" cy="196" rx="92" ry="54" fill="#6cae85" opacity="0.22" filter="url(#mp-mongo-blob)" />
+
+      <g fill="none" stroke="#c4e2d0" strokeWidth="2" opacity="0.75">
+        <path d="M262 56 c-10 -22 -28 -34 -50 -36" />
+        <path d="M232 42 c20 -16 46 -8 30 26" />
+        <path d="M204 72 c-12 12 -26 14 -40 6" />
+      </g>
+
+      <g transform="translate(150 132)">
+        <ellipse cx="0" cy="58" rx="44" ry="10" fill="#173a24" opacity="0.1" />
+        {[
+          { y: 10, body: '#3d7f55', top: '#c4e2d0' },
+          { y: 26, body: '#2f7a4f', top: '#8fcaa4' },
+          { y: 42, body: '#4c9a68', top: '#e3f2e9' },
+        ].map((d, i) => (
+          <g key={i}>
+            <path d={`M-34 ${d.y + 16} a34 12 0 0 0 68 0 V${d.y} h-68 Z`} fill={d.body} />
+            <ellipse cx="0" cy={d.y} rx="34" ry="12" fill={d.top} />
+          </g>
+        ))}
+      </g>
+
+      <g>
+        <path d="M150 146 C148 112 142 92 122 70" stroke="#2f7a4f" strokeWidth="4" fill="none" strokeLinecap="round" />
+        <path d="M130 82 C139 91 145 105 145 118 C129 118 120 104 130 82 Z" fill="#6cae85" />
+        <path d="M134 108 C151 108 166 120 170 136 C150 139 134 128 134 108 Z" fill="#4c9a68" />
+        <path d="M118 62 C114 54 116 44 124 38 C130 48 126 58 118 62 Z" fill="#8fcaa4" />
+      </g>
+    </svg>
+  )
+}
+
+function FeatureRow({ icon: Icon, iconClass = '', label }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-110 ${iconClass}`}>
+        <Icon size={16} strokeWidth={2} />
+      </span>
+      <span className="text-sm font-medium text-body">{label}</span>
+    </div>
+  )
+}
+
+function SqlPracticeCard({ onPick, active = false }) {
+  const features = [
+    { icon: BookIcon, label: 'Multiple Chapters' },
+    { icon: BoltIcon, label: 'Real-time Execution' },
+    { icon: ChartIcon, label: 'Track Progress' },
+  ]
+  return (
+    <button
+      type="button"
+      onClick={() => onPick('sql')}
+      className="group relative isolate flex h-full w-full flex-col overflow-hidden rounded-3xl border border-brand-200/70 bg-gradient-to-br from-brand-50 via-brand-100/60 to-brand-200/50 p-7 text-left shadow-sm outline-none transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-brand-600/20 active:scale-[0.985] focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 sm:p-8"
+    >
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-500 via-brand-400 to-brand-200 opacity-90" />
+      <div className="flex h-full w-full flex-col gap-8 lg:flex-row lg:items-center lg:gap-6">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-4">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-md shadow-brand-600/30">
+              <CodeIcon size={28} strokeWidth={2} />
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
+              <StarIcon className="text-amber-200" />
+              Popular
+            </span>
+          </div>
+
+          <h2 className="mt-6 text-2xl font-bold tracking-tight text-ink sm:text-[26px]">SQL Practice</h2>
+          <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted sm:text-[15px]">
+            Write and run real SQL queries with instant feedback.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3">
+            {features.map((f) => (
+              <FeatureRow key={f.label} icon={f.icon} iconClass="bg-white/80 text-brand-600" label={f.label} />
+            ))}
+          </div>
+
+          <span className="mt-8 inline-flex items-center justify-center gap-2 self-start rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm shadow-brand-600/25 transition-all duration-200 group-hover:bg-brand-700 group-hover:gap-3">
+            Start Practicing
+            <ArrowRightIcon size={17} strokeWidth={2.4} />
+          </span>
+        </div>
+
+        <div className="pointer-events-none mx-auto w-full max-w-[240px] shrink-0 lg:max-w-none lg:w-[250px]">
+          <div className="mp-float" style={{ animationDelay: '0s' }}>
+            <SqlCardArt active={active} className="h-auto w-full" />
+          </div>
+        </div>
+      </div>
+    </button>
+  )
+}
+
+function MongoPracticeCard() {
+  const features = [
+    { icon: DocumentIcon, label: 'Real Documents' },
+    { icon: PipelineIcon, label: 'Aggregation Pipelines' },
+    { icon: ChartIcon, label: 'Track Progress' },
+  ]
+  return (
+    <div className="group relative isolate flex h-full w-full flex-col overflow-hidden rounded-3xl border border-leaf-200/80 bg-gradient-to-br from-leaf-50 via-leaf-100/60 to-leaf-200/50 p-7 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-leaf-500/20 sm:p-8">
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-leaf-500 via-leaf-400 to-leaf-200 opacity-90" />
+      <div className="flex h-full w-full flex-col gap-8 lg:flex-row lg:items-center lg:gap-6">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-4">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-leaf-500 to-leaf-700 text-white shadow-md shadow-leaf-600/30">
+              <LeafIcon size={28} strokeWidth={2} />
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-leaf-600 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
+              <SparkleDotIcon className="text-leaf-100" />
+              Soon
+            </span>
+          </div>
+
+          <h2 className="mt-6 text-2xl font-bold tracking-tight text-ink sm:text-[26px]">MongoDB Practice</h2>
+          <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted sm:text-[15px]">
+            Work with MongoDB queries and real-time challenges.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3">
+            {features.map((f) => (
+              <FeatureRow key={f.label} icon={f.icon} iconClass="bg-white/80 text-leaf-600" label={f.label} />
+            ))}
+          </div>
+
+          <span className="shimmer mt-8 inline-flex cursor-not-allowed items-center justify-center gap-2 self-start rounded-xl bg-line/80 px-6 py-3 font-semibold text-muted">
+            Coming soon
+          </span>
+        </div>
+
+        <div className="pointer-events-none mx-auto w-full max-w-[240px] shrink-0 lg:max-w-none lg:w-[250px]">
+          <div className="mp-float" style={{ animationDelay: '-3.1s', animationDuration: '7.2s' }}>
+            <MongoCardArt className="h-auto w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function Chip({ children, className }) {
   return (
@@ -274,51 +689,58 @@ function ChoiceGroup({ label, options, value, onSelect }) {
 }
 
 function GameSelect({ onPick }) {
+  const [cardsRef, cardsInView] = useInView()
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-8 text-center">
-        <h1 className="bg-gradient-to-r from-brand-700 via-brand-600 to-plum-600 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent">
-          More Practice
-        </h1>
-        <p className="mt-2 text-sm text-muted">Unlimited practice, no lives, no timer. Pick a database to start.</p>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {GAMES.map((g) => (
-          <button
-            key={g.key}
-            type="button"
-            onClick={() => !g.comingSoon && onPick(g.key)}
-            className="group relative rounded-2xl text-left outline-none"
+    <div className="mx-auto max-w-6xl">
+      <section className="grid gap-10 lg:grid-cols-2 lg:items-center">
+        <div>
+          <span
+            className="enter-rise inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-brand-700"
+            style={stagger(0, 100)}
           >
-            <div
-              className={`pointer-events-none absolute -inset-1 rounded-3xl bg-gradient-to-r ${g.accent} opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100`}
-            />
-            <div
-              className={`relative overflow-hidden rounded-2xl border bg-white p-6 transition-all duration-300 ${
-                g.comingSoon ? 'border-line grayscale' : `${g.hover} group-hover:-translate-y-1`
-              }`}
-            >
-              <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${g.accent} opacity-80`} />
-              <div
-                className={`flex h-11 w-11 items-center justify-center rounded-xl border font-mono text-lg font-black ${g.badge}`}
-              >
-                {g.icon}
-              </div>
-              <div className="mt-4 font-mono text-lg font-bold text-ink">{g.title}</div>
-              <div className="mt-1 text-sm font-medium text-muted">{g.tagline}</div>
-              <p className="mt-3 text-sm leading-relaxed text-muted">{g.desc}</p>
-              {g.comingSoon ? (
-                <span className="mt-5 inline-block rounded-full bg-line px-3 py-1 text-xs font-semibold text-body">
-                  Coming soon
-                </span>
-              ) : (
-                <span className="mt-5 inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-700">
-                  Select →
-                </span>
-              )}
-            </div>
-          </button>
-        ))}
+            <StarIcon className="text-brand-500" />
+            Practice · Improve · Grow
+          </span>
+
+          <h1
+            className="enter-rise mt-5 font-sans text-4xl font-black leading-[1.05] tracking-tight text-ink sm:text-5xl"
+            style={stagger(1, 100)}
+          >
+            More <span className="text-brand-600">Practice</span>
+          </h1>
+
+          <p className="enter-rise mt-4 max-w-xl text-base leading-relaxed text-muted" style={stagger(2, 100)}>
+            Sharpen your skills with hands-on practice. Explore SQL and MongoDB exercises, work on
+            real-world problems, and build confidence.
+          </p>
+
+          <div className="mt-7 flex flex-wrap gap-x-6 gap-y-4">
+            <FeatureChip icon={BoltIcon} label="Real Practice" style={stagger(3, 100)} />
+            <FeatureChip icon={TargetIcon} label="Build Confidence" style={stagger(4, 100)} />
+            <FeatureChip icon={ChartIcon} label="Track Progress" style={stagger(5, 100)} />
+          </div>
+        </div>
+
+        <div className="relative mx-auto mt-4 w-full max-w-[360px] sm:max-w-[440px] lg:mt-0 lg:max-w-[520px]">
+          <style>{HERO_ANIM}</style>
+          <div className="mp-scene-in">
+            <PracticeHeroArt />
+          </div>
+          <span className="pointer-events-none absolute right-0 top-[22%] rotate-[-8deg] font-hand text-2xl font-bold leading-[1.05] text-brand-600 sm:text-3xl">
+            Practice Today
+            <br />
+            Build Tomorrow
+          </span>
+        </div>
+      </section>
+
+      <div ref={cardsRef} className="mt-12 grid gap-5 sm:grid-cols-2">
+        <div className={`reveal h-full ${cardsInView ? 'is-in' : ''}`} style={{ transitionDelay: '0ms' }}>
+          <SqlPracticeCard onPick={onPick} active={cardsInView} />
+        </div>
+        <div className={`reveal h-full ${cardsInView ? 'is-in' : ''}`} style={{ transitionDelay: '150ms' }}>
+          <MongoPracticeCard />
+        </div>
       </div>
     </div>
   )

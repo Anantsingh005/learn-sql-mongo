@@ -354,6 +354,52 @@ const collectBg = (el) => {
     if (!fg) continue;
 
     const clip = cs.webkitBackgroundClip || cs.backgroundClip;
+
+    // A glyph span inside a background-clip: text ancestor (the per-char
+    // typewriter headline) carries color: transparent while the ancestor's
+    // gradient is the real ink. Measuring the span's own colour would report
+    // a 1:1 that never paints — walk up, find that ancestor, and measure its
+    // stops instead. No such ancestor means the text really is transparent
+    // ink, so fall through to the normal path and fail honestly.
+    if (fg.a === 0) {
+      let anc = el.parentElement;
+      let handled = false;
+      while (anc && anc !== document.body) {
+        const acs = getComputedStyle(anc);
+        if ((acs.webkitBackgroundClip || acs.backgroundClip) === 'text') {
+          handled = true;
+          const aimg = acs.backgroundImage;
+          const astops = aimg && aimg !== 'none'
+            ? [...aimg.matchAll(/rgba?\\([^)]+\\)/g)].map((m) => parse(m[0])).filter(Boolean)
+            : [];
+          if (astops.length) {
+            const behind = collectBg(anc.parentElement || document.body);
+            const worst = Math.min(...astops.flatMap((s) => behind.map((b) => {
+              const ink = s.a < 1 ? over(s, b) : s;
+              return ratio(dim(ink, op), dim(b, op));
+            })));
+            if (worst < need) {
+              const key = 'gradient|' + cs.fontSize + '|' + el.className;
+              if (!seen.has(key)) {
+                seen.add(key);
+                fails.push({
+                  text: el.textContent.trim().replace(/\\s+/g, ' ').slice(0, 46),
+                  cls: (typeof el.className === 'string' ? el.className : '').trim().split(/\\s+/).slice(0, 4).join(' '),
+                  color: 'gradient ' + astops.map(rgb).join(' '),
+                  size: Math.round(size),
+                  got: Math.round(worst * 100) / 100,
+                  need,
+                });
+              }
+            }
+          }
+          break;
+        }
+        anc = anc.parentElement;
+      }
+      if (handled) continue;
+    }
+
     if (clip === 'text') {
       // The gradient is the ink: the color property is transparent by design, so
       // comparing it to the page reports 1:1 for text that may be perfectly

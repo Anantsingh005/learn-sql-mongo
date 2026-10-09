@@ -1,6 +1,8 @@
 import { isLevelUnlocked, levelKey, COMPLETE_THRESHOLD } from '../../lib/progress.js'
 import { GUEST_QUESTION_LIMIT } from '../../data/selectQuestions.js'
+import { useInView } from '../../hooks/useInView.js'
 import GuestBanner from './GuestBanner.jsx'
+import ProfileSidebar from '../ProfileSidebar.jsx'
 
 const levels = [
   { key: 'easy', label: 'Easy', desc: 'Warm up', code: 'LVL-01' },
@@ -16,8 +18,8 @@ const accents = {
     tag: 'text-brand-600',
     badge: 'border-brand-200 bg-brand-50 text-brand-700',
     bar: 'from-brand-500 to-plum-400',
-    barGlow: 'shadow-[0_0_10px_rgba(#1554c7,0.22)]',
-    btn: 'bg-brand-100 text-brand-700 hover:bg-brand-100 hover:shadow-[0_2px_10px_rgba(#1554c7,0.22)] shadow-[0_2px_10px_rgba(#1554c7,0.22)]',
+    barGlow: 'shadow-[0_0_10px_rgba(#d4349e,0.22)]',
+    btn: 'bg-brand-100 text-brand-700 hover:bg-brand-100 hover:shadow-[0_2px_10px_rgba(#d4349e,0.22)] shadow-[0_2px_10px_rgba(#d4349e,0.22)]',
   },
   easy: {
     glow: 'from-leaf-100/70 via-leaf-50/60 to-transparent',
@@ -135,16 +137,30 @@ function LevelCard({ mode, lv, index, bank, progress, onPick, isGuest }) {
 }
 
 function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPick, onBack, isGuest }) {
+  const [levelsRef, levelsInView] = useInView()
+
   return (
-    <div className="mx-auto max-w-3xl px-2">
-      <div className="mb-8 text-center">
-        <div className="font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-gradient">
+    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:items-start">
+        <div className="order-2 lg:order-1">
+          <ProfileSidebar />
+        </div>
+
+        <div className="order-1 mx-auto w-full max-w-3xl lg:order-2">
+          <div className="mb-8 text-center">
+        <div
+          className="enter-rise font-mono text-[11px] font-bold uppercase tracking-[0.4em] text-gradient"
+          style={{ animationDelay: '0ms' }}
+        >
           Pick your level
         </div>
-        <h1 className="mt-2 bg-gradient-to-r from-brand-700 via-brand-600 to-plum-600 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent sm:text-4xl">
+        <h1
+          className="enter-rise mt-2 bg-gradient-to-r from-brand-700 via-brand-600 to-plum-600 bg-clip-text font-mono text-3xl font-black tracking-tight text-transparent sm:text-4xl"
+          style={{ animationDelay: '120ms' }}
+        >
           {mode.title}
         </h1>
-        <p className="mt-2 text-sm text-muted">
+        <p className="enter-rise mt-2 text-sm text-muted" style={{ animationDelay: '300ms' }}>
           Finish{' '}
           <span className="font-semibold text-leaf-700">Easy</span> and{' '}
           <span className="font-semibold text-amber-700">Medium</span> with at least{' '}
@@ -154,30 +170,42 @@ function LevelSelect({ mode, bank, progress = { completed: [], best: {} }, onPic
         </p>
       </div>
 
-      {isGuest && <div className="mb-6"><GuestBanner limit={GUEST_QUESTION_LIMIT} /></div>}
+      {isGuest && (
+        <div className="enter-rise mb-6" style={{ animationDelay: '380ms' }}>
+          <GuestBanner limit={GUEST_QUESTION_LIMIT} />
+        </div>
+      )}
 
-      <div className="flex flex-col gap-4">
+      <div ref={levelsRef} className="flex flex-col gap-4">
         {levels.map((lv, i) => (
-          <LevelCard
+          <div
             key={lv.key}
-            mode={mode}
-            lv={lv}
-            index={i}
-            bank={bank}
-            progress={progress}
-            isGuest={isGuest}
-            onPick={onPick}
-          />
+            className={`reveal ${levelsInView ? 'is-in' : ''}`}
+            style={{ transitionDelay: `${i * 80}ms` }}
+          >
+            <LevelCard
+              mode={mode}
+              lv={lv}
+              index={i}
+              bank={bank}
+              progress={progress}
+              isGuest={isGuest}
+              onPick={onPick}
+            />
+          </div>
         ))}
       </div>
 
       <button
         type="button"
         onClick={onBack}
-        className="group mt-6 text-sm text-muted transition-colors hover:text-body"
+        className="group enter-fade mt-6 text-sm text-muted transition-colors hover:text-body"
+        style={{ animationDelay: `${levels.length * 80 + 120}ms` }}
       >
         <span className="mr-1 inline-block transition-transform group-hover:-translate-x-1">←</span> Back to modes
-      </button>
+        </button>
+        </div>
+      </div>
     </div>
   )
 }

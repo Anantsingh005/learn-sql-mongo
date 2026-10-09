@@ -72,3 +72,28 @@ export function neighbour(slug, offset) {
 export function totalSections() {
   return CHAPTERS.reduce((n, c) => n + c.sections.length, 0)
 }
+
+// Counts for the Academy "Quick Stats" strip. Everything is derived from the
+// registered chapters (never a literal), so the strip cannot drift from the book:
+// - chapters: every registered chapter (one chapter file each)
+// - examples: runnable worked examples — `code` consoles plus `dml` statements,
+//   the same two block types scripts/verify-lessons.mjs executes
+// - referenceTables: the static `result` tables the reader inspects
+export function academyStats() {
+  let examples = 0
+  let referenceTables = 0
+  for (const chapter of CHAPTERS) {
+    for (const section of chapter.sections) {
+      for (const block of section.blocks) {
+        if (block.type === 'code' || block.type === 'dml') examples += 1
+        else if (block.type === 'result') referenceTables += 1
+      }
+    }
+  }
+  return {
+    chapters: CHAPTERS.length,
+    sections: totalSections(),
+    examples,
+    referenceTables,
+  }
+}

@@ -71,8 +71,8 @@ function ResultScreen({ snapshot, saveStatus = 'idle', onReplay, difficulty, mod
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="rounded-2xl border border-line bg-white p-8 text-center">
+    <div className="mx-auto max-w-2xl px-5 py-8 sm:px-8">
+      <div className="enter-rise rounded-2xl border border-line bg-white p-8 text-center">
         <div className="text-xs font-semibold uppercase tracking-widest text-muted">Quiz complete</div>
         {levelMessage && (
           <div className="mt-3 rounded-lg border border-leaf-200 bg-leaf-50 px-4 py-2.5 text-sm font-medium text-leaf-700">

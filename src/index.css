@@ -3,11 +3,13 @@
 @import "@fontsource-variable/inter/wght.css";
 @import "@fontsource-variable/source-serif-4/wght.css";
 @import "@fontsource-variable/jetbrains-mono/wght.css";
+@import "@fontsource-variable/caveat/wght.css";
 
 @theme {
   --font-sans: "Inter Variable", system-ui, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, Consolas, monospace;
   --font-serif: "Source Serif 4 Variable", "Iowan Old Style", Palatino, Georgia, serif;
+  --font-hand: "Caveat Variable", "Segoe Print", "Bradley Hand", cursive;
 
   --color-brand-50: #fdf0f8;
   --color-brand-100: #f7d4ed;
@@ -116,6 +118,33 @@ body {
     transform-origin: center bottom;
   }
 
+  /* Slow bobbing loop for hero illustrations. */
+  .float-soft {
+    animation: float-soft 6.5s ease-in-out infinite;
+  }
+
+  /* Slow background drift for small decorative hero shapes. */
+  .drift-slow {
+    animation: drift-slow 9s ease-in-out infinite alternate;
+  }
+
+  /* Gentle once-per-6s pulse for the footer CTA — transform only,
+     so it never causes layout shift and stays on the compositor. */
+  .soft-pulse {
+    animation: soft-pulse 6s ease-in-out infinite;
+  }
+
+  /* Very slow drifting gradient blobs behind the academy page. */
+  .blob-drift {
+    animation: blob-drift 24s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .blob-drift-b {
+    animation: blob-drift 32s ease-in-out -9s infinite alternate;
+    will-change: transform;
+  }
+
   .reveal {
     opacity: 0;
     transform: translateY(14px);
@@ -127,6 +156,38 @@ body {
   .reveal.is-in {
     opacity: 1;
     transform: none;
+  }
+
+  /* Same reveal, but the element enters from the left (used by the Academy
+     sidebar). Declared after `.reveal` so the X transform wins. */
+  .reveal-left {
+    transform: translateX(-24px);
+  }
+
+  .reveal-left.is-in {
+    transform: none;
+  }
+
+  /* Subtle sweeping highlight for the MongoDB "Coming soon" pill. Transform
+     only, paused under prefers-reduced-motion. */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 32%,
+      rgb(255 255 255 / 0.72) 50%,
+      transparent 68%
+    );
+    transform: translateX(-140%);
+    animation: shimmer 4.4s ease-in-out infinite;
+    pointer-events: none;
   }
 
   .card-part {
@@ -184,7 +245,10 @@ body {
   }
 
   .text-gradient {
-    background-image: linear-gradient(96deg, #8c1568, #e8198b 55%, #6b0f50);
+    /* Middle stop is brand-500, not #e8198b: the brighter pink measured
+       4.25:1 on white (3.86:1 on the quiz hero's tinted backdrop) at 11px,
+       which fails AA. brand-500 keeps the magenta read at 6.3:1. */
+    background-image: linear-gradient(96deg, #8c1568, #b01f82 55%, #6b0f50);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -247,7 +311,9 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .reveal,
-  .reveal.is-in {
+  .reveal.is-in,
+  .reveal-left,
+  .reveal-left.is-in {
     opacity: 1;
     transform: none;
     transition: none;
@@ -272,6 +338,19 @@ body {
 
   .parallax-scene {
     animation: none;
+  }
+
+  .float-soft,
+  .drift-slow,
+  .soft-pulse,
+  .blob-drift,
+  .blob-drift-b {
+    animation: none;
+  }
+
+  .shimmer::after {
+    animation: none;
+    opacity: 0;
   }
 }
 
@@ -303,6 +382,58 @@ body {
   }
   to {
     transform: translateY(-7px);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes drift-slow {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(8px, -16px, 0) rotate(10deg);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  86%,
+  100% {
+    transform: scale(1);
+  }
+  91% {
+    transform: scale(1.05);
+  }
+  96% {
+    transform: scale(1);
+  }
+}
+
+@keyframes blob-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(44px, -36px, 0) scale(1.08);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-140%);
+  }
+  55%,
+  100% {
+    transform: translateX(140%);
   }
 }
 

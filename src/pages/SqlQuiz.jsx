@@ -180,7 +180,7 @@ function SqlQuiz() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
+    <div className="enter-rise mx-auto flex max-w-2xl flex-col gap-4 px-5 py-6 sm:px-8 sm:py-8">
       <HUD snapshot={snapshot} />
 
       {snapshot.extraTimePending && (
