@@ -21,7 +21,6 @@ function App() {
         <Route index element={<Home />} />
         <Route path="quiz/sql" element={<SqlQuiz />} />
         <Route path="practice" element={<Practice />} />
-        <Route path="more-practice" element={<Practice />} />
         <Route path="academy" element={<Academy />} />
         <Route path="academy/sql" element={<Academy />} />
         <Route path="academy/sql/:chapterSlug" element={<Chapter />} />

@@ -37,10 +37,6 @@ export const QueryRunner = {
   async run(sql) {
     return post('run', { sql })
   },
-  async reset() {
-    if (!worker) return
-    return post('reset')
-  },
 }
 
 export default QueryRunner

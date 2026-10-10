@@ -51,7 +51,6 @@ function AcademyHeroArt() {
       </text>
       <rect x="66" y="108" width="8" height="14" rx="2" fill="#d4349e" />
 
-      {/* Open book */}
       <path
         d="M190 176C162 156 118 148 74 152L74 232C118 228 162 236 190 254Z"
         fill="#ffffff"
@@ -198,7 +197,6 @@ function SqlCardArt({ className = '' }) {
       <path d="M96 30v42c0 6.1 13.4 11 30 11s30-4.9 30-11V30" fill="#fff" stroke="#d4349e" strokeWidth="2" />
       <path d="M96 50c0 6.1 13.4 11 30 11s30-4.9 30-11" stroke="#d4349e" strokeWidth="2" />
 
-      {/* Open book */}
       <path
         d="M72 92C54 78 26 74 6 78v54c20-4 48 0 66 14z"
         fill="#fff"

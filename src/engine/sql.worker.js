@@ -34,10 +34,6 @@ self.onmessage = async (event) => {
       if (!db) throw new Error('No database loaded. Setup the question first.')
       const results = db.exec(payload.sql)
       self.postMessage({ id, ok: true, payload: lastResult(results) })
-    } else if (type === 'reset') {
-      if (db) db.close()
-      db = null
-      self.postMessage({ id, ok: true })
     } else {
       self.postMessage({ id, ok: false, error: `Unknown command: ${type}` })
     }

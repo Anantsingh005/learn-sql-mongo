@@ -22,12 +22,10 @@ function visibleChars(text, visible) {
   ))
 }
 
-/* -------------------------------------------------------------------------- */
-/* Phone + tablet home (max-width: 1024px), built from DBQuiz's existing      */
-/* light design language. Phones stack single-column; tablets (>= 768px) get  */
-/* a two-column layout with the real workspace illustration.                  */
-/* Desktop (>= 1024px) keeps the original hero + game cards via Home.jsx.     */
-/* -------------------------------------------------------------------------- */
+// Phone + tablet home (max-width: 1024px), built from DBQuiz's existing
+// light design language. Phones stack single-column; tablets (>= 768px) get
+// a two-column layout with the real workspace illustration.
+// Desktop (>= 1024px) keeps the original hero + game cards via Home.jsx.
 
 const CHIPS = [
   { label: 'SQL', Icon: CodeIcon, to: '/quiz/sql', active: true },
@@ -162,7 +160,7 @@ const EDITOR_LINES = [
   ),
 ]
 
-/* Code + results workspace preview ----------------------------------------- */
+// Code + results workspace preview
 
 const WS_TONE = {
   kw: 'text-brand-700',
@@ -243,8 +241,6 @@ function WorkspaceCard() {
     </div>
   )
 }
-
-/* -------------------------------------------------------------------------- */
 
 export default function MobileHome() {
   return (

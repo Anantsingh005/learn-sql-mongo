@@ -69,7 +69,6 @@ export default function QuickStats() {
   return (
     <section className="mt-6 rounded-[24px] border border-plum-200/70 bg-gradient-to-br from-plum-50 via-white to-brand-50 p-5 shadow-[0_18px_40px_-32px_rgba(87,52,153,0.5)] sm:p-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:gap-6">
-        {/* Label */}
         <div className="flex items-center gap-3 lg:w-52 lg:shrink-0">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-plum-100 text-plum-700">
             <Icon className="h-5 w-5">
@@ -87,7 +86,6 @@ export default function QuickStats() {
           </div>
         </div>
 
-        {/* The three counts */}
         <div className="flex flex-1 items-center justify-between gap-1 sm:gap-4 lg:justify-around">
           {items.map((s, i) => (
             <Fragment key={s.key}>
@@ -107,7 +105,6 @@ export default function QuickStats() {
           ))}
         </div>
 
-        {/* Next up */}
         <div className="flex items-center gap-3 rounded-2xl border border-plum-200/70 bg-white/80 p-3 lg:w-64 lg:shrink-0">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
             <Icon className="h-4 w-4">

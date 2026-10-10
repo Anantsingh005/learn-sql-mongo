@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { ENTER_POP, stagger } from '../site/motion.js'
 import { livesInfo } from './quizStats.js'
 
@@ -38,29 +39,37 @@ function ClockIcon({ className }) {
 
 function ExtraTimePrompt({ timeLeft, extraTimeSeconds, onGrant, onDecline }) {
   return (
-    <div className="enter-pop rounded-xl border border-amber-200 bg-amber-50 p-3.5">
-      <div className="flex items-center gap-2 text-amber-700">
-        <ClockIcon className="h-4 w-4" />
-        <span className="text-xs font-bold">Only {timeLeft}s left</span>
-      </div>
-      <p className="mt-1 text-xs leading-relaxed text-amber-800">
-        Add {extraTimeSeconds}s more to keep working on this question?
-      </p>
-      <div className="mt-3 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onGrant}
-          className="flex-1 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-amber-600"
-        >
-          +{extraTimeSeconds}s
-        </button>
-        <button
-          type="button"
-          onClick={onDecline}
-          className="rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-50"
-        >
-          No thanks
-        </button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-ink/45 backdrop-blur-md" aria-hidden="true" />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Extra time"
+        className="enter-pop relative w-full max-w-sm rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-[0_30px_60px_-20px_rgba(16,42,67,0.45)]"
+      >
+        <div className="flex items-center gap-2 text-amber-700">
+          <ClockIcon className="h-4 w-4" />
+          <span className="text-sm font-bold">Only {timeLeft}s left</span>
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-amber-800">
+          Add {extraTimeSeconds}s more to keep working on this question?
+        </p>
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onGrant}
+            className="flex-1 rounded-lg bg-amber-500 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600"
+          >
+            +{extraTimeSeconds}s
+          </button>
+          <button
+            type="button"
+            onClick={onDecline}
+            className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-50"
+          >
+            No thanks
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -79,7 +88,6 @@ function HUD({ snapshot, onGrantExtraTime, onDeclineExtraTime }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
-        {/* Timer + progress */}
         <div className="rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,42,67,0.05)] sm:p-5">
           <div className="flex items-center gap-2">
             <ClockIcon className="h-4 w-4 text-muted" />
@@ -111,7 +119,6 @@ function HUD({ snapshot, onGrantExtraTime, onDeclineExtraTime }) {
           </div>
         </div>
 
-        {/* Lives */}
         <div className="flex flex-col justify-between rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,42,67,0.05)] sm:p-5">
           <span className="font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
             Lives
@@ -134,14 +141,16 @@ function HUD({ snapshot, onGrantExtraTime, onDeclineExtraTime }) {
         </div>
       </div>
 
-      {extraTimePending && (
-        <ExtraTimePrompt
-          timeLeft={timeLeft}
-          extraTimeSeconds={extraTimeSeconds}
-          onGrant={onGrantExtraTime}
-          onDecline={onDeclineExtraTime}
-        />
-      )}
+      {extraTimePending &&
+        createPortal(
+          <ExtraTimePrompt
+            timeLeft={timeLeft}
+            extraTimeSeconds={extraTimeSeconds}
+            onGrant={onGrantExtraTime}
+            onDecline={onDeclineExtraTime}
+          />,
+          document.body,
+        )}
     </div>
   )
 }

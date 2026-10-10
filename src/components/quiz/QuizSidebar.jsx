@@ -192,7 +192,6 @@ function QuizSidebar({ variant = 'full', snapshot, questions = [], level }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Progress */}
       <div className="rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
         <div className="flex items-center gap-4">
           <ProgressRing value={progress}>
@@ -226,7 +225,6 @@ function QuizSidebar({ variant = 'full', snapshot, questions = [], level }) {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="divide-y divide-line rounded-2xl border border-line bg-white py-1 shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
         <StatRow
           icon={<TrophyIcon className="h-4 w-4" />}
@@ -245,7 +243,6 @@ function QuizSidebar({ variant = 'full', snapshot, questions = [], level }) {
         />
       </div>
 
-      {/* Question sections */}
       {sections.length > 0 && (
         <div className="rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
           <div className="flex items-center gap-2">
@@ -283,7 +280,6 @@ function QuizSidebar({ variant = 'full', snapshot, questions = [], level }) {
         </div>
       )}
 
-      {/* Lives remaining */}
       <div className="rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-body">Lives Remaining</span>
@@ -304,7 +300,6 @@ function QuizSidebar({ variant = 'full', snapshot, questions = [], level }) {
         </div>
       </div>
 
-      {/* Mascot */}
       <div className="flex items-center gap-3 rounded-2xl border border-plum-200 bg-plum-50 p-4">
         <span className="quiz-bob inline-block">
           <span key={moodKey} className={`inline-block ${moodClass}`}>

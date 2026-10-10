@@ -147,19 +147,16 @@ const HERO_ANIM = `
 @keyframes mp-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
 @keyframes mp-scene-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
 @keyframes mp-type-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-@keyframes mp-blink { 0%, 55% { opacity: 1; } 60%, 100% { opacity: 0; } }
 .mp-float { animation: mp-float 6s ease-in-out infinite; }
 .mp-spin { animation: mp-spin 46s linear infinite; }
 .mp-twinkle { animation: mp-twinkle 3.2s ease-in-out infinite; }
 .mp-scene-in { animation: mp-scene-in 700ms var(--ease-out-soft) both; }
 .mp-type-line { animation: mp-type-in 360ms var(--ease-out-soft) both; }
 .mp-type-line-pending { opacity: 0; }
-.mp-caret { animation: mp-blink 1.1s steps(1, end) infinite; }
 @media (prefers-reduced-motion: reduce) {
   .mp-float, .mp-spin, .mp-twinkle { animation: none; }
   .mp-scene-in { animation: none; opacity: 1; transform: none; }
   .mp-type-line, .mp-type-line-pending { animation: none; opacity: 1; transform: none; }
-  .mp-caret { animation: none; opacity: 1; }
 }
 `
 
@@ -303,7 +300,6 @@ function SqlCardArt({ active = false, className = '' }) {
             <tspan fill="#9fe8c0"> id = 1;</tspan>
           </text>
         </g>
-        {active && <rect className="mp-caret" x="126" y="83" width="6" height="11" rx="1" fill="#f0a8da" />}
         <path d="M96 164 l12 32 h200 l20 -32 Z" fill="#3a1554" />
         <rect x="102" y="150" width="220" height="14" rx="6" fill="#4d1c6e" />
       </g>

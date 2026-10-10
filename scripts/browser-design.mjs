@@ -37,7 +37,6 @@ const ROUTES = [
   '/academy',
   '/academy/sql',
   '/practice',
-  '/more-practice',
   '/leaderboard',
   '/auth',
   '/profile',

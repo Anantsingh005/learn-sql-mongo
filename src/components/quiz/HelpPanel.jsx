@@ -73,14 +73,12 @@ function ThinkSqlIllustration() {
       <Sparkle x={22} y={100} scale={0.8} className="fill-plum-400" />
       <Sparkle x={226} y={102} scale={1} className="fill-amber-300" />
 
-      {/* speech bubble */}
       <rect x="126" y="24" width="120" height="60" rx="16" className="fill-white stroke-plum-200" strokeWidth="2" />
       <path d="M150 82l-14 20 30-8z" className="fill-white stroke-plum-200" strokeWidth="2" strokeLinejoin="round" />
       <text x="186" y="61" textAnchor="middle" className="fill-plum-700 font-hand" fontSize="26">
         Think SQL!
       </text>
 
-      {/* mascot */}
       <ellipse cx="66" cy="46" rx="33" ry="12.5" className="fill-plum-200 stroke-plum-400" strokeWidth="2" />
       <path className="fill-plum-100 stroke-plum-400" strokeWidth="2" d="M33 46v52c0 7 14.8 12.5 33 12.5s33-5.5 33-12.5V46" />
       <circle cx="55" cy="70" r="4" className="fill-plum-700" />
@@ -130,7 +128,6 @@ function HelpPanel({ question, isGuest, snapshot, onBackToLevels }) {
       </button>
 
       <div className={`${open ? 'flex' : 'hidden min-[1200px]:flex'} flex-col gap-4`}>
-        {/* 1. Mascot header */}
         <div className="overflow-hidden rounded-2xl border border-plum-200 bg-plum-50 p-3">
           <span className="quiz-bob block">
             <span key={moodKey} className={`block ${moodClass}`}>
@@ -139,7 +136,6 @@ function HelpPanel({ question, isGuest, snapshot, onBackToLevels }) {
           </span>
         </div>
 
-        {/* 2. Quick Info */}
         {info && (
           <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4">
             <CardHeader icon={<BulbIcon className="h-4 w-4 text-brand-600" />} label="Quick Info" tone="text-brand-700" />
@@ -149,7 +145,6 @@ function HelpPanel({ question, isGuest, snapshot, onBackToLevels }) {
           </div>
         )}
 
-        {/* 3. Tips */}
         {tips.length > 0 && (
           <div className="rounded-2xl border border-leaf-200 bg-leaf-50 p-4">
             <CardHeader icon={<CheckIcon className="h-4 w-4 text-leaf-600" />} label="Tips" tone="text-leaf-700" />
@@ -164,7 +159,6 @@ function HelpPanel({ question, isGuest, snapshot, onBackToLevels }) {
           </div>
         )}
 
-        {/* 4. Need Help? */}
         {showNeedHelp && (
           <div className="rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
             <CardHeader icon={<HelpIcon className="h-4 w-4 text-brand-600" />} label="Need Help?" tone="text-body" />

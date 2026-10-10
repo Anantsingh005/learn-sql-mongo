@@ -38,9 +38,8 @@ const ROUTES = [
   '/profile',
   '/admin',
   '/quiz/mongo',
-  // Every remaining declared route. The alias and the two legal pages were
+  // Every remaining declared route. The two legal pages were
   // missing here, so a "look at every page" pass silently skipped them.
-  '/more-practice',
   '/privacy',
   '/terms',
 ]

@@ -87,9 +87,7 @@ export default function Header({ links: staticLinks }) {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/* Desktop nav + smooth gliding pill indicator (DESKTOP ONLY)                 */
-/* -------------------------------------------------------------------------- */
+// Desktop nav + smooth gliding pill indicator (DESKTOP ONLY)
 
 function DesktopNav({ links }) {
   const navRef = useRef(null)
@@ -184,9 +182,7 @@ function DesktopNav({ links }) {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/* Auth control — sign in, or the profile dropdown                            */
-/* -------------------------------------------------------------------------- */
+// Auth control — sign in, or the profile dropdown
 
 function AuthControl() {
   const { user, profile, configured, signOut } = useAuth()
@@ -340,9 +336,7 @@ function SignOutIcon() {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/* Mobile Menu — dedicated overlay and solid drawer for phone screens         */
-/* -------------------------------------------------------------------------- */
+// Mobile Menu — dedicated overlay and solid drawer for phone screens
 
 function MobileMenu({ links, onClose }) {
   const { user, profile, signOut } = useAuth()
