@@ -74,6 +74,23 @@ async function waitFor(ws, expression, label, timeoutMs = 20000) {
   throw new Error(`waitFor timeout: ${label}`)
 }
 
+// The start screen is now a mode picker (Multiple Choice / Write the Query /
+// Fix the Bug), followed by a level screen whose unlocked levels carry a Play
+// button. Pick a mode by its card text, then hit Play on the easy level.
+async function pickMode(ws, label, steps) {
+  await evalVal(
+    ws,
+    `[...document.querySelectorAll('button')].find((b) => b.textContent.includes(${JSON.stringify(label)})).click()`,
+  )
+  await waitFor(
+    ws,
+    `document.body.innerText.includes('Easy') && [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Play')`,
+    `${label} level cards`,
+  )
+  steps.push(`PASS  ${label} -> level cards rendered`)
+  await evalVal(ws, `[...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Play').click()`)
+}
+
 async function main() {
   const steps = []
   const pass = (label) => { steps.push('PASS ' + label) }
@@ -84,83 +101,67 @@ async function main() {
     const ws = await withTimeout(connect(page.webSocketDebuggerUrl), 15000, 'connect ws')
     await send(ws, 'Runtime.enable')
 
-    // 1. Start screen visible
-    await waitFor(ws, `document.body.innerText.includes('SQL Quiz')`, 'start screen')
+    // 1. Start screen (mode picker) visible
+    await waitFor(ws, `document.body.innerText.includes('Multiple Choice')`, 'start screen')
     pass('start screen rendered')
 
-    // 2. Only MC + easy: fastest path through the full loop
-    await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Start Quiz')).click()`)
-    await waitFor(ws, `document.body.innerText.includes('Q 1/') && /MULTIPLE CHOICE|Multiple choice/.test(document.body.innerText)`, 'first question')
+    // 2. MC + easy: fastest path through the full loop
+    await pickMode(ws, 'Multiple Choice', steps)
+    await waitFor(
+      ws,
+      `document.querySelector('article button') !== null && document.body.innerText.includes('Time Left')`,
+      'first question',
+    )
     pass('quiz started, first question rendered')
 
-    // 3. Answer MC (click the FIRST option; correct or not, we just verify feedback renders)
+    // 3. Answer MC (first option; correct or not, we just verify feedback renders)
     await evalVal(ws, `[...document.querySelectorAll('article button')][0].click()`)
     await sleep(400)
-    await waitFor(ws, `!([...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Submit')?.disabled)`, 'submit enabled')
-    await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Submit').click()`)
-    await waitFor(ws, `document.body.innerText.includes('Why')`, 'mc feedback')
+    await waitFor(
+      ws,
+      `!([...document.querySelectorAll('button')].find((b) => b.textContent.includes('Submit'))?.disabled)`,
+      'submit enabled',
+    )
+    await evalVal(ws, `[...document.querySelectorAll('button')].find((b) => b.textContent.includes('Submit')).click()`)
+    await waitFor(ws, `/Correct!|Not quite|Time ran out/.test(document.body.innerText)`, 'mc feedback')
     pass('MC answered -> feedback shown')
 
     // 4. Move to next question
-    await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Next question')).click()`)
-    await sleep(600)
+    await evalVal(ws, `[...document.querySelectorAll('button')].find((b) => b.textContent.includes('Next question')).click()`)
+    await sleep(800)
     pass('advanced to next question')
 
-    // 5. Check what next question type is
-    const isWriteOrBug = await evalVal(ws, `document.body.innerText.includes('Write your SQL here')`)
-    const isMc = await evalVal(ws, `document.body.innerText.includes('Multiple choice')`)
-    steps.push(isWriteOrBug ? 'INFO  next question is write/bug' : isMc ? 'INFO  next question is MC' : 'INFO  next question unknown')
+    // 5. Verify HUD elements present
+    await waitFor(
+      ws,
+      `document.querySelector('[role="timer"]') !== null && /lives/i.test(document.body.innerText)`,
+      'hud render',
+      10000,
+    )
+    pass('HUD (timer/lives) present')
 
-    // If write/bug question, type a SQL statement and run it
-    if (isWriteOrBug) {
-      await waitFor(ws, `document.querySelector('textarea') !== null`, 'sql editor ready')
-      // Type a valid query: select all from first table - we can't know the schema, so just run a safe one per question list
-      await evalVal(ws, `(() => {
-        const ta = document.querySelector('textarea');
-        const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-        nativeSetter.call(ta, 'SELECT * FROM employees;');
-        ta.dispatchEvent(new Event('input', { bubbles: true }));
-        return true;
-      })()`)
-      const runBtn = await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Run') !== undefined`)
-      if (runBtn) {
-        await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Run').click()`)
-        await sleep(2500)
-        const hasResult = await evalVal(ws, `document.body.innerText.includes('Query result')`)
-        steps.push(hasResult ? 'PASS  Run produced a result table' : 'WARN  Run did not show result (might be schema mismatch)')
-      }
-    }
-
-    // 6. Verify HUD elements present
-    await waitFor(ws, `document.body.innerText.includes('Score') && /\\d+s/.test(document.body.innerText)`, 'hud render', 10000)
-    pass('HUD (score/timer/lives) present')
-
-    // 7. Play a WRITE question end-to-end: restart with "Write the Query" only (first = write-01)
+    // 6. Play a WRITE question end-to-end
     await evalVal(ws, `location.reload()`)
-    await waitFor(ws, `document.body.innerText.includes('Question types')`, 'reloaded start', 10000)
-    await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.trim().startsWith('Multiple Choice')).click()`)
-    await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.trim().startsWith('Fix the Bug')).click()`)
-    await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.includes('Start Quiz')).click()`)
+    await waitFor(ws, `document.body.innerText.includes('Multiple Choice')`, 'reloaded start', 10000)
+    await pickMode(ws, 'Write the Query', steps)
     await waitFor(ws, `document.querySelector('textarea') !== null`, 'write editor', 20000)
     pass('write question editor rendered')
-    // Schema is employees; the correct answer:
+
     await evalVal(ws, `(() => {
       const ta = document.querySelector('textarea');
-      Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(ta, 'SELECT name, salary FROM employees WHERE salary > 60000');
+      Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set.call(ta, 'SELECT * FROM employees;');
       ta.dispatchEvent(new Event('input', { bubbles: true }));
       return true;
     })()`)
     await sleep(400)
-    await waitFor(ws, `!([...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Submit')?.disabled)`, 'submit enabled 2')
-    await evalVal(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Submit').click()`)
-    await sleep(2500)
-    const correct = await evalVal(ws, `document.body.innerText.includes('Correct!')`)
-    if (correct) pass('correct SQL answer accepted -> "Correct!" shown')
-    else {
-      const body = await evalVal(ws, `document.body.innerText`)
-      console.log('  write feedback text:', body.slice(0, 300))
-      pass('write question submitted (verification continues)')
-    }
+    await waitFor(
+      ws,
+      `!([...document.querySelectorAll('button')].find((b) => b.textContent.includes('Submit'))?.disabled)`,
+      'submit enabled 2',
+    )
+    await evalVal(ws, `[...document.querySelectorAll('button')].find((b) => b.textContent.includes('Submit')).click()`)
+    await waitFor(ws, `/Correct!|Not quite/.test(document.body.innerText)`, 'write feedback', 15000)
+    pass('write question submitted -> feedback shown')
 
     console.log(steps.join('\n'))
     const failed = steps.filter((s) => s.startsWith('FAIL'))
@@ -169,11 +170,12 @@ async function main() {
   } catch (e) {
     console.log(steps.join('\n'))
     console.log('QUIZ FLOW ERROR:', e.message)
+    process.exitCode = 1
   } finally {
     chrome.kill()
   }
 }
 
 main()
-  .then(() => process.exit(0))
+  .then(() => process.exit(process.exitCode ?? 0))
   .catch((e) => { console.error(e); process.exit(1) })

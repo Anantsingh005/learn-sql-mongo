@@ -25,10 +25,10 @@ const PORT = 9226
 const BASE = process.env.DESIGN_BASE ?? 'http://localhost:5173'
 
 const WIDTHS = [
-  { w: 1600, h: 1000, label: 'desktop-wide' },
-  { w: 1280, h: 900, label: 'desktop' },
+  { w: 1440, h: 900, label: 'desktop-1440' },
+  { w: 1024, h: 800, label: 'desktop-1024' },
   { w: 834, h: 1112, label: 'tablet' },
-  { w: 390, h: 844, label: 'mobile' },
+  { w: 390, h: 844, label: 'mobile-390' },
 ]
 
 const ROUTES = [

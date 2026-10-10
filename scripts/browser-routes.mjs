@@ -50,7 +50,7 @@ try {
   await send(ws, 'Runtime.enable')
 
   const checks = [
-    ['/', 'Test your database skills', 'home'],
+    ['/', 'Start Learning', 'home'],
     ['/leaderboard', 'Leaderboard', 'leaderboard'],
     ['/quiz/mongo', 'MongoDB', 'mongo placeholder'],
   ]
@@ -61,7 +61,7 @@ try {
   }
 
   await ev(ws, `location.href = '${BASE}/quiz/sql'`)
-  await waitFor(ws, `document.body.innerText.includes('Start Quiz')`, 'sql quiz start')
+  await waitFor(ws, `document.body.innerText.includes('Multiple Choice')`, 'sql quiz start')
   console.log('PASS route /quiz/sql rendered')
 
   // check for any console/page errors on the last route

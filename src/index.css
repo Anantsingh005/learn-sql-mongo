@@ -668,3 +668,272 @@ body {
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   SQL quiz micro-interactions.
+   Every effect here animates transform/opacity only, so nothing touches layout,
+   and every looping or decorative animation is switched off under
+   prefers-reduced-motion (see the block at the bottom of this file).
+   --------------------------------------------------------------------------- */
+
+@keyframes quiz-col-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes quiz-card-swap {
+  from {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes quiz-opt-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes quiz-opt-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.01);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes quiz-opt-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.015);
+  }
+}
+
+@keyframes quiz-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-7px);
+  }
+  30% {
+    transform: translateX(6px);
+  }
+  45% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(3px);
+  }
+  80% {
+    transform: translateX(-1px);
+  }
+}
+
+@keyframes quiz-sparkle {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(1.05) rotate(90deg);
+  }
+}
+
+@keyframes quiz-heart-break {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1.28) rotate(-16deg);
+    opacity: 0.5;
+  }
+  60% {
+    transform: scale(0.88) rotate(10deg);
+    opacity: 0.78;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes quiz-timer-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes quiz-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes quiz-mascot-happy {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-6px) scale(1.06);
+  }
+  55% {
+    transform: translateY(0) scale(1);
+  }
+  75% {
+    transform: translateY(-3px) scale(1.03);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes quiz-mascot-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-7deg);
+  }
+  45% {
+    transform: rotate(6deg);
+  }
+  70% {
+    transform: rotate(-3deg);
+  }
+}
+
+@layer utilities {
+  .quiz-col {
+    animation: quiz-col-in 520ms var(--ease-out-soft) both;
+  }
+
+  .quiz-card-swap {
+    animation: quiz-card-swap 320ms var(--ease-out-soft) both;
+  }
+
+  .quiz-opt-pop {
+    animation: quiz-opt-pop 260ms var(--ease-3d);
+  }
+
+  .quiz-opt-pulse {
+    animation: quiz-opt-pulse 900ms var(--ease-out-soft);
+  }
+
+  .quiz-shake {
+    animation: quiz-shake 380ms var(--ease-3d);
+  }
+
+  .quiz-timer-warn {
+    animation: quiz-timer-pulse 1s ease-in-out infinite;
+  }
+
+  .quiz-bob {
+    animation: quiz-bob 5.5s ease-in-out infinite;
+  }
+
+  .quiz-mood-happy {
+    animation: quiz-mascot-happy 700ms var(--ease-out-soft);
+  }
+
+  .quiz-mood-wobble {
+    animation: quiz-mascot-wobble 520ms var(--ease-3d);
+  }
+
+  .quiz-heart-break {
+    display: inline-block;
+    animation: quiz-heart-break 620ms var(--ease-out-soft);
+  }
+
+  /* Green glow burst on a correct option. The box-shadow itself is static —
+     only its opacity and scale animate, so it stays on the compositor. */
+  .quiz-glow {
+    position: relative;
+  }
+
+  .quiz-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+      0 0 0 2px rgb(47 122 79 / 0.55),
+      0 0 22px 4px rgb(108 174 133 / 0.7);
+    opacity: 0;
+    pointer-events: none;
+    animation: quiz-opt-glow 1000ms var(--ease-out-soft);
+  }
+
+  .quiz-sparkle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    color: #2f7a4f;
+    pointer-events: none;
+    animation: quiz-sparkle 720ms var(--ease-out-soft) forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-col,
+  .quiz-card-swap,
+  .quiz-opt-pop,
+  .quiz-opt-pulse,
+  .quiz-shake,
+  .quiz-timer-warn,
+  .quiz-bob,
+  .quiz-mood-happy,
+  .quiz-mood-wobble,
+  .quiz-heart-break,
+  .quiz-glow::after,
+  .quiz-sparkle {
+    animation: none;
+  }
+
+  .quiz-glow::after {
+    opacity: 0;
+  }
+}

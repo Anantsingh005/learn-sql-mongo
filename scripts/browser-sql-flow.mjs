@@ -111,17 +111,19 @@ async function main() {
       await send(ws, 'Page.navigate', { url: 'http://127.0.0.1:' + DEV_PORT + '/quiz/sql' })
       await sleep(1500)
 
-      await clickByText(ws, 'SQL', 'home SQL card')
-      await sleep(1200)
       await waitFor(ws, `document.body.innerText.includes('Multiple Choice')`, 'mode cards visible')
       pass('mode cards rendered')
 
       await clickByText(ws, 'Multiple Choice', 'MC mode')
-      await waitFor(ws, `document.body.innerText.includes('Easy')`, 'level cards visible')
+      await waitFor(
+        ws,
+        `document.body.innerText.includes('Easy') && [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Play')`,
+        'level cards visible',
+      )
       pass('level cards rendered')
 
-      await clickByText(ws, 'Easy', 'easy level')
-      await waitFor(ws, `document.body.innerText.includes('Question') || document.body.innerText.includes('What')`, 'first question visible', 20000)
+      await clickByText(ws, 'Play', 'easy level')
+      await waitFor(ws, `document.body.innerText.includes('Question') || document.body.innerText.includes('Time Left')`, 'first question visible', 20000)
       pass('quiz started')
 
     } finally {

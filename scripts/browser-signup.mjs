@@ -115,6 +115,8 @@ async function main() {
 
       const uniq = Date.now().toString(36)
       const email = `smoke${uniq}@gmail.com`
+      await setInput(ws, 'input[autocomplete="username"]', `smoke${uniq}`)
+      await setInput(ws, 'input[autocomplete="name"]', 'Smoke Test')
       await setInput(ws, 'input[type="email"]', email)
       await setInput(ws, 'input[type="password"]', 'secret123')
       await sleep(300)

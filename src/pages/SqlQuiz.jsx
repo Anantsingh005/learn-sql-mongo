@@ -14,10 +14,12 @@ import LevelSelect from '../components/quiz/LevelSelect.jsx'
 import QuestionCard from '../components/quiz/QuestionCard.jsx'
 import SqlEditor from '../components/quiz/SqlEditor.jsx'
 import HUD from '../components/quiz/HUD.jsx'
-import Feedback from '../components/quiz/Feedback.jsx'
+import QuizSidebar from '../components/quiz/QuizSidebar.jsx'
+import HelpPanel from '../components/quiz/HelpPanel.jsx'
 import ResultScreen from '../components/quiz/ResultScreen.jsx'
 
 const DEEP_LINK_LEVELS = new Set(['easy', 'medium', 'hard', 'all'])
+const OPTION_KEYS = ['a', 'b', 'c', 'd']
 
 function SqlQuiz() {
   const [mode, setMode] = useState(null)
@@ -26,6 +28,7 @@ function SqlQuiz() {
   const [saveResult, setSaveResult] = useState(null)
   const [progress, setProgress] = useState({ completed: [], best: {} })
   const savedRef = useRef(null)
+  const selectedRef = useRef(null)
   const deepLinkRef = useRef(false)
   const [params] = useSearchParams()
   const { user, profile, configured, loading } = useAuth()
@@ -119,6 +122,40 @@ function SqlQuiz() {
     return undefined
   }, [loading, isGuest, params, progress])
 
+  useEffect(() => {
+    selectedRef.current = selectedIndex
+  }, [selectedIndex])
+
+  const activeQuestion = snapshot?.current
+  const snapshotStatus = snapshot?.status
+  useEffect(() => {
+    if (!engine || !activeQuestion || activeQuestion.type !== 'mc' || snapshotStatus !== 'question') {
+      return undefined
+    }
+    const optionCount = activeQuestion.options?.length ?? 0
+    const onKey = (event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+      const target = event.target
+      const tag = target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return
+      const index = OPTION_KEYS.indexOf(event.key.toLowerCase())
+      if (index !== -1 && index < optionCount) {
+        event.preventDefault()
+        setSelectedIndex(index)
+        return
+      }
+      if (event.key === 'Enter') {
+        if (tag === 'BUTTON') return
+        if (selectedRef.current !== null) {
+          event.preventDefault()
+          engine.submitMultipleChoice(selectedRef.current)
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [engine, activeQuestion, snapshotStatus])
+
   const handleReplay = () => {
     setEngine((prev) => {
       prev?.destroy()
@@ -175,94 +212,95 @@ function SqlQuiz() {
     engine.submitMultipleChoice(selectedIndex)
   }
 
+  const handleNext = () => {
+    setSelectedIndex(null)
+    engine.next()
+  }
+
   const handleSqlSubmit = async (sql) => {
     await engine.submitQuery(sql)
   }
 
   return (
-    <div className="enter-rise mx-auto flex max-w-2xl flex-col gap-4 px-5 py-6 sm:px-8 sm:py-8">
-      <HUD snapshot={snapshot} />
+    <div className="relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/70 via-white to-white"
+      />
+      <div
+        aria-hidden="true"
+        className="blob-drift pointer-events-none absolute -left-24 top-8 -z-10 h-72 w-72 rounded-full bg-[rgba(247,212,237,0.55)] blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="blob-drift-b pointer-events-none absolute -right-24 top-48 -z-10 h-80 w-80 rounded-full bg-[rgba(213,194,245,0.5)] blur-3xl"
+      />
 
-      {snapshot.extraTimePending && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-xl">⏰</span>
-            <div>
-              <div className="text-sm font-bold text-amber-700">
-                Only {snapshot.timeLeft}s left!
-              </div>
-              <div className="text-xs text-amber-800">
-                Add {snapshot.extraTimeSeconds} more seconds to keep working on this question?
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => engine.grantExtraTime()}
-              className="rounded-lg bg-amber-50 px-4 py-1.5 text-sm font-bold text-amber-700 transition-colors hover:bg-amber-50"
-            >
-              Add {snapshot.extraTimeSeconds}s
-            </button>
-            <button
-              type="button"
-              onClick={() => engine.declineExtraTime()}
-              className="rounded-lg border border-line bg-line px-4 py-1.5 text-sm font-medium text-body transition-colors hover:bg-line"
-            >
-              No thanks
-            </button>
-          </div>
-        </div>
-      )}
-
-      <QuestionCard
-        key={question.id}
-        question={question}
-        selectedIndex={selectedIndex}
-        onSelect={handleMcSelect}
-        disabled={isFeedback || snapshot.runningAnswer}
-        isGuest={isGuest}
-      >
-        {(question.type === 'write' || question.type === 'bug') && !isFeedback && (
-          <div className="mt-4">
-            <SqlEditor key={question.id} question={question} onSubmit={handleSqlSubmit} disabled={isFeedback} />
-          </div>
-        )}
-        {(question.type === 'write' || question.type === 'bug') && isFeedback && (
-          <div className="mt-4">
-            <p className="mb-1 text-xs font-medium text-muted">Your query:</p>
-            <pre className="overflow-x-auto rounded-lg border border-line bg-white px-3 py-2 font-mono text-[13px] text-leaf-700">
-              {snapshot.answers[snapshot.answers.length - 1]?.answer}
-            </pre>
-          </div>
-        )}
-      </QuestionCard>
-
-      {question.type === 'mc' && (
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted">
-            {selectedIndex === null ? 'Select an answer above' : 'Ready to submit'}
-          </span>
-          <button
-            type="button"
-            disabled={selectedIndex === null || isFeedback}
-            onClick={submitMc}
-            className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+      <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="grid grid-cols-1 gap-6 min-[900px]:grid-cols-[320px_minmax(0,1fr)] min-[1200px]:grid-cols-[320px_minmax(0,1fr)_320px]">
+          {/* Left sidebar (summary) — collapses into a slim row under 900px */}
+          <aside
+            className="quiz-col order-2 hidden min-[900px]:col-start-1 min-[900px]:row-start-1 min-[900px]:block"
+            style={{ animationDelay: '0ms' }}
           >
-            Submit
-          </button>
-        </div>
-      )}
+            <QuizSidebar
+              snapshot={snapshot}
+              questions={engine.sequence}
+              level={engine.difficulty}
+            />
+          </aside>
 
-      {isFeedback && (
-        <Feedback
-          snapshot={snapshot}
-          onNext={() => {
-            setSelectedIndex(null)
-            engine.next()
-          }}
-        />
-      )}
+          {/* Center — question card with mode-specific body + footer */}
+          <div
+            className="quiz-col order-1 flex min-w-0 flex-col gap-5 min-[900px]:order-none min-[900px]:col-start-2 min-[900px]:row-start-1"
+            style={{ animationDelay: '120ms' }}
+          >
+            <div className="min-[900px]:hidden">
+              <QuizSidebar variant="compact" snapshot={snapshot} level={engine.difficulty} />
+            </div>
+
+            <HUD
+              snapshot={snapshot}
+              onGrantExtraTime={() => engine.grantExtraTime()}
+              onDeclineExtraTime={() => engine.declineExtraTime()}
+            />
+
+            <QuestionCard
+              key={question.id}
+              question={question}
+              selectedIndex={selectedIndex}
+              onSelect={handleMcSelect}
+              disabled={isFeedback || snapshot.runningAnswer}
+              snapshot={snapshot}
+              onSubmit={submitMc}
+              onNext={handleNext}
+            >
+              {(question.type === 'write' || question.type === 'bug') && (
+                <SqlEditor
+                  question={question}
+                  onSubmit={handleSqlSubmit}
+                  isFeedback={isFeedback}
+                  snapshot={snapshot}
+                  onNext={handleNext}
+                />
+              )}
+            </QuestionCard>
+          </div>
+
+          {/* Right help panel — collapsible "Help" under the card below 1200px */}
+          <aside
+            className="quiz-col order-3 min-w-0 min-[900px]:order-none min-[900px]:col-start-2 min-[900px]:row-start-2 min-[1200px]:col-start-3 min-[1200px]:row-start-1"
+            style={{ animationDelay: '240ms' }}
+          >
+            <HelpPanel
+              question={question}
+              isGuest={isGuest}
+              snapshot={snapshot}
+              onBackToLevels={handleReplay}
+            />
+          </aside>
+        </div>
+      </div>
     </div>
   )
 }

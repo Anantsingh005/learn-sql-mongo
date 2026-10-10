@@ -10,6 +10,8 @@ import { selectQuestions, GUEST_QUESTION_LIMIT } from '../../data/selectQuestion
 import GuestBanner from './GuestBanner.jsx'
 import ProfileSidebar from '../ProfileSidebar.jsx'
 import LeaderboardPreview from '../LeaderboardPreview.jsx'
+import SqlQuizHero from './SqlQuizHero.jsx'
+import SqlGameProgress from './SqlGameProgress.jsx'
 
 export const quizModes = [
   {
