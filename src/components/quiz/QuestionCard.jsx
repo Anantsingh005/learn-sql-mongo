@@ -138,7 +138,7 @@ function QuestionPrompt({ text }) {
   }
   return (
     <div>
-      <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-line bg-mist/60 px-4 py-3 font-mono text-base font-bold leading-relaxed text-ink sm:text-lg">
+      <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-line bg-mist/60 px-4 py-3 font-mono text-base font-bold leading-relaxed text-ink shadow-inner sm:text-lg">
         {sql}
       </pre>
       {sentence && (
@@ -331,7 +331,7 @@ function McFooter({ question, snapshot, selectedIndex, onSubmit, onNext }) {
 function QuestionCard({ question, selectedIndex, onSelect, disabled, children, snapshot, onSubmit, onNext }) {
   const isMc = question.type === 'mc'
   return (
-    <article className="quiz-card-swap min-h-[18rem] overflow-hidden rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
+    <article className="quiz-card-swap min-h-[18rem] overflow-hidden rounded-2xl border border-line bg-gradient-to-b from-white via-white to-mist/30 shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
       <div className="flex flex-wrap items-center gap-2 border-b border-line bg-mist/50 px-5 py-3.5 sm:px-6">
         <QuestionMeta
           type={question.type}

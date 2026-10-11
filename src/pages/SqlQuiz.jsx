@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import QueryRunner from '../engine/QueryRunner.js'
 import { QuizEngine } from '../engine/QuizEngine.js'
@@ -17,6 +17,7 @@ import HUD from '../components/quiz/HUD.jsx'
 import QuizSidebar from '../components/quiz/QuizSidebar.jsx'
 import HelpPanel from '../components/quiz/HelpPanel.jsx'
 import ResultScreen from '../components/quiz/ResultScreen.jsx'
+import { getQuizHelp } from '../data/quizHelp.js'
 
 const DEEP_LINK_LEVELS = new Set(['easy', 'medium', 'hard', 'all'])
 const OPTION_KEYS = ['a', 'b', 'c', 'd']
@@ -156,6 +157,8 @@ function SqlQuiz() {
     return () => window.removeEventListener('keydown', onKey)
   }, [engine, activeQuestion, snapshotStatus])
 
+  const help = useMemo(() => (activeQuestion ? getQuizHelp(activeQuestion) : null), [activeQuestion])
+
   const handleReplay = () => {
     setEngine((prev) => {
       prev?.destroy()
@@ -222,7 +225,7 @@ function SqlQuiz() {
   }
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-clip">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-brand-50/70 via-white to-white"
@@ -243,11 +246,12 @@ function SqlQuiz() {
             className="quiz-col order-2 hidden min-[900px]:col-start-1 min-[900px]:row-start-1 min-[900px]:block"
             style={{ animationDelay: '0ms' }}
           >
-            <QuizSidebar
-              snapshot={snapshot}
-              questions={engine.sequence}
-              level={engine.difficulty}
-            />
+              <QuizSidebar
+                snapshot={snapshot}
+                questions={engine.sequence}
+                level={engine.difficulty}
+                help={help}
+              />
           </aside>
 
           {/* Center — question card with mode-specific body + footer */}
@@ -256,7 +260,7 @@ function SqlQuiz() {
             style={{ animationDelay: '120ms' }}
           >
             <div className="min-[900px]:hidden">
-              <QuizSidebar variant="compact" snapshot={snapshot} level={engine.difficulty} />
+              <QuizSidebar variant="compact" snapshot={snapshot} level={engine.difficulty} help={help} />
             </div>
 
             <HUD
@@ -289,7 +293,7 @@ function SqlQuiz() {
 
           {/* Right help panel — collapsible "Help" under the card below 1200px */}
           <aside
-            className="quiz-col order-3 min-w-0 min-[900px]:order-none min-[900px]:col-start-2 min-[900px]:row-start-2 min-[1200px]:col-start-3 min-[1200px]:row-start-1"
+            className="quiz-col order-3 min-w-0 min-[900px]:order-none min-[900px]:col-start-2 min-[900px]:row-start-2 min-[1200px]:col-start-3 min-[1200px]:row-start-1 min-[1200px]:self-start min-[1200px]:sticky min-[1200px]:top-[86px] min-[1200px]:max-h-[calc(100vh-104px)] min-[1200px]:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{ animationDelay: '240ms' }}
           >
             <HelpPanel
@@ -297,6 +301,7 @@ function SqlQuiz() {
               isGuest={isGuest}
               snapshot={snapshot}
               onBackToLevels={handleReplay}
+              help={help}
             />
           </aside>
         </div>

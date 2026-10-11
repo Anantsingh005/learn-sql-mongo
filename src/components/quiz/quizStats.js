@@ -17,3 +17,26 @@ export function feedbackMood(snapshot) {
   if (!last) return null
   return last.correct ? 'happy' : 'wobble'
 }
+
+// Correct-answer streak, derived from the engine's own recorded answers so it
+// can never disagree with the score. `current` walks back from the latest
+// answer while it stayed correct; `best` is the longest correct run so far.
+export function streakInfo(snapshot) {
+  const answers = snapshot?.answers ?? []
+  let current = 0
+  for (let i = answers.length - 1; i >= 0; i -= 1) {
+    if (!answers[i]?.correct) break
+    current += 1
+  }
+  let best = 0
+  let run = 0
+  for (const answer of answers) {
+    if (answer?.correct) {
+      run += 1
+      if (run > best) best = run
+    } else {
+      run = 0
+    }
+  }
+  return { current, best, answered: answers.length }
+}

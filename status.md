@@ -1,8 +1,51 @@
 # Project Status
 
-Last updated: 2026-10-08
+Last updated: 2026-10-11
 
-## Current session (2026-10-08): Profile & Leaderboard redesign (16-section spec)
+## Current session (2026-10-11): quiz coaching panel — sections, streaks and shortcuts
+
+A guidance-and-presentation pass over the two side panels of the SQL quiz, against no written spec this time: the aim was to make the Help panel teach instead of decorate, and to make the sidebar show where the player actually is. **Scoring, timing, persistence, routes and Supabase are untouched — the only new *behaviour* is derived data.** Seven files modified, one new, and `src/data/quizHelp.js` is the whole of the new content.
+
+### `src/data/quizHelp.js` (new)
+
+A pure, synchronous lookup — no React, no engine import — that gives **every** question a `{ section, quickInfo, tips[3] }`. Matching is two ordered passes: first the rule's `topic` regex against `question.topic + subtopic`, then (if nothing matched) its `text` regex against the concatenated `question`/`buggyQuery`/`solutionQuery`/`explanation`, and finally a `FALLBACK`. Rules are ordered most-specific-first — `window` before `cte`, `selfjoin` before `leftjoin` before `join`, `having` before `groupby` before `aggregate` — so a broad token never steals a narrow label. `SECTION_ORDER` fixes the eight sections (Reading Data → Database Concepts) that the sidebar renders in order; the FALLBACK teaches a clause-order method rather than naming a topic.
+
+### `src/components/quiz/HelpPanel.jsx`
+
+- Takes the precomputed `help` prop (or derives it). **Quick Info now shows the question's own explanation when present, else quizHelp's one-liner** — the old generated "This question tests *x*." sentence is gone; the paragraph is keyed to the question id and swaps with `quiz-fade-swap` under a `min-h` so the card does not jump. Tips come from `help.tips` with a staggered `enter-pop`.
+- New **Your Streak** card (amber): `current` and `best` from `streakInfo`, with the flame scaling to the streak length (capped) and the number popping on the latest answer.
+- New **Shortcuts** card built on a small `Kbd` component; **mode-aware** — MC shows `A/B/C/D` to choose and `Enter` to submit, Write/Bug shows `Ctrl+Enter`.
+- `ThinkSqlIllustration` is now **mood-aware**: `happy` adds four staggered sparkle bursts and a wide grin, `wobble` inverts the mouth and prints "Almost! / Check the explanation." in the bubble instead of "Think SQL!".
+- Every card gets a gradient surface, a right-slide entrance with a stagger, and a hover lift guarded by `motion-safe` / `motion-reduce`.
+
+### `src/components/quiz/QuizSidebar.jsx`
+
+- `SECTION_ICONS` maps each of the eight section names to an inline SVG (table, funnel, sort, link, sigma, nested, pencil, database).
+- `buildSections` now groups by `getQuizHelp(q).section` (was the raw `topic/subtopic/chapter` text) and orders the result by `SECTION_ORDER`, then any extra names. `currentSection` is derived separately, so `buildSections` no longer takes a `currentId`.
+- The current section is marked by a **single sliding highlight row** whose `height` and `translateY` are measured to the active row in a `useEffect` keyed on `currentSection` — a smooth handoff between sections rather than a re-painted `bg` per row.
+- The section list only scrolls when there are more than five, and `scrollIntoView({ block: 'nearest' })` keeps the active row in view (smooth unless reduced motion). A section-label line sits under the heading.
+- `Mascot` gets the same happy/wobble treatment as the HelpPanel illustration; hearts pop in on the "Lives Remaining" row; all cards get a left-slide entrance.
+
+### Supporting files
+
+- **`quizStats.js`** — new `streakInfo(snapshot)` walks the engine's own recorded `answers` (current streak from the tail, longest run overall) so the displayed streak can never disagree with the score.
+- **`HintReveal.jsx`** — a `quiz-halo` burst on the bulb while the hint is open, and `quiz-hint-drop` on the hint itself; the `ENTER_POP` import is dropped.
+- **`QuestionCard.jsx`** — `shadow-inner` on the SQL block and a white→mist gradient card surface.
+- **`SqlQuiz.jsx`** — computes `help` once per question with `useMemo` and threads it to both sidebar variants and the HelpPanel; the right help column is now `self-start sticky top-[86px]` + `overflow-y-auto` with a hidden scrollbar at ≥1200px, and the page wrapper is `overflow-hidden` → `overflow-clip`.
+
+### `src/index.css`
+
+Seven new keyframes and their utilities (`quiz-slide-in-left/right`, `quiz-fade-swap`, `quiz-streak-pop`, `quiz-hint-drop`, `quiz-halo`, `quiz-sparkle-burst`, `quiz-dot-in`), plus a longer, again-looped `quiz-sparkle` curve. The slide-in utilities use a `backwards` fill only, so a delayed card is hidden during its delay yet still keeps its own hover transform once it lands. `.quiz-halo` is a static radial fill whose opacity/scale animate on the compositor (no per-frame filter or box-shadow). Every new animation is named in the `prefers-reduced-motion` reset, and `.quiz-section-highlight` drops its transition there too.
+
+### Verified
+
+`npm run build` → success · `npx oxlint src scripts` → no new findings (only the long-standing `set-state-in-effect` / `exhaustive-deps` warnings, which on `SqlQuiz.jsx` are unchanged from `HEAD`).
+
+**Known leftover:** `.quiz-dot-in` (keyframe + utility) is referenced by no JSX — dead CSS. It is harmless (`browser-visual.mjs` flags classes that have *no* CSS, not CSS that has no class), so it was left in place rather than removed in this pass.
+
+**Not done:** no browser/DOM audit ran for this session, so the new panel layout, the sticky right column and the animations are verified only by the build and by reading the diff — a human should look. Only `SqlQuiz` and its panels changed; no other route was touched.
+
+## Previous session (2026-10-08): Profile & Leaderboard redesign (16-section spec)
 
 A visual-only pass over `src/pages/Profile.jsx` and `src/components/Leaderboard.jsx` against a written design spec. The original chat copy of the spec was lost, so it was recovered verbatim from the opencode session database (extracted with `node:sqlite` into `%TEMP%/opencode/original-prompt.txt`) — every decision below is traceable to that text. **No route, hook, data-fetch, Supabase or ranking change; no `@theme` token retouched; the global footer untouched; existing animation utilities (`pop-on`, `reveal-levels`, `enter-rise`) kept.** Two files modified, three new files, all uncommitted at write time.
 

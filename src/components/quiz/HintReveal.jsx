@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { ENTER_POP } from '../site/motion.js'
 
 function BulbIcon({ className }) {
   return (
@@ -35,12 +34,15 @@ function HintReveal({ hint, label = 'Show hint', openLabel = 'Hide hint' }) {
             : 'border-line bg-white text-muted hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
         }`}
       >
-        <BulbIcon className="h-4 w-4" />
+        <span className="relative inline-flex items-center justify-center">
+          <BulbIcon className="h-4 w-4" />
+          {open && <span aria-hidden="true" className="quiz-halo" />}
+        </span>
         {open ? openLabel : label}
         <ChevronIcon className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? 'rotate-90' : ''}`} />
       </button>
       {open && (
-        <p className={`${ENTER_POP} mt-2 rounded-xl border border-brand-200 bg-brand-50 px-3.5 py-2.5 text-sm leading-relaxed text-brand-700`}>
+        <p className="quiz-hint-drop mt-2 rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white px-3.5 py-2.5 text-sm leading-relaxed text-brand-700 shadow-sm">
           {hint}
         </p>
       )}

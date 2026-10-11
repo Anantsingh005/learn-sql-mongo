@@ -776,13 +776,17 @@ body {
     transform: scale(1) rotate(0deg);
     opacity: 1;
   }
-  30% {
-    transform: scale(1.28) rotate(-16deg);
-    opacity: 0.5;
+  22% {
+    transform: scale(1.3) rotate(-18deg);
+    opacity: 0.45;
   }
-  60% {
-    transform: scale(0.88) rotate(10deg);
-    opacity: 0.78;
+  50% {
+    transform: scale(0.82) rotate(14deg);
+    opacity: 0.18;
+  }
+  78% {
+    transform: scale(1.06) rotate(-4deg);
+    opacity: 0.72;
   }
   100% {
     transform: scale(1) rotate(0deg);
@@ -841,6 +845,101 @@ body {
   }
   70% {
     transform: rotate(-3deg);
+  }
+}
+
+@keyframes quiz-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes quiz-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(26px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes quiz-fade-swap {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes quiz-streak-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes quiz-hint-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes quiz-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  35% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes quiz-sparkle-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+
+@keyframes quiz-dot-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -915,6 +1014,56 @@ body {
     pointer-events: none;
     animation: quiz-sparkle 720ms var(--ease-out-soft) forwards;
   }
+
+  /* Backwards fill only: the entrance plays hidden during its delay, then
+     releases the element so the card's own hover transform still works. */
+  .quiz-slide-left {
+    animation: quiz-slide-in-left 480ms var(--ease-out-soft) backwards;
+  }
+
+  .quiz-slide-right {
+    animation: quiz-slide-in-right 480ms var(--ease-out-soft) backwards;
+  }
+
+  .quiz-fade-swap {
+    animation: quiz-fade-swap 320ms var(--ease-out-soft);
+  }
+
+  .quiz-streak-pop {
+    display: inline-block;
+    animation: quiz-streak-pop 340ms var(--ease-3d);
+  }
+
+  .quiz-hint-drop {
+    animation: quiz-hint-drop 300ms var(--ease-out-soft) both;
+  }
+
+  .quiz-dot-in {
+    animation: quiz-dot-in 260ms var(--ease-out-soft) both;
+  }
+
+  /* Glow = static radial fill, only opacity/scale animate, so it stays on the
+     compositor (no filter/box-shadow per frame). */
+  .quiz-halo {
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    background: radial-gradient(closest-side, rgb(245 158 11 / 0.7), rgb(245 158 11 / 0));
+    pointer-events: none;
+    animation: quiz-halo 720ms var(--ease-out-soft) both;
+  }
+
+  .quiz-sparkle-burst {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: quiz-sparkle-burst 760ms var(--ease-out-soft) both;
+  }
+
+  .quiz-section-highlight {
+    transition:
+      transform 380ms var(--ease-out-soft),
+      height 380ms var(--ease-out-soft);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -929,11 +1078,24 @@ body {
   .quiz-mood-wobble,
   .quiz-heart-break,
   .quiz-glow::after,
-  .quiz-sparkle {
+  .quiz-sparkle,
+  .quiz-slide-left,
+  .quiz-slide-right,
+  .quiz-fade-swap,
+  .quiz-streak-pop,
+  .quiz-hint-drop,
+  .quiz-dot-in,
+  .quiz-halo,
+  .quiz-sparkle-burst {
     animation: none;
   }
 
-  .quiz-glow::after {
+  .quiz-glow::after,
+  .quiz-halo {
     opacity: 0;
+  }
+
+  .quiz-section-highlight {
+    transition: none;
   }
 }
