@@ -159,7 +159,7 @@ function SqlQuiz() {
 
   const help = useMemo(() => (activeQuestion ? getQuizHelp(activeQuestion) : null), [activeQuestion])
 
-  const handleReplay = () => {
+  const handleBackToLevels = () => {
     setEngine((prev) => {
       prev?.destroy()
       return null
@@ -167,6 +167,16 @@ function SqlQuiz() {
     setSelectedIndex(null)
     setSaveResult(null)
     savedRef.current = null
+  }
+
+  const handleReplay = () => {
+    if (!engine || !mode) {
+      handleBackToLevels()
+      return
+    }
+    setSaveResult(null)
+    savedRef.current = null
+    handleStart({ types: [mode.key], difficulty: engine.difficulty }, mode)
   }
 
   if (!engine) {
@@ -196,6 +206,7 @@ function SqlQuiz() {
           progress={progress}
           username={profile?.username}
           onReplay={handleReplay}
+          onBackToLevels={handleBackToLevels}
         />
       )
     }
@@ -300,7 +311,7 @@ function SqlQuiz() {
               question={question}
               isGuest={isGuest}
               snapshot={snapshot}
-              onBackToLevels={handleReplay}
+              onBackToLevels={handleBackToLevels}
               help={help}
             />
           </aside>

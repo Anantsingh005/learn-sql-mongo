@@ -1099,3 +1099,175 @@ body {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   SQL quiz result screen: entrance, celebration, stat and review motion.
+   Transform/opacity only, except the row expansion, which animates
+   grid-template-rows — the single sanctioned layout exception. Every looping
+   or decorative effect is switched off under prefers-reduced-motion.
+   --------------------------------------------------------------------------- */
+
+@keyframes result-hero-in {
+  from {
+    opacity: 0;
+    transform: scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes result-side-in {
+  from {
+    opacity: 0;
+    transform: translateX(34px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes result-review-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes result-stat-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes result-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes result-confetti {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx, 0px), var(--dy, 320px), 0) rotate(var(--rot, 360deg));
+  }
+}
+
+@keyframes draw-check {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes result-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@layer utilities {
+  .result-hero {
+    animation: result-hero-in 620ms var(--ease-out-soft) both;
+  }
+
+  .result-side {
+    animation: result-side-in 660ms var(--ease-out-soft) both;
+  }
+
+  .result-review {
+    animation: result-review-in 620ms var(--ease-out-soft) both;
+  }
+
+  .result-stat {
+    animation: result-stat-pop 460ms var(--ease-3d) both;
+  }
+
+  .result-row {
+    animation: result-row-in 420ms var(--ease-out-soft) both;
+  }
+
+  .result-confetti {
+    animation: result-confetti 1100ms var(--ease-out-soft) both;
+  }
+
+  /* Gentle idle float for the hero illustration; disabled under reduced motion. */
+  .result-float {
+    animation: result-float 4200ms ease-in-out infinite;
+  }
+
+  /* The check badge draws itself once via a dash offset (see the media block). */
+  .draw-check {
+    stroke-dasharray: 40;
+    stroke-dashoffset: 0;
+  }
+
+  /* Row expansion: grid-template-rows 0fr -> 1fr is the one allowed layout
+     animation. The child is clipped so nothing paints while collapsed. */
+  .result-expand {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 320ms var(--ease-out-soft);
+  }
+
+  .result-expand.is-open {
+    grid-template-rows: 1fr;
+  }
+
+  .result-expand > * {
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .draw-check {
+    animation: draw-check 900ms var(--ease-out-soft) 260ms both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-hero,
+  .result-side,
+  .result-review,
+  .result-stat,
+  .result-row,
+  .result-confetti,
+  .result-float,
+  .draw-check {
+    animation: none;
+  }
+
+  .result-expand {
+    transition: none;
+  }
+}
