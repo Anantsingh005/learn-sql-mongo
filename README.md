@@ -11,7 +11,7 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
 - **Per-question timer** — 120 seconds per question in every mode.
 - **Extra time** — Write and Bug modes offer +60s on demand when the timer drops below 10s (repeatable).
 - **Schema panel** — Write and Bug cards include an expandable view of all tables with sample rows.
-- **More Practice** (unlimited, no lives/timer) — `/practice` hub with **SQL** and **MongoDB** (coming soon) game cards. Drill any question type (**Multiple choice / Write the query / Fix the bug**) across topic (**table-query / joins / aggregation**) and level (**easy / medium / hard**) filters. Multiple-choice cards show the tables panel too (quiz-bank MCs use the `store` schema; generated-bank MCs have inline fictional datasets). Every question has a **Skip** button, the live HUD shows correct/wrong/practiced counts, and the end screen reports how many questions you practiced with a correct/wrong/skipped breakdown (skips are counted in the practiced total but excluded from the score percentage).
+- **More Practice** (unlimited, no lives/timer) — `/practice` hub with **SQL** and **MongoDB** (coming soon) game cards. The setup screen is a two-column picker (hero copy + inline SVG art) whose question type / topic / level filters are keyboard-navigable radio chips that **preview how many questions each option would leave**, disable combinations with none, roll the total, and sync every choice to the URL (`?type=&topic=&level=`) so a filter is shareable and survives reload and back/forward. Drill any question type (**Multiple choice / Write the query / Fix the bug**) across topic (**table-query / joins / aggregation**) and level (**easy / medium / hard**). Topic counts are derived from the quiz-coaching sections via `practiceTopicOf`, so the picker and the quiz agree; multiple-choice cards show the tables panel (quiz-bank MCs use the `store` schema, generated-bank MCs have inline fictional datasets), every question has a **Skip** button, the live HUD shows correct/wrong/practiced counts, and the end screen reports how many questions you practiced with a correct/wrong/skipped breakdown (skips are counted in the practiced total but excluded from the score percentage).
 - **Hints** — collapsible "Show hint" toggle on Write and Bug questions.
 - **Quiz coaching panel** — the quiz's side panels guide rather than just decorate. A data-driven helper (`src/data/quizHelp.js`) gives every question a **section**, a one-line **Quick Info** and three **tips** from its topic text. The Help panel adds a live **streak** card (current and best, derived from the engine's own answers), a mode-aware **shortcuts** card, and an illustrated mascot that reacts to whether the last answer was right; the sidebar lists the run's sections with icons and a sliding highlight that follows the current one.
 - **Question bank** (see `src/data/sql/`):
@@ -111,10 +111,12 @@ npm run dev
 
 ### Design regression scripts
 
-These check the light theme. The first four exit non-zero on failure, so they
-work as a pre-commit gate; `browser-shots.mjs` is the exception, since capturing
-PNGs cannot fail on a design problem. All five need a dev server already running
-on port 5173.
+These check the light theme. All but `browser-shots.mjs` exit non-zero on
+failure, so they work as a pre-commit gate; capturing PNGs cannot fail on a
+design problem so it is the exception. `browser-contrast`, `browser-design`,
+`browser-hero` and `browser-visual` need a dev server already running on port
+5173; `browser-practice-picker` boots its own, so it must be the only thing on
+that port.
 
 | Command                                  | What it asserts |
 | ---------------------------------------- | --------------- |
@@ -122,6 +124,7 @@ on port 5173.
 | `node scripts/browser-design.mjs`        | 13 routes × 4 widths: heading order, no horizontal overflow, header presence and height, no console errors |
 | `node scripts/browser-hero.mjs`          | Home fits 1080p without scrolling *above the footer*, plus typewriter and `prefers-reduced-motion` |
 | `node scripts/browser-visual.mjs`        | Gradients that are secretly flat, cards with no edge, elements with nothing painted, transparent text separated from its `background-clip: text` painter by an atomic inline, and classes with no generated CSS. **Needs `npm run build` first** — it reads `dist/assets/*.css` |
+| `node scripts/browser-practice-picker.mjs` | `/practice` picker end-to-end: option counts recomputed from the JSON bank, empty combinations disable Start, URL filters survive reload and back/forward, no horizontal scroll at 1440/1024/390, entrance + CTA-pulse animations on, all off under `prefers-reduced-motion`. Boots its own dev server |
 | `node scripts/browser-shots.mjs`         | Writes a PNG per route per width to `%TEMP%/opencode/shots` for human review |
 
 `browser-visual.mjs` exists because the other three are blind to a specific

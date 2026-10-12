@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   PRACTICE_TOPICS,
@@ -16,6 +16,7 @@ import SqlEditor from '../components/quiz/SqlEditor.jsx'
 import SchemaPanel from '../components/quiz/SchemaPanel.jsx'
 import HintReveal from '../components/quiz/HintReveal.jsx'
 import { useInView } from '../hooks/useInView.js'
+import { useReducedMotion } from '../hooks/useReducedMotion.js'
 import { stagger } from '../components/site/motion.js'
 import { ArrowRightIcon, CodeIcon, LeafIcon } from '../components/site/icons.jsx'
 
@@ -109,11 +110,59 @@ function PipelineIcon(props) {
   )
 }
 
+function ChoiceIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M4 7h9" />
+      <path d="M4 12h6" />
+      <path d="M4 17h9" />
+      <path d="m15 15 2.2 2.2L21.5 12" />
+    </In>
+  )
+}
+
+function TableIcon(props) {
+  return (
+    <In {...props}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 9.5h18" />
+      <path d="M3 15h18" />
+      <path d="M9.5 9.5V20" />
+    </In>
+  )
+}
+
+function GaugeIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M4 18a8 8 0 1 1 16 0" />
+      <path d="m12 14 4-4" />
+    </In>
+  )
+}
+
+function CheckIcon(props) {
+  return (
+    <In {...props}>
+      <path d="m5 12.5 4.5 4.5L19 6.5" />
+    </In>
+  )
+}
+
 function StarIcon({ className = '' }) {
   return (
     <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" className={className} aria-hidden="true">
       <path d="M12 2.3l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.6 6.2 20.1l1.6-6.6L2.6 9.1l6.8-.5L12 2.3Z" />
     </svg>
+  )
+}
+
+function CrownIcon({ size = 18, strokeWidth = 2, className = '' }) {
+  return (
+    <In size={size} strokeWidth={strokeWidth} className={className}>
+      <path d="M3 7.5 6 16h12l3-8.5-4.6 3L12 4.5 7.6 10.5 3 7.5Z" />
+      <path d="M6.5 19h11" />
+    </In>
   )
 }
 
@@ -660,27 +709,343 @@ function Feedback({ answer, onNext }) {
   )
 }
 
-function ChoiceGroup({ label, options, value, onSelect }) {
+// Accent surfaces for the filter option cards. Each accent pairs the icon
+// tile with the selected-state border/fill, so a filter group reads as one
+// colour family. Brand is the fallback for any unknown key.
+const TYPE_URL = { mc: 'mcq', write: 'write', bug: 'bug' }
+const TYPE_FROM_URL = { mcq: 'mc', write: 'write', bug: 'bug' }
+const LEVEL_VALUES = ['easy', 'medium', 'hard']
+
+// Read `?type= / ?topic= / ?level=` into the internal filter keys, ignoring any
+// value that is not recognised and falling back to "all".
+function parseFilterParams(params) {
+  const typeParam = params.get('type')
+  const topic = Object.prototype.hasOwnProperty.call(PRACTICE_TOPICS, params.get('topic') ?? '')
+    ? params.get('topic')
+    : 'all'
+  return {
+    type: TYPE_FROM_URL[typeParam] ?? 'all',
+    topic,
+    level: LEVEL_VALUES.includes(params.get('level')) ? params.get('level') : 'all',
+  }
+}
+
+// Short eased tween between successive counts so the total rolls rather than
+// jumps. Skipped entirely (instant) when motion is reduced or still loading.
+function useRollingCount(target, loading, reduced) {
+  const [value, setValue] = useState(target)
+  const fromRef = useRef(target)
+  const instant = loading || reduced
+
+  if (instant && value !== target) setValue(target)
+
+  useEffect(() => {
+    if (instant) {
+      fromRef.current = target
+      return undefined
+    }
+    const from = fromRef.current
+    if (from === target) return undefined
+
+    let raf = 0
+    const duration = 480
+    const t0 = performance.now()
+    const tick = (now) => {
+      const p = Math.min((now - t0) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setValue(Math.round(from + (target - from) * eased))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    fromRef.current = target
+    return () => cancelAnimationFrame(raf)
+  }, [target, instant])
+
+  return instant ? target : value
+}
+
+function OptionChip({ label, selected, disabled, onSelect, tabIndex, buttonRef, onKeyDown }) {
+  const [pop, setPop] = useState(null)
+  const [wasSelected, setWasSelected] = useState(selected)
+  if (wasSelected !== selected) {
+    setWasSelected(selected)
+    setPop(selected ? 'in' : 'out')
+  }
+
+  const base =
+    'inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold outline-none transition-[transform,color,background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white'
+  const state = selected
+    ? 'border-brand-600 bg-brand-600 text-white shadow-sm shadow-brand-600/25'
+    : disabled
+      ? 'border-line bg-white text-body'
+      : 'border-line bg-white text-body hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-700 hover:shadow-sm'
+  const popClass = pop === 'in' ? 'picker-chip-pop' : pop === 'out' ? 'picker-chip-pop-out' : ''
+
   return (
-    <div className="mt-4">
-      <div className="mb-2 text-sm font-semibold text-muted">{label}</div>
-      <div className="flex flex-wrap gap-2">
-        {Object.entries(options).map(([key, optionLabel]) => (
-          <button
+    <button
+      ref={buttonRef}
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      aria-disabled={disabled || undefined}
+      tabIndex={tabIndex}
+      onClick={disabled ? undefined : onSelect}
+      onKeyDown={onKeyDown}
+      onAnimationEnd={(event) => {
+        if (event.target === event.currentTarget) setPop(null)
+      }}
+      title={disabled ? 'No questions for this combination yet' : undefined}
+      className={`${base} ${state} ${disabled ? 'cursor-not-allowed opacity-40' : ''} ${popClass}`}
+    >
+      {selected && <CheckIcon size={14} strokeWidth={3} className="picker-check" />}
+      {label}
+      {disabled && <span className="sr-only"> — no questions available</span>}
+    </button>
+  )
+}
+
+function FilterRow({ id, title, hint, icon: Icon, options, value, onSelect, counts, loading, inView, rowIndex }) {
+  const chipRefs = useRef([])
+  const titleId = `practice-filter-${id}-label`
+
+  const isDisabled = (key) => !loading && (counts[key] ?? 0) === 0
+  const enabledIndexes = options.reduce((acc, [key], i) => (isDisabled(key) ? acc : [...acc, i]), [])
+  const selectedIndex = options.findIndex(([key]) => key === value)
+  const rovingIndex = selectedIndex >= 0 ? selectedIndex : (enabledIndexes[0] ?? 0)
+
+  const focusChip = (index) => chipRefs.current[index]?.focus()
+
+  const moveFocus = (from, dir) => {
+    const count = options.length
+    for (let step = 1; step <= count; step += 1) {
+      const next = (from + dir * step + count) % count
+      if (enabledIndexes.includes(next)) {
+        focusChip(next)
+        return
+      }
+    }
+  }
+
+  const handleKeyDown = (event, index) => {
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      moveFocus(index, 1)
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      moveFocus(index, -1)
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      if (enabledIndexes.length) focusChip(enabledIndexes[0])
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      if (enabledIndexes.length) focusChip(enabledIndexes[enabledIndexes.length - 1])
+    }
+  }
+
+  return (
+    <div
+      className={`flex flex-col gap-3 py-5 min-[700px]:flex-row min-[700px]:items-center min-[700px]:gap-5 ${inView ? 'picker-row' : ''}`}
+      style={inView ? { animationDelay: `${rowIndex * 100}ms` } : undefined}
+    >
+      <div className="group/row flex items-center gap-3 min-[700px]:shrink-0">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 transition-transform duration-200 group-hover/row:-rotate-6">
+          <Icon size={18} strokeWidth={2} />
+        </span>
+        <div className="min-[700px]:w-40">
+          <div id={titleId} className="text-sm font-bold tracking-tight text-ink">
+            {title}
+          </div>
+          <p className="mt-0.5 text-xs text-muted">{hint}</p>
+        </div>
+      </div>
+      <div role="radiogroup" aria-labelledby={titleId} className="flex flex-wrap gap-2">
+        {options.map(([key, label], index) => (
+          <span
             key={key}
-            type="button"
-            onClick={() => onSelect(key)}
-            className={`relative rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-              value === key
-                ? 'pop-on pop-on-indigo border-brand-200 bg-brand-50 text-brand-700'
-                : 'border-line bg-line/60 text-muted hover:border-line hover:bg-line'
-            }`}
+            className={`inline-flex ${inView ? 'picker-chip' : ''}`}
+            style={inView ? { animationDelay: `${rowIndex * 100 + 90 + index * 55}ms` } : undefined}
           >
-            {optionLabel}
-          </button>
+            <OptionChip
+              label={label}
+              selected={value === key}
+              disabled={isDisabled(key)}
+              tabIndex={index === rovingIndex ? 0 : -1}
+              onSelect={() => onSelect(key)}
+              onKeyDown={(event) => handleKeyDown(event, index)}
+              buttonRef={(el) => {
+                chipRefs.current[index] = el
+              }}
+            />
+          </span>
         ))}
       </div>
     </div>
+  )
+}
+
+// Hero animation for the practice picker. Only transform and opacity are
+// animated in the entrance; loops and the one-shot reveals are switched off
+// under prefers-reduced-motion.
+const PICKER_HERO_ANIM = `
+@keyframes ph-art-in { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes ph-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes ph-sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+@keyframes ph-curtain { from { transform: translateX(-210px); } to { transform: translateX(0); } }
+@keyframes ph-draw { from { stroke-dashoffset: 240; } to { stroke-dashoffset: 0; } }
+.ph-art-in { animation: ph-art-in 700ms var(--ease-out-soft) 120ms both; }
+.ph-float { animation: ph-float 6.5s ease-in-out infinite; }
+.ph-sway { animation: ph-sway 5.5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+.ph-curtain { animation: ph-curtain 620ms steps(18) both; }
+.ph-underline { stroke-dasharray: 240; animation: ph-draw 700ms var(--ease-out-soft) 700ms both; }
+@media (prefers-reduced-motion: reduce) {
+  .ph-art-in { animation: none; }
+  .ph-float { animation: none; }
+  .ph-sway { animation: none; }
+  .ph-curtain { animation: none; transform: none; }
+  .ph-underline { animation: none; stroke-dashoffset: 0; }
+}
+`
+
+// Handwritten tagline floating at the top-right of the hero: a crown doodle,
+// the phrase in the script face, and an underline that draws itself once.
+function PracticeTagline() {
+  return (
+    <div className="pointer-events-none absolute right-1 top-1 z-10 hidden rotate-[-7deg] text-right min-[700px]:block">
+      <CrownIcon size={26} strokeWidth={2} className="ml-auto text-amber-400" />
+      <div className="font-hand text-[26px] font-bold leading-none text-brand-600">
+        Practice Learn Grow
+      </div>
+      <svg viewBox="0 0 200 12" className="ml-auto mt-1 h-3 w-[190px]" fill="none" aria-hidden="true">
+        <path
+          className="ph-underline"
+          d="M3 8C40 2 78 11 116 5S168 1 197 7"
+          stroke="#d4349e"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  )
+}
+
+// Inline hero art for the practice picker: a purple database stack and a potted
+// plant beside a dark window of SQL with a magenta "SQL" tile and a green
+// "MongoDB · Soon" teaser tile.
+function PickerHeroArt() {
+  return (
+    <svg
+      viewBox="0 0 440 380"
+      className="h-auto w-full"
+      fill="none"
+      role="img"
+      aria-label="A purple database stack and a potted plant beside a window of SQL code, with SQL and MongoDB tiles"
+    >
+      <defs>
+        <linearGradient id="phDb" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#9575e0" />
+          <stop offset="1" stopColor="#6b46c9" />
+        </linearGradient>
+        <linearGradient id="phMag" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#d4349e" />
+          <stop offset="1" stopColor="#8c1568" />
+        </linearGradient>
+        <clipPath id="phWin">
+          <rect x="190" y="54" width="220" height="150" rx="16" />
+        </clipPath>
+      </defs>
+
+      <circle cx="214" cy="196" r="150" fill="#fdf0f8" />
+      <circle cx="392" cy="58" r="26" fill="#f6f2ff" />
+      <path d="M46 40v16M38 48h16" stroke="#f0a8da" strokeWidth="3" strokeLinecap="round" />
+      <path d="M404 300v14M397 307h14" stroke="#d5c2f5" strokeWidth="3" strokeLinecap="round" />
+
+      {/* Potted plant — leaves sway slowly; sits behind the database stack. */}
+      <g transform="translate(60 268)">
+        <path d="M-24 -6h48l-7 30h-34z" fill="#573499" />
+        <rect x="-26" y="-12" width="52" height="9" rx="4" fill="#6b46c9" />
+        <g className="ph-sway">
+          <path d="M0 -12C-1 -26-8 -34-18 -40" stroke="#2f6b45" strokeWidth="2.5" fill="none" />
+          <ellipse cx="-22" cy="-44" rx="9" ry="15" transform="rotate(-32 -22 -44)" fill="#4c9a68" />
+          <path d="M0 -12C1 -30 2 -40 6 -52" stroke="#2f6b45" strokeWidth="2.5" fill="none" />
+          <ellipse cx="7" cy="-56" rx="9" ry="16" transform="rotate(6 7 -56)" fill="#5aa978" />
+          <path d="M0 -12C4 -24 14 -30 24 -34" stroke="#2f6b45" strokeWidth="2.5" fill="none" />
+          <ellipse cx="27" cy="-37" rx="9" ry="14" transform="rotate(34 27 -37)" fill="#4c9a68" />
+        </g>
+      </g>
+
+      {/* Database stack — floats slowly. */}
+      <g transform="translate(126 132)">
+        <g className="ph-float">
+          <path d="M-58 20V64a58 18 0 0 0 116 0V20" fill="url(#phDb)" />
+          <ellipse cx="0" cy="20" rx="58" ry="18" fill="#b79cf0" />
+          <path d="M-58 34a58 18 0 0 0 116 0" stroke="#7d5fd0" strokeWidth="2" />
+          <path d="M-58 50a58 18 0 0 0 116 0" stroke="#7d5fd0" strokeWidth="2" />
+        </g>
+      </g>
+
+      {/* Dark code window — the query types out line by line. */}
+      <g clipPath="url(#phWin)">
+        <rect x="190" y="54" width="220" height="150" fill="#2c1c3f" />
+        <rect x="190" y="54" width="220" height="30" fill="#3a2755" />
+        <circle cx="208" cy="69" r="4" fill="#f4a8a8" />
+        <circle cx="224" cy="69" r="4" fill="#f8d9a4" />
+        <circle cx="240" cy="69" r="4" fill="#a9e0c6" />
+        <text x="396" y="73" textAnchor="end" fontFamily="'JetBrains Mono Variable', monospace" fontSize="9" fontWeight="700" fill="#b9a7e0">
+          query.sql
+        </text>
+
+        <g fontFamily="'JetBrains Mono Variable', monospace" fontSize="11">
+          <text x="204" y="106">
+            <tspan fill="#ff7ac2" fontWeight="700">SELECT</tspan>
+            <tspan fill="#c6b6f7"> * </tspan>
+            <tspan fill="#ff7ac2" fontWeight="700">FROM</tspan>
+            <tspan fill="#c6b6f7"> employees</tspan>
+          </text>
+          <text x="204" y="130">
+            <tspan fill="#ff7ac2" fontWeight="700">WHERE</tspan>
+            <tspan fill="#c6b6f7"> dept = </tspan>
+            <tspan fill="#7fd6a6">'Sales'</tspan>
+          </text>
+          <text x="204" y="154">
+            <tspan fill="#ff7ac2" fontWeight="700">ORDER BY</tspan>
+            <tspan fill="#c6b6f7"> salary </tspan>
+            <tspan fill="#ff7ac2" fontWeight="700">DESC</tspan>
+            <tspan fill="#c6b6f7">;</tspan>
+          </text>
+        </g>
+
+        {/* Curtains retract to type each line once. At rest (no CSS applied)
+            they sit off the right edge, so the code stays visible either way. */}
+        <rect className="ph-curtain" x="414" y="96" width="210" height="16" fill="#2c1c3f" />
+        <rect className="ph-curtain" x="414" y="120" width="210" height="16" fill="#2c1c3f" style={{ animationDelay: '500ms' }} />
+        <rect className="ph-curtain" x="414" y="144" width="210" height="16" fill="#2c1c3f" style={{ animationDelay: '1000ms' }} />
+      </g>
+
+      {/* Magenta SQL tile */}
+      <g transform="translate(322 250)">
+        <rect x="0" y="0" width="78" height="78" rx="20" fill="url(#phMag)" />
+        <text x="39" y="40" textAnchor="middle" fontFamily="'JetBrains Mono Variable', monospace" fontSize="22" fontWeight="700" fill="#ffffff">
+          &lt;/&gt;
+        </text>
+        <text x="39" y="60" textAnchor="middle" fontFamily="'JetBrains Mono Variable', monospace" fontSize="12" fontWeight="700" fill="#ffd6ef">
+          SQL
+        </text>
+      </g>
+
+      {/* MongoDB teaser tile */}
+      <g transform="translate(168 258)">
+        <rect x="0" y="0" width="140" height="58" rx="16" fill="#ffffff" stroke="#a9e0c6" strokeWidth="2" />
+        <circle cx="30" cy="29" r="13" fill="#f3faf5" stroke="#7fc9a3" strokeWidth="2" />
+        <path d="M30 18c5 6 5 13 0 22-5-9-5-16 0-22Z" fill="#4c9a68" />
+        <text x="54" y="34" fontFamily="'JetBrains Mono Variable', monospace" fontSize="13" fontWeight="700" fill="#2f6b45">
+          MongoDB
+        </text>
+        <rect x="98" y="36" width="34" height="16" rx="8" fill="#fff8ec" stroke="#f0c27a" />
+        <text x="115" y="48" textAnchor="middle" fontFamily="'JetBrains Mono Variable', monospace" fontSize="9" fontWeight="700" fill="#b5761f">
+          Soon
+        </text>
+      </g>
+    </svg>
   )
 }
 
@@ -762,41 +1127,259 @@ function MongoComingSoon({ onBack }) {
   )
 }
 
-function Picker({ topic, difficulty, types, onTopic, onDifficulty, onTypes, bank, onStart, onBack }) {
+function Picker({ topic, difficulty, types, onTopic, onDifficulty, onTypes, bank, onStart, onBack, loading, error, onRetry }) {
+  const [groupsRef, groupsInView] = useInView()
+  const footerRef = useRef(null)
+  const [pinned, setPinned] = useState(false)
+  const reduced = useReducedMotion()
   const available = countPracticeQuestions(bank, topic, difficulty, types)
+  const shown = useRollingCount(available, loading, reduced)
+  const ctaEnabled = !loading && available > 0
+  const [shake, setShake] = useState(false)
+  const prevAvailable = useRef(available)
+
+  // Shake the total once the moment a combination drops to zero, to draw the
+  // eye to the now-disabled Start button. Never under reduced motion.
+  useEffect(() => {
+    if (!reduced && prevAvailable.current > 0 && available === 0) setShake(true)
+    prevAvailable.current = available
+  }, [available, reduced])
+
+  // Keep the mobile footer pinned to the viewport bottom only once the card has
+  // scrolled far enough up; otherwise a sticky last child clamps onto the card
+  // header as the card enters the viewport.
+  useEffect(() => {
+    const card = groupsRef.current
+    const footer = footerRef.current
+    if (!card || !footer) return undefined
+    let frame = 0
+    const update = () => {
+      frame = 0
+      setPinned(card.getBoundingClientRect().top < window.innerHeight - footer.offsetHeight)
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    schedule()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [groupsRef, loading, error])
+
+  const typeOptions = Object.entries(PRACTICE_TYPES)
+  const topicOptions = [['all', 'All topics'], ...Object.entries(PRACTICE_TOPICS)]
+  const levelOptions = Object.entries(PRACTICE_DIFFICULTIES)
+
+  // Every count is derived from the real bank: each option previews how many
+  // questions it would leave under the other two current filters.
+  const countByType = Object.fromEntries(
+    typeOptions.map(([key]) => [key, countPracticeQuestions(bank, topic, difficulty, key)]),
+  )
+  const countByTopic = Object.fromEntries(
+    topicOptions.map(([key]) => [key, countPracticeQuestions(bank, key, difficulty, types)]),
+  )
+  const countByLevel = Object.fromEntries(
+    levelOptions.map(([key]) => [key, countPracticeQuestions(bank, topic, key, types)]),
+  )
+
+  const groups = [
+    {
+      key: 'type',
+      title: 'Question type',
+      hint: 'What kind of questions?',
+      icon: ChoiceIcon,
+      options: typeOptions,
+      value: types,
+      onSelect: onTypes,
+      counts: countByType,
+    },
+    {
+      key: 'topic',
+      title: 'Topic',
+      hint: 'Choose a specific topic.',
+      icon: TableIcon,
+      options: topicOptions,
+      value: topic,
+      onSelect: onTopic,
+      counts: countByTopic,
+    },
+    {
+      key: 'level',
+      title: 'Level',
+      hint: 'Select the difficulty level.',
+      icon: GaugeIcon,
+      options: levelOptions,
+      value: difficulty,
+      onSelect: onDifficulty,
+      counts: countByLevel,
+    },
+  ]
+
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <div className="rounded-2xl border border-line bg-white p-6">
-        <div className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted">More Practice · SQL</div>
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="mb-3 text-sm font-medium text-muted transition-colors hover:text-body"
-          >
-            ← SQL / MongoDB
-          </button>
-        )}
-        <h1 className="text-lg font-bold text-ink">Pick your practice</h1>
-        <p className="mt-1 text-sm text-muted">
-          Choose the question type, topic, and level you want to drill.
-        </p>
+    <div className="relative isolate">
+      <style>{PICKER_HERO_ANIM}</style>
 
-        <ChoiceGroup label="Question type" options={PRACTICE_TYPES} value={types} onSelect={onTypes} />
-        <ChoiceGroup label="Topic" options={{ all: 'All topics', ...PRACTICE_TOPICS }} value={topic} onSelect={onTopic} />
-        <ChoiceGroup label="Level" options={PRACTICE_DIFFICULTIES} value={difficulty} onSelect={onDifficulty} />
+      {/* Soft pink blobs drifting slowly behind the hero. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -left-20 -top-24 h-72 w-72 rounded-full bg-brand-100/70 blur-3xl blob-drift" />
+        <div className="absolute right-0 top-6 h-80 w-80 rounded-full bg-plum-100/70 blur-3xl blob-drift-b" />
+        <div className="absolute bottom-[-5rem] left-1/3 h-64 w-64 rounded-full bg-brand-50 blur-3xl blob-drift" />
+      </div>
 
-        <div className="mt-6 flex items-center justify-between">
-          <span className="text-xs text-muted">{available} questions available</span>
-          <button
-            type="button"
-            onClick={onStart}
-            disabled={available === 0}
-            className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+      <div className="grid gap-8 min-[1100px]:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)] min-[1100px]:grid-rows-[auto_1fr]">
+        {/* Hero text — left column, first row. */}
+        <div className="min-[1100px]:col-start-1 min-[1100px]:row-start-1">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="enter-rise mb-4 inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:border-brand-200 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+            >
+              ← Back to practice modes
+            </button>
+          )}
+
+          <p
+            className="enter-rise font-mono text-[11px] font-bold uppercase tracking-[0.42em] text-brand-600"
+            style={stagger(0, 100, 80)}
           >
-            Start practicing
-          </button>
+            More practice · SQL
+          </p>
+
+          <h1
+            className="enter-rise mt-3 text-3xl font-black leading-[1.08] tracking-[-0.02em] text-ink sm:text-4xl"
+            style={stagger(1, 100, 80)}
+          >
+            Choose Your <span className="text-gradient">Practice</span>
+          </h1>
+
+          <p
+            className="enter-rise mt-3 max-w-md text-sm leading-relaxed text-muted sm:text-[15px]"
+            style={stagger(2, 100, 80)}
+          >
+            Select a question type, topic, and difficulty level to start practicing.
+            Build your skills and get better, one question at a time.
+          </p>
         </div>
+
+        {/* Illustration — right column spanning both rows on desktop; under the
+            hero text on smaller screens, scaled down. */}
+        <div className="relative mx-auto w-full max-w-[380px] min-[1100px]:col-start-2 min-[1100px]:row-span-2 min-[1100px]:row-start-1 min-[1100px]:max-w-none">
+          <PracticeTagline />
+          <div className="ph-art-in">
+            <PickerHeroArt />
+          </div>
+        </div>
+
+      {/* Picker card — left column, second row. */}
+      <div className="min-[1100px]:col-start-1 min-[1100px]:row-start-2">
+        <div
+          ref={groupsRef}
+          className={`reveal group/card relative ${groupsInView ? 'is-in' : ''} flex flex-col rounded-3xl border border-line bg-white shadow-sm`}
+        >
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 shadow-[0_24px_60px_-28px_rgba(140,21,104,0.5)] transition-opacity duration-300 group-hover/card:opacity-100"
+          />
+          <div className="p-6 pb-0 sm:p-7 sm:pb-0">
+            <div className="flex items-center gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm shadow-brand-600/30 transition-transform duration-300 group-hover/card:-translate-y-0.5 group-hover/card:rotate-3">
+                <TargetIcon size={22} strokeWidth={2} />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-lg font-black tracking-tight text-ink">Pick Your Practice</h2>
+                <p className="mt-0.5 text-sm text-muted">
+                  Choose the question type, topic, and level you want to drill.
+                </p>
+              </div>
+            </div>
+
+            {error ? (
+              <div className="my-6 rounded-2xl border border-danger-200 bg-danger-50 px-4 py-4">
+                <p className="text-sm font-bold text-danger-700">Couldn't load practice questions.</p>
+                <p className="mt-1 text-sm text-danger-700/80">Check your connection, then try again.</p>
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg bg-danger-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-danger-700/90 focus-visible:ring-2 focus-visible:ring-danger-700 focus-visible:ring-offset-2"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 divide-y divide-line">
+                {groups.map(({ key: groupKey, ...rest }, index) => (
+                  <FilterRow
+                    key={groupKey}
+                    id={groupKey}
+                    {...rest}
+                    loading={loading}
+                    inView={groupsInView}
+                    rowIndex={index}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {!error && (
+            <div
+              ref={footerRef}
+              className={`${pinned ? 'sticky bottom-0 z-10' : 'relative'} rounded-b-3xl border-t border-line bg-white p-6 pt-5 shadow-[0_-10px_24px_-20px_rgba(45,0,34,0.45)] sm:p-7 sm:pt-5 min-[700px]:static min-[700px]:shadow-none`}
+            >
+              <div className="flex flex-col gap-4 min-[700px]:flex-row min-[700px]:items-center min-[700px]:justify-between">
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="flex min-h-6 items-center gap-2 text-sm font-semibold text-body"
+                >
+                  <DocumentIcon size={17} strokeWidth={2} className="shrink-0 text-brand-500" />
+                  {loading ? (
+                    <>
+                      <span className="sr-only">Loading questions…</span>
+                      <span aria-hidden="true" className="shimmer block h-4 w-40 rounded-full bg-line" />
+                    </>
+                  ) : (
+                    <span
+                      className={`inline-flex items-center gap-1 ${shake ? 'picker-count-shake' : ''}`}
+                      onAnimationEnd={(event) => {
+                        if (event.target === event.currentTarget) setShake(false)
+                      }}
+                    >
+                      {shown} {shown === 1 ? 'question' : 'questions'} available
+                    </span>
+                  )}
+                </div>
+                <span className={`inline-flex w-full min-[700px]:w-auto ${ctaEnabled ? 'picker-cta-pulse' : ''}`}>
+                  <button
+                    type="button"
+                    onClick={onStart}
+                    disabled={loading || available === 0}
+                    className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm shadow-brand-600/25 transition-[transform,background-color,opacity] duration-200 hover:-translate-y-0.5 hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:bg-brand-600 min-[700px]:w-auto"
+                  >
+                    Start Practicing
+                    <ArrowRightIcon
+                      size={17}
+                      strokeWidth={2.4}
+                      className="transition-transform duration-200 group-hover:translate-x-0.5"
+                    />
+                  </button>
+                </span>
+              </div>
+              {!loading && available === 0 && (
+                <p className="mt-3 rounded-xl bg-brand-50 px-3 py-2 text-xs font-semibold text-brand-700">
+                  No questions here yet. Try another topic or level.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       </div>
     </div>
   )
@@ -866,34 +1449,54 @@ function Results({ snapshot, onReplay, onChangeSettings }) {
 }
 
 function Practice() {
-  const [params] = useSearchParams()
-  const topicParam = params.get('topic')
-  const prefilled =
-    topicParam && Object.prototype.hasOwnProperty.call(PRACTICE_TOPICS, topicParam) ? topicParam : null
+  const [params, setParams] = useSearchParams()
+  const { type: types, topic, level: difficulty } = parseFilterParams(params)
+  const hasDeepLink = params.has('type') || params.has('topic') || params.has('level')
 
   const [bank, setBank] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
-  const [game, setGame] = useState(() => (prefilled ? 'sql' : null))
-  const [topic, setTopic] = useState(prefilled ?? 'all')
-  const [difficulty, setDifficulty] = useState('all')
-  const [types, setTypes] = useState('all')
+  const [reloadKey, setReloadKey] = useState(0)
+  const [game, setGame] = useState(() => (hasDeepLink ? 'sql' : null))
   const [engine, setEngine] = useState(null)
   const [selected, setSelected] = useState(null)
   const snapshot = useQuizEngine(engine)
+
+  // Selecting a chip rewrites the matching query param, so the choice is
+  // shareable, survives reload, and is restored on back/forward navigation.
+  const setFilter = (key, value) => {
+    const next = new URLSearchParams(params)
+    if (!value || value === 'all') next.delete(key)
+    else next.set(key, value)
+    setParams(next)
+  }
+  const setTypes = (value) => setFilter('type', value === 'all' ? null : TYPE_URL[value])
+  const setTopic = (value) => setFilter('topic', value === 'all' ? null : value)
+  const setDifficulty = (value) => setFilter('level', value === 'all' ? null : value)
 
   useEffect(() => {
     let active = true
     loadPracticeQuestions()
       .then((questions) => {
-        if (active) setBank(questions)
+        if (!active) return
+        setBank(questions)
+        setLoading(false)
       })
       .catch(() => {
-        if (active) setLoadError(true)
+        if (!active) return
+        setLoadError(true)
+        setLoading(false)
       })
     return () => {
       active = false
     }
-  }, [])
+  }, [reloadKey])
+
+  const retryLoad = () => {
+    setLoading(true)
+    setLoadError(false)
+    setReloadKey((key) => key + 1)
+  }
 
   useEffect(() => {
     return () => engine?.destroy()
@@ -923,26 +1526,6 @@ function Practice() {
     setSelected(null)
   }
 
-  if (loadError) {
-    return (
-      <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl border border-danger-200 bg-danger-50 px-5 py-4 text-sm text-danger-700">
-          Couldn't load practice questions. Please try again later.
-        </div>
-      </div>
-    )
-  }
-
-  if (!bank) {
-    return (
-      <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl border border-line bg-white p-6 text-sm text-muted">
-          Loading practice questions…
-        </div>
-      </div>
-    )
-  }
-
   if (!engine) {
     if (!game) return <GameSelect onPick={setGame} />
     if (game === 'mongo') return <MongoComingSoon onBack={() => setGame(null)} />
@@ -954,7 +1537,10 @@ function Practice() {
         onTopic={setTopic}
         onDifficulty={setDifficulty}
         onTypes={setTypes}
-        bank={bank}
+        bank={bank ?? []}
+        loading={loading}
+        error={loadError}
+        onRetry={retryLoad}
         onStart={() => handleStart()}
         onBack={() => setGame(null)}
       />

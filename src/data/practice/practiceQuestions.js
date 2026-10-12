@@ -1,4 +1,23 @@
 import bundled from './practice-questions.json'
+import { getQuizHelp } from '../quizHelp.js'
+
+const SECTION_TO_TOPIC = {
+  'Reading Data': 'table-query',
+  'Filtering Data': 'table-query',
+  'Sorting Data': 'table-query',
+  'Joins & Relationships': 'joins',
+  Aggregation: 'aggregation',
+}
+
+const practiceTopicCache = new WeakMap()
+
+export function practiceTopicOf(question) {
+  if (practiceTopicCache.has(question)) return practiceTopicCache.get(question)
+  const mapped = SECTION_TO_TOPIC[getQuizHelp(question).section]
+  const topic = mapped ?? question.topic
+  practiceTopicCache.set(question, topic)
+  return topic
+}
 
 export const PRACTICE_TOPICS = {
   'table-query': 'Table Query',
@@ -31,7 +50,7 @@ export function loadPracticeQuestions() {
 
 export function selectPracticeQuestions({ questions = [], topic = 'all', difficulty = 'all', types = 'all' } = {}) {
   return questions.filter((q) => {
-    const topicOk = topic === 'all' || q.topic === topic
+    const topicOk = topic === 'all' || practiceTopicOf(q) === topic
     const difficultyOk = difficulty === 'all' || q.difficulty === difficulty
     const typesOk = types === 'all' || q.type === types
     return topicOk && difficultyOk && typesOk

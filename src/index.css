@@ -1271,3 +1271,147 @@ body {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Practice picker: entrance cascade, chip selection, count roll and CTA pulse.
+   Transform/opacity only. Stagger, loops and tweens are switched off under
+   prefers-reduced-motion (see the block below).
+   --------------------------------------------------------------------------- */
+
+@keyframes picker-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes picker-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes picker-chip-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.045);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes picker-chip-pop-out {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(0.96);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes picker-check-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.18) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes picker-count-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(1px);
+  }
+}
+
+/* Gentle once-per-cycle pulse for the enabled "Start Practicing" button. */
+@keyframes picker-cta-pulse {
+  0%,
+  88%,
+  100% {
+    transform: scale(1);
+  }
+  92% {
+    transform: scale(1.03);
+  }
+  96% {
+    transform: scale(1);
+  }
+}
+
+@layer utilities {
+  .picker-row {
+    animation: picker-row-in 520ms var(--ease-out-soft) backwards;
+  }
+
+  .picker-chip {
+    animation: picker-chip-in 440ms var(--ease-out-soft) backwards;
+  }
+
+  .picker-chip-pop {
+    animation: picker-chip-pop 300ms var(--ease-3d);
+  }
+
+  .picker-chip-pop-out {
+    animation: picker-chip-pop-out 280ms var(--ease-3d);
+  }
+
+  /* `both` fill so the check starts hidden and holds its settled state. */
+  .picker-check {
+    animation: picker-check-in 300ms var(--ease-3d) both;
+  }
+
+  .picker-count-shake {
+    animation: picker-count-shake 420ms var(--ease-3d);
+  }
+
+  .picker-cta-pulse {
+    animation: picker-cta-pulse 4.4s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .picker-row,
+  .picker-chip,
+  .picker-chip-pop,
+  .picker-chip-pop-out,
+  .picker-check,
+  .picker-count-shake,
+  .picker-cta-pulse {
+    animation: none;
+  }
+}
