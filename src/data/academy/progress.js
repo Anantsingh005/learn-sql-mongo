@@ -4,16 +4,19 @@ const STORAGE_KEY = 'dbquiz:academy-progress'
 
 const EMPTY = { sections: [], chapters: [], correct: [] }
 
+function normalize(parsed) {
+  return {
+    sections: Array.isArray(parsed?.sections) ? parsed.sections : [],
+    chapters: Array.isArray(parsed?.chapters) ? parsed.chapters : [],
+    correct: Array.isArray(parsed?.correct) ? parsed.correct : [],
+  }
+}
+
 function read() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return { ...EMPTY }
-    const parsed = JSON.parse(raw)
-    return {
-      sections: Array.isArray(parsed.sections) ? parsed.sections : [],
-      chapters: Array.isArray(parsed.chapters) ? parsed.chapters : [],
-      correct: Array.isArray(parsed.correct) ? parsed.correct : [],
-    }
+    return normalize(JSON.parse(raw))
   } catch {
     return { ...EMPTY }
   }
@@ -29,6 +32,19 @@ function write(state) {
 
 export function getProgress() {
   return read()
+}
+
+/* Like getProgress(), but lets a storage-access failure propagate so the UI can
+   surface an error state and offer a retry. Corrupt data still falls back to
+   empty progress (a read is never a hard error for malformed JSON). */
+export function loadProgress() {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (!raw) return { ...EMPTY }
+  try {
+    return normalize(JSON.parse(raw))
+  } catch {
+    return { ...EMPTY }
+  }
 }
 
 export function markSectionRead(sectionId, done) {

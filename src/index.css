@@ -134,6 +134,11 @@ body {
     animation: soft-pulse 6s ease-in-out infinite;
   }
 
+  /* Shimmer for loading placeholders (opacity only, no layout shift). */
+  .skeleton-pulse {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
   /* Very slow drifting gradient blobs behind the academy page. */
   .blob-drift {
     animation: blob-drift 24s ease-in-out infinite alternate;
@@ -287,6 +292,83 @@ body {
     background: inherit;
     animation: badge-pulse 2.4s ease-out infinite;
   }
+
+  /* ---- SQL book landing page: hero + tagline motion --------------------- */
+
+  /* Illustration entrance: fade + gentle scale, plays once. */
+  .sb-art-in {
+    animation: sb-art-in 760ms var(--ease-out-soft) both;
+  }
+
+  /* Slow offset bob for the two stacked books. */
+  .sb-float {
+    animation: sb-float 5.6s ease-in-out infinite;
+  }
+
+  /* Plant sway, pivoting around its base. */
+  .sb-sway {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: sb-sway 6.4s ease-in-out infinite;
+  }
+
+  /* Crown doodle bob. */
+  .sb-bob {
+    animation: sb-bob 4.2s ease-in-out infinite;
+  }
+
+  /* SQL lines "type" themselves left-to-right, once. */
+  .sb-code-line {
+    animation: sb-code-type 540ms steps(16, end) both;
+  }
+
+  /* Completed check pops once, the moment its card reveals. `paused` until the
+     covering `.reveal` wrapper enters the viewport, so the pop is always seen. */
+  .sb-check-pop {
+    transform-origin: center;
+    animation: sb-check-pop 440ms var(--ease-3d) 260ms both;
+    animation-play-state: paused;
+  }
+
+  .reveal.is-in .sb-check-pop {
+    animation-play-state: running;
+  }
+
+  /* In-progress ring spins slowly, starting once its card is on screen. */
+  .sb-ring-spin {
+    transform-origin: center;
+    animation: sb-ring-spin 7s linear infinite;
+    animation-play-state: paused;
+  }
+
+  .reveal.is-in .sb-ring-spin {
+    animation-play-state: running;
+  }
+
+  /* "All Chapters" book icon wiggles once when the header scrolls in. */
+  .sb-icon-wiggle {
+    animation: sb-icon-wiggle 620ms var(--ease-3d) 120ms both;
+    animation-play-state: paused;
+  }
+
+  .reveal.is-in .sb-icon-wiggle {
+    animation-play-state: running;
+  }
+
+  /* Tagline strip: twinkling stars, a nudging arrow and a slowly drifting wave. */
+  .sb-twinkle {
+    transform-origin: center;
+    animation: sb-twinkle 3.4s ease-in-out infinite;
+  }
+
+  .sb-arrow {
+    display: inline-block;
+    animation: sb-arrow 3.2s ease-in-out infinite;
+  }
+
+  .sb-wave {
+    animation: sb-wave 22s ease-in-out infinite alternate;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -348,6 +430,32 @@ body {
     animation: none;
   }
 
+  .skeleton-pulse {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  /* SQL book page: no loops, no typing, no pop — every state lands instantly. */
+  .sb-art-in,
+  .sb-code-line,
+  .sb-check-pop,
+  .sb-icon-wiggle {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+
+  .sb-float,
+  .sb-sway,
+  .sb-bob,
+  .sb-ring-spin,
+  .sb-twinkle,
+  .sb-arrow,
+  .sb-wave {
+    animation: none;
+  }
+
   .shimmer::after {
     animation: none;
     opacity: 0;
@@ -392,6 +500,16 @@ body {
   }
   50% {
     transform: translateY(-12px);
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 
@@ -572,6 +690,126 @@ body {
   100% {
     opacity: 0;
     transform: scale(2.6);
+  }
+}
+
+/* ---- SQL book landing page ------------------------------------------------ */
+
+@keyframes sb-art-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sb-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes sb-sway {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2.4deg);
+  }
+}
+
+@keyframes sb-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes sb-code-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes sb-check-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sb-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sb-icon-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+  75% {
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes sb-twinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.86);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sb-arrow {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes sb-wave {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-22px);
   }
 }
 
@@ -1414,4 +1652,19 @@ body {
   .picker-cta-pulse {
     animation: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Academy SQL book page.
+   The hero and the closing wave strip break out to the full viewport width
+   (`margin-inline: calc(50% - 50vw)`), because the shared Layout keeps this
+   route inside its max-w-6xl padded main column and must not be edited.
+   `overflow-x: clip` (not `hidden`) contains that breakout without turning the
+   body into a scroll container, so the sticky header and fixed overlays keep
+   working. Scoped to the book page via :has() so no other route is affected.
+   Applied to the root as well so the `100vw` breakout (which is ~1 scrollbar
+   wider than the layout viewport) can never produce a horizontal scrollbar. */
+html:has(.sqlbook-page),
+body:has(.sqlbook-page) {
+  overflow-x: clip;
 }
