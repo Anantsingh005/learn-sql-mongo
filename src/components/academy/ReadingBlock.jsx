@@ -16,7 +16,7 @@ export default function ReadingBlock({ block, accent, ink = accent }) {
             <Prose
               key={i}
               text={para}
-              className="text-[15px] leading-[1.75] text-body first:text-[16px]"
+              className="max-w-[70ch] text-[16px] leading-[1.7] text-body"
             />
           ))}
         </div>

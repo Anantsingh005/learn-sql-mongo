@@ -1,5 +1,4 @@
-import ResultTable from '../quiz/ResultTable.jsx'
-import Console from './Console.jsx'
+import TableCard from './TableCard.jsx'
 import Reveal from './Reveal.jsx'
 
 function unwrap(row) {
@@ -21,16 +20,20 @@ export default function Cheatsheet({ cheatsheet, accent = '#1554c7', ink = accen
       >
         Reference
       </div>
-      <h3 className="font-serif text-xl font-semibold tracking-tight text-ink sm:text-2xl">
+      <h2 className="font-serif text-xl font-semibold tracking-tight text-ink sm:text-2xl">
         {cheatsheet.title}
-      </h3>
-      <p className="mt-1.5 text-sm leading-relaxed text-body">
+      </h2>
+      <p className="mt-1.5 max-w-[70ch] text-[16px] leading-[1.7] text-body">
         Keep this open next to you while you practise. It is the whole chapter, compressed.
       </p>
 
-      <Console title="cheat sheet" className="mt-4" bodyClass="p-3">
-        <ResultTable columns={cheatsheet.columns} rows={cheatsheet.rows.map(unwrap)} />
-      </Console>
+      <div className="mt-4">
+        <TableCard
+          label="Cheat sheet"
+          columns={cheatsheet.columns}
+          rows={cheatsheet.rows.map(unwrap)}
+        />
+      </div>
     </Reveal>
   )
 }

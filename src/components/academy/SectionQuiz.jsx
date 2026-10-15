@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import Console from './Console.jsx'
+import BlockCard from './BlockCard.jsx'
+import { QuizIcon } from './BlockIcons.jsx'
 import { Inline } from './Prose.jsx'
 import { clearQuestions, isQuestionCorrect, markQuestionCorrect } from '../../data/academy/progress.js'
 
@@ -116,14 +117,21 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
 
   return (
     <div className="mt-8">
-      <Console
-        title="check yourself"
-        badge={complete ? `${score}/${total} correct` : `Question ${index + 1} of ${total}`}
-        badgeClass={
-          complete ? 'bg-leaf-50 text-leaf-700' : 'bg-line text-body'
+      <BlockCard
+        clip={false}
+        tone="brand"
+        icon={<QuizIcon />}
+        title="Check yourself"
+        meta={
+          <span
+            className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider ${
+              complete ? 'bg-leaf-50 text-leaf-700' : 'bg-line text-body'
+            }`}
+          >
+            {complete ? `${score}/${total} correct` : `Question ${index + 1} of ${total}`}
+          </span>
         }
-        noClip
-        bodyClass="p-3 sm:p-4"
+        bodyClassName="p-3 sm:p-4"
       >
         <div style={{ perspective: reduced ? undefined : 1400 }}>
           <div
@@ -153,7 +161,7 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
                   </span>
                 </div>
 
-                <p className="mt-2.5 text-[14px] leading-relaxed text-muted">
+                <p className="mt-2.5 text-[16px] leading-[1.7] text-muted">
                   {alreadyAllCorrect
                     ? 'You have answered every question in this section correctly. Read on, or test yourself again.'
                     : score === total
@@ -168,7 +176,7 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
                 <button
                   type="button"
                   onClick={retry}
-                  className="mt-4 rounded-lg border border-line bg-white px-3.5 py-1.5 text-[13px] font-medium text-muted transition-colors hover:border-line hover:text-body"
+                  className="mt-4 min-h-11 rounded-lg border border-line bg-white px-3.5 py-1.5 text-[13px] font-medium text-muted transition-colors hover:border-line hover:text-body"
                 >
                   {alreadyAllCorrect ? 'Answer again' : 'Retry'}
                 </button>
@@ -198,7 +206,7 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
                       boxShadow: `0 24px 48px -24px ${accent}40`,
                     }}
                   >
-                    <p className="text-[15px] leading-relaxed text-body">
+                    <p className="max-w-[70ch] text-[16px] leading-[1.7] text-body">
                       <Inline
                         text={question.prompt}
                         codeClass="rounded bg-white px-1.5 py-0.5 font-mono text-[0.82em] text-body ring-1 ring-brand-600"
@@ -220,7 +228,7 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
                           onClick={() => !checked && setPicked(i)}
                           disabled={checked}
                           aria-pressed={picked === i}
-                          className={`relative flex w-full items-start gap-3 rounded-lg border px-3 py-2 text-left text-[13px] leading-relaxed transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 ease-3d disabled:cursor-default ${optionClass(i)} ${lift}`}
+                          className={`relative flex min-h-11 w-full items-start gap-3 rounded-lg border px-3 py-2 text-left text-[16px] leading-[1.7] transition-[transform,box-shadow,color,background-color,border-color,opacity] duration-200 ease-3d disabled:cursor-default ${optionClass(i)} ${lift}`}
                           style={{ transform: optionTransform(i), opacity: !checked || i === question.answerIndex || i === picked ? 1 : 0.85 }}
                         >
                           <span
@@ -263,7 +271,7 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
                             : 'Not quite — the highlighted option is the answer.'}
                         </div>
                         {question.explanation && (
-                          <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                          <p className="mt-1 max-w-[70ch] text-[16px] leading-[1.7] text-muted">
                             <Inline
                               text={question.explanation}
                               codeClass="rounded bg-white px-1.5 py-0.5 font-mono text-[0.82em] text-muted ring-1 ring-brand-600"
@@ -287,7 +295,7 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
                 type="button"
                 onClick={check}
                 disabled={picked === null}
-                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-[filter,opacity] duration-200 enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 ${
+                className={`min-h-11 rounded-lg px-4 py-2 text-sm font-semibold transition-[filter,opacity] duration-200 enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 ${
                   picked === null ? 'text-white' : 'text-ink'
                 }`}
                 style={{ background: picked === null ? '#243b53' : accent }}
@@ -298,7 +306,7 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
               <button
                 type="button"
                 onClick={advance}
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-[filter,transform] duration-200 hover:brightness-110"
+                className="min-h-11 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-[filter,transform] duration-200 hover:brightness-110"
                 style={{ background: accent }}
               >
                 {isLast ? 'Show results' : 'Next question →'}
@@ -308,7 +316,7 @@ export default function SectionQuiz({ questions, accent = '#1554c7', ink = accen
             <MarkerRail markers={markers} reduced={reduced} />
           </div>
         )}
-      </Console>
+      </BlockCard>
     </div>
   )
 }

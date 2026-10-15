@@ -1,28 +1,38 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useReducedMotion } from './useReducedMotion.js'
 
 /**
- * Animates a number from 0 to `target` with an ease-out curve once `start`
- * becomes true (e.g. when the element scrolls into view).
+ * Returns a display value that eases from the previous number to the new one,
+ * used for stat read-outs. Under `prefers-reduced-motion` the value lands
+ * immediately with no tween.
  */
-export function useCountUp(target, { duration = 1100, start = false } = {}) {
-  const [value, setValue] = useState(0)
+export function useCountUp(value, duration = 600) {
+  const reduced = useReducedMotion()
+  const [display, setDisplay] = useState(value)
+  const fromRef = useRef(value)
 
   useEffect(() => {
-    if (!start) return undefined
+    const from = fromRef.current
+    if (from === value) return undefined
 
-    let raf = 0
-    const t0 = performance.now()
+    // A zero-length span lands the value on the first frame, which is how the
+    // reduced-motion case stays instant without a synchronous setState.
+    const span = reduced ? 0 : duration
+    let frame = 0
+    const start = performance.now()
     const tick = (now) => {
-      const p = Math.min((now - t0) / duration, 1)
-      const eased = 1 - Math.pow(1 - p, 3)
-      setValue(Math.round(target * eased))
-      if (p < 1) raf = requestAnimationFrame(tick)
+      const t = span > 0 ? Math.min(1, (now - start) / span) : 1
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplay(Math.round(from + (value - from) * eased))
+      if (t < 1) frame = requestAnimationFrame(tick)
+      else fromRef.current = value
     }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [start, target, duration])
 
-  return value
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [value, reduced, duration])
+
+  return display
 }
 
 export default useCountUp

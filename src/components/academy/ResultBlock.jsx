@@ -1,15 +1,15 @@
-import ResultTable from '../quiz/ResultTable.jsx'
-import Console from './Console.jsx'
+import TableCard from './TableCard.jsx'
+
+// A reference table from the lesson data (label + columns + rows), shown as the
+// styled table card: label chip, header row, zebra rows, horizontal scroll.
 
 export default function ResultBlock({ label, caption, columns, rows }) {
   return (
-    <div className="space-y-2.5">
-      <Console title={label} bodyClass="p-3">
-        <ResultTable columns={columns} rows={rows} />
-      </Console>
-      {caption && (
-        <p className="px-0.5 text-[13px] leading-relaxed text-body italic">{caption}</p>
-      )}
-    </div>
+    <TableCard
+      label={label ?? 'Table'}
+      caption={caption}
+      columns={columns}
+      rows={rows}
+    />
   )
 }

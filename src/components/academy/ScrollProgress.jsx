@@ -31,7 +31,7 @@ export default function ScrollProgress({ accent = '#38bdf8' }) {
   }, [])
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px] bg-ink/70">
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-[3px] bg-ink/70" aria-hidden="true">
       <div
         className="h-full origin-left transition-[width] duration-150 ease-out"
         style={{

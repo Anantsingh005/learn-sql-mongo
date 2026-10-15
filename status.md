@@ -1,8 +1,55 @@
 # Project Status
 
-Last updated: 2026-10-12
+Last updated: 2026-10-15
 
-## Current session (2026-10-12): Practice picker redesign — hero, live counts, shareable filters
+## Current session (2026-10-15): SQL book chapter reader rebuild — shared card system, right rail, mobile drawer
+
+A visual-and-interaction rebuild of the SQL book **chapter reader** (`/academy/sql/:chapterSlug`). The lesson used to be a flat column of ad-hoc boxes; every content block now renders through one card shell, the page gets a real three-column layout (Contents | paper sheet | tools rail), and the whole screen is reachable from a phone through a slide-over drawer. **No chapter data, lesson prose, quiz engine, progress keys or routing changed** — the only non-presentation code touched is the `useCountUp` hook. 16 files modified, 1 deleted (`Console.jsx`), 8 new. All uncommitted at write time.
+
+### New components (`src/components/academy/`)
+
+- **`BlockCard.jsx`** — the one shell every lesson block now uses: rounded-2xl white card, optional icon chip + mono title + `meta`/`actions` on the right, and a body. Six tones (plum/brand/leaf/amber/danger/slate) colour the chip only. It replaces the old `Console` card (now deleted) as the visual primitive.
+- **`BlockIcons.jsx`** — thirteen inline 24×24 `currentColor` icons (info, check, code, bulb, warn, table, flow, join, syntax, quiz, copy, book), so no icon library is introduced.
+- **`BlockParts.jsx`** — `Badge`, `Caption` (plain or danger), and `CodeSurface`, the shared pieces that keep `CodeBlock` and `DmlBlock` identical.
+- **`TableCard.jsx`** — a result table as a card: a label chip, a live row count, zebra rows that cascade in via `useInView`, `NULL` rendered as muted text, a 0-row state, and its own horizontal-scroll wrapper so a table can never widen the page.
+- **`CopyButton.jsx`** — copy-to-clipboard with an async-Clipboard fallback to a hidden textarea + `execCommand`, plus a "Copied" confirmation. Affordance only; the block computes nothing.
+- **`ChapterArt.jsx`** — eight decorative per-chapter SVG line drawings (table, funnel, sort, linked tables, nested circles, grouped bars, pencil, window frame) selected by chapter index and tinted with the chapter accent.
+- **`ChapterRail.jsx`** — the lesson's right column: a **Chapter Progress** card (self-drawing ring + `useCountUp` read count + caption), a **Quick Navigation** list whose rows deep-link to sections (read ticks, sliding active state), and a **Motivation** card. A single sticky column ≥1280px, a three-up row at 900–1279px, hidden below 900px.
+- **`SectionProgress.jsx`** — a thin, `aria-hidden` bar pinned under the header at ≥900px that tracks scroll through the *current section* (rAF-throttled, transform-only).
+
+### `src/pages/Chapter.jsx`
+
+- New header row (book-mark icon + serif chapter title + "Chapter N" + an `x/y read` pill), and an `Objectives` box that now renders **only on the chapter's first section**.
+- The section body is factored into a shared `SectionBody` used by both the live section and a held-out **crossfade** copy (`.lesson-leaving`, 260ms, skipped under reduced motion). Only one section is in the DOM now, so the read-tracking `IntersectionObserver` re-attaches per section instead of observing all of them at once.
+- New `ChapterSkeleton` (a real three-column shimmer, not a bare "Loading…"), `ChapterError` (retry), `ChapterNotFound` and `SectionNotFound` states, and a `SectionNav` with previous/next (the next chapter is named) and a "Finish: try More Practice" fallback.
+- `SectionProgress` and `ChapterRail` are wired into a `[240px, 1fr, 240px]` grid at ≥1280px, `[280px, 1fr]` at 900–1279px, single column below.
+
+### `src/components/academy/ChapterOutline.jsx` (largest single change)
+
+- Rewritten into **two layouts in one component**: a sticky desktop card (≥900px) and a sticky top bar (<900px) whose Contents button opens the same list as a focus-trapped **slide-over drawer** (portal, Escape to close, body scroll lock, focus restore).
+- An eight-position accent palette for the chapter badges; a single sliding highlight measured against the scroll container; collapsible chapter panels (`grid-template-rows` 0fr↔1fr, `inert` when closed); Arrow/Home/End roving focus across visible rows; and the active row scrolled into view *inside its own container*, never the page.
+
+### Block components
+
+`CodeBlock` / `DmlBlock` now render through `BlockCard` with a status badge (**Runs / Writes / Careful / Refused**), a `Caption` that turns into the error message for a refused statement, a `CodeSurface`, a `CopyButton`, and a `TableCard` result. `FlowDiagram`, `JoinMap` and `SyntaxMap` are wrapped in `BlockCard`; `Cheatsheet` and `ResultBlock` use `TableCard`; `Note` moved to icon chips with a lavender (tip/info) or amber (warn) treatment; `SectionQuiz` uses the card shell with larger 16px/1.7 text and `min-h-11` touch targets; `ReadingBlock` prose is 16px/1.7 capped at 70ch.
+
+### Supporting
+
+- **`useCountUp.js`** — replaced the animate-from-zero-on-`start` API with `useCountUp(value, duration = 600)`, which eases from the previous value to a new one and lands instantly under reduced motion (the hook now reads `useReducedMotion` itself). `ChapterRail` uses the new form. **See Known Deviations — four older call sites were not migrated.**
+- **`Layout.jsx`** — `/academy/sql/*` joins the full-bleed branch (`flex-1 w-full min-w-0`) so the reader owns its 3-column grid and gutters; other routes unchanged.
+- **`index.css`** — a global `:focus-visible` ring in `@layer base`, and a chapter motion pass: `lesson-rise` / `lesson-leave` / `table-row-in` / `qnav-slide-in` keyframes plus `.lesson-head`, `.lesson-intro`, `.lesson-leaving`, `.kp-item`, `.kp-check`, `.trow`, `.qnav-row` utilities (all `animation-play-state: paused` until their parent `.reveal.is-in`), a hover glide on `.arrow-next`/`.arrow-prev`, and a `.press:active` dip — every one reset under `prefers-reduced-motion`.
+
+### Verified
+
+`npm run build` → success (1.50s; chunk-size warning only) · `npx oxlint src scripts` → **no errors**; the baseline `set-state-in-effect`/`exhaustive-deps` warnings remain, with **two new** `set-state-in-effect` warnings in `ChapterOutline.jsx:300/304` (the `useMediaQuery` subscription and the `setOpenSlug(currentSlug)` sync).
+
+### Known leftover
+
+`useCountUp`'s signature change was **not** propagated to four older call sites — `MobileHome.jsx:368`, `ResultScreen.jsx:284`, `SqlBook.jsx:267,508` still pass `{ duration, start }` as the second argument. Because the new second parameter is a number, those calls fall through to "no tween": the correct value is still shown, but the count-up animation silently stops. They need either migration to the new signature or a backward-compatible hook.
+
+**Not done:** no browser/DOM audit ran for this pass, so the new grid, drawer and rail are verified only by the build and lint — a human should look at the rendered reader at ≥1280 / 900–1279 / <900px.
+
+## Previous session (2026-10-12): Practice picker redesign — hero, live counts, shareable filters
 
 A visual-and-interaction rebuild of the `/practice` SQL setup screen (the picker between the game-select and the quiz), done against no written spec. It borrows the quiz's visual language: a hero headline, an inline SVG illustration, and filters rendered as keyboard-navigable radio chips that preview their own result counts. **No engine, question-bank content, Supabase, routing or scoring change.** Four files modified, one new E2E script; the only *data* change is a derived topic (`practiceTopicOf`). All uncommitted at write time.
 
@@ -514,9 +561,10 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 ## Work State
 
 ### In progress (uncommitted)
-- Practice picker redesign (see current 2026-10-12 session): `/practice` hero + inline SVG art + count-previewing radio filters with URL-synced state, `practiceTopicOf` derivation, and the new `scripts/browser-practice-picker.mjs`. Build green and the gate is 38/39 (the one failure is a hover probe aimed at the selected chip — a test bug). Not committed; no human review of the rendered picker yet.
+- Nothing in the tree. The SQL book **chapter reader** rebuild (see the 2026-10-15 session) was committed this session. Build and lint are green, but **no browser/DOM audit ran** for the new grid, rail or mobile drawer, and the four stale `useCountUp` call sites are open (see Known Deviations).
 
 ### Completed (fully verified)
+- Practice picker redesign (see the 2026-10-12 session — **committed**): `/practice` hero + inline SVG art + count-previewing radio filters with URL-synced state, `practiceTopicOf` derivation, and `scripts/browser-practice-picker.mjs`. Gate is 38/39 (the one failure is a hover probe aimed at the selected chip — a test bug). No human review of the rendered picker yet.
 - Academy SQL book reader (see previous 2026-09-26 session): **8 chapters / 40 sections**, `/academy` gate + `/academy/sql` book + `/academy/sql/:slug` chapter, localStorage progress, **section quizzes on all 40 sections (87 questions, every answer key and 6 distractors machine-verified against sql.js, coverage a hard failure)**, quiz/practice cross-links (976/978 questions), static verified DML after-state, and `scripts/verify-lessons.mjs` (123 queries, 30 tables, 40 sections pass). **Committed.**
 - More Practice hub + MC tables + skip/results + circular progress rings (see previous 2026-09-26 session — committed & deployed): `GameSelect`/`MongoComingSoon` in `Practice.jsx`, nav rename, inline datasets embedded for all 450 generated MC practice questions (450/450 answer-verified), Skip for all question types, `wrong`/`graded` snapshot metrics, practiced/correct/wrong/skipped results + HUD, and `ProgressRing` on the Profile SQL progress grid.
 - Level progress reports + leaderboard card (see previous 2026-09-24 session): `question_attempts` table + RLS, `attempts.js`, `LevelReport.jsx`, deep-link quiz start, Profile matrix links, top-10 leaderboard with your overall rank.
@@ -529,10 +577,10 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 - `src/data/sql/writeQuery.js`: easy placeholder prompts replaced; no placeholders remain.
 
 ### Verified since last change
-- `npm run build` → success (1.21s, chunk-size warning only).
-- `npx oxlint src scripts` → no errors; baseline warnings only plus 3 new unused-var warnings in `scripts/browser-practice-picker.mjs` (see the current session entry).
+- `npm run build` → success (1.50s, chunk-size warning only).
+- `npx oxlint src scripts` → no errors; baseline warnings only plus the two new `set-state-in-effect` warnings in `ChapterOutline.jsx` (see the current session entry).
 - `node scripts/browser-practice-picker.mjs` → 38/39 (hover-lift probe is a test bug; the rest pass).
-- Working tree carries the uncommitted 2026-10-12 picker work (4 modified files + the new script); everything else matches `HEAD`.
+- Working tree clean after committing the 2026-10-15 chapter reader work; everything matches `HEAD`.
 
 ## Key Technical Facts
 - **SQLite silently accepts a missing comma as an alias:** `SELECT name city FROM customers` returns a column *named* `city` containing the names, with no error. Don't assume a typo in the select list will fail loudly.
@@ -553,8 +601,12 @@ Moved authentication and the data layer from Firebase (Auth + Firestore) to Supa
 - Leaderboard ranking uses the same tiebreak as the board itself: `score DESC, time_seconds ASC`. `fetchPlayerSnapshot` computes "your rank" by counting strictly-better rows with a `count: 'exact'` head query (`score > mine OR (score = mine AND time_seconds < mine)`) — no window/function needed, and `scores` is public to read.
 - `fetchTopScores` selects `user_id` so the Profile card can highlight "your" rows; the standalone `/leaderboard` page ignores the extra column.
 - The practice picker's topic is **not** the question's stored `q.topic`: `practiceTopicOf(q)` (in `src/data/practice/practiceQuestions.js`) maps the quiz-coaching section to `table-query`/`joins`/`aggregation` and falls back to `q.topic`; both `selectPracticeQuestions` and the picker's counts use it. `?type=` in the URL is `mcq`/`write`/`bug` while the internal key is `mc`/`write`/`bug` (`TYPE_URL`/`TYPE_FROM_URL`).
+- `Layout.jsx` treats any path starting with `/academy/sql/` as full-bleed (`flex-1 w-full min-w-0`) so `Chapter.jsx` owns its own 3-column grid and gutters. The `/academy/sql` **index** (the book page) is *not* in that branch; it keeps the shared `max-w-6xl` column.
+- The chapter reader renders only the **current section** in the DOM (plus a 260ms crossfade copy), so the read-tracking `IntersectionObserver` is re-attached per section rather than observing the whole chapter.
+- `useCountUp(value, duration = 600)` (2026-10-15) eases from the previous value to the new one and reads `useReducedMotion` internally; it is **not** a drop-in for the old `(target, { duration, start })` shape. `ChapterRail` uses the new form.
 
 ## Known Deviations / To-Dos
+- **`useCountUp` has a stale-caller regression** (2026-10-15): the hook's second parameter changed from an options object to a `duration` number, but `MobileHome.jsx:368`, `ResultScreen.jsx:284` and `SqlBook.jsx:267,508` still call it as `useCountUp(value, { duration, start })`. The calls resolve to "no tween" — the number renders correctly but the count-up animation is off. Migrate the callers (or restore a backward-compatible signature) next touch.
 - The new `scripts/browser-practice-picker.mjs` has two blemishes to clean up on the next touch: its hover probe hovers the *selected* chip (which intentionally has no lift) so that check always fails, and its `COMBOS` loop destructures `topic`/`level`/`type` without using them (3 oxlint warnings).
 - **Uncommitted work is still parked in `stash@{0}`** ("wip: pre-wipe backup") from the 2026-10-03 wipe, including the whole `src/components/site/` light-theme shell and the Feedback feature. Nothing depends on it any more; drop it when you no longer want the option.
 - **The live `public.feedback` table is now orphaned.** The migration is kept on disk, but every line of code that used it (`src/lib/feedback.js`, the footer feedback modal, `FeedbackPanel.jsx`) was discarded on 2026-10-03. Either drop the table or rebuild the feature — right now it is a live table with no consumer.

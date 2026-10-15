@@ -91,6 +91,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* One clear, consistent keyboard focus ring for every interactive element.
+   Lives in the base layer so a component's own `outline-none` + `focus-visible:ring`
+   treatment still wins where it provides the ring itself. */
+@layer base {
+  :focus-visible {
+    outline: 3px solid var(--color-brand-700);
+    outline-offset: 2px;
+  }
+}
+
 @layer utilities {
   .enter-rise {
     animation: enter-rise 620ms var(--ease-out-soft) both;
@@ -1667,4 +1677,148 @@ body {
 html:has(.sqlbook-page),
 body:has(.sqlbook-page) {
   overflow-x: clip;
+}
+
+/* ---------------------------------------------------------------------------
+   Chapter reader motion pass (the SQL book lesson screen).
+   Entrance, section crossfade, objective-check draws, table/quick-nav cascades
+   and button feedback. Transform/opacity only (plus SVG stroke-dashoffset).
+   Every entry animation is switched off under prefers-reduced-motion so state
+   changes land instantly.
+   --------------------------------------------------------------------------- */
+
+@keyframes lesson-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes lesson-leave {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes table-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes qnav-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer utilities {
+  /* Heading and intro rise in sequence when a section swaps in. */
+  .lesson-head {
+    animation: lesson-rise 520ms var(--ease-out-soft) both;
+  }
+
+  .lesson-intro {
+    animation: lesson-rise 520ms var(--ease-out-soft) both;
+  }
+
+  /* The outgoing section, held in the DOM for one beat while it fades away. */
+  .lesson-leaving {
+    animation: lesson-leave 260ms ease-in both;
+  }
+
+  /* Objectives: each row rises and its check draws itself, both gated on the
+     card revealing so the cascade is always seen (paused until `.is-in`). */
+  .kp-item {
+    animation: lesson-rise 460ms var(--ease-out-soft) both;
+    animation-play-state: paused;
+  }
+
+  .kp-check {
+    stroke-dasharray: 40;
+    stroke-dashoffset: 0;
+    animation: draw-check 620ms var(--ease-out-soft) both;
+    animation-play-state: paused;
+  }
+
+  .reveal.is-in .kp-item,
+  .reveal.is-in .kp-check {
+    animation-play-state: running;
+  }
+
+  /* Result / cheat-sheet table rows cascade as the table scrolls in. */
+  .trow {
+    animation: table-row-in 440ms var(--ease-out-soft) both;
+    animation-play-state: paused;
+  }
+
+  .trows-in .trow {
+    animation-play-state: running;
+  }
+
+  /* Quick Navigation rows slide in from the left, a beat apart. */
+  .qnav-row {
+    animation: qnav-slide-in 440ms var(--ease-out-soft) both;
+    animation-play-state: paused;
+  }
+
+  .reveal.is-in .qnav-row {
+    animation-play-state: running;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  /* The "Next" arrow glides right (and "Previous" left) on hover. */
+  .arrow-next,
+  .arrow-prev {
+    transition: transform 200ms var(--ease-out-soft);
+  }
+
+  .group:hover .arrow-next {
+    transform: translateX(3px);
+  }
+
+  .group:hover .arrow-prev {
+    transform: translateX(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Buttons dip a touch while held down. */
+  .press:active {
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lesson-head,
+  .lesson-intro,
+  .lesson-leaving,
+  .kp-item,
+  .kp-check,
+  .trow,
+  .qnav-row {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

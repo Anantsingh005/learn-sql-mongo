@@ -1,62 +1,52 @@
-import Console from './Console.jsx'
-import SqlCode from './SqlCode.jsx'
-import ResultTable from '../quiz/ResultTable.jsx'
+import BlockCard from './BlockCard.jsx'
+import TableCard from './TableCard.jsx'
+import CopyButton from './CopyButton.jsx'
+import { CodeIcon } from './BlockIcons.jsx'
+import { Badge, Caption, CodeSurface } from './BlockParts.jsx'
 
-const TONES = {
-  good: {
-    ring: 'border-leaf-200',
-    glow: 'shadow-[0_2px_10px_rgba(#3d7f55,0.1)]',
-    badge: 'Works',
-    badgeClass: 'bg-leaf-50 text-leaf-700',
-  },
-  bad: {
-    ring: 'border-danger-200',
-    glow: 'shadow-[0_2px_10px_rgba(#b03333,0.12)]',
-    badge: 'Broken',
-    badgeClass: 'bg-danger-50 text-danger-700',
-  },
-  plain: {
-    ring: 'border-line/80',
-    glow: '',
-    badge: '',
-    badgeClass: '',
-  },
-}
+// A runnable example. The card shows the intro line first, then the SQL, then
+// the table it is expected to return. A failing example (expectError) or a trap
+// (tone 'bad') is tinted red and its explaining caption becomes the error
+// message. The code itself is only displayed — it is verified at build time.
 
 export default function CodeBlock({ code, caption, tone, expect, expectError }) {
-  const t = TONES[tone] ?? TONES.plain
-  const outcome = expectError
-    ? { badge: 'Will not run', badgeClass: 'bg-danger-50 text-danger-700' }
-    : expect
-      ? { badge: 'Runs', badgeClass: 'bg-leaf-50 text-leaf-700' }
-      : { badge: '', badgeClass: '' }
+  const failed = Boolean(expectError)
+  const risky = tone === 'bad' && !failed
+  const flagged = failed || risky
+
+  const badge = failed
+    ? { tone: 'danger', text: 'Refused' }
+    : risky
+      ? { tone: 'danger', text: 'Careful' }
+      : expect
+        ? { tone: 'leaf', text: 'Runs' }
+        : null
 
   return (
-    <div className="space-y-2.5">
-      <Console
-        title="sql"
-        badge={outcome.badge}
-        badgeClass={outcome.badgeClass}
-        className={`${t.ring} ${t.glow}`}
-        bodyClass="p-3.5"
-      >
-        <pre className="overflow-x-auto font-mono text-[13px] leading-relaxed">
-          <SqlCode code={code} />
-        </pre>
-      </Console>
-
-      {caption && (
-        <p className="px-0.5 text-[13px] leading-relaxed text-body italic">{caption}</p>
+    <BlockCard
+      icon={<CodeIcon />}
+      title="Example"
+      tone={flagged ? 'danger' : 'plum'}
+      meta={badge ? <Badge tone={badge.tone}>{badge.text}</Badge> : null}
+      actions={<CopyButton text={code} />}
+      bodyClassName="space-y-3 p-4 sm:p-5"
+    >
+      {caption && <Caption text={caption} tone={flagged ? 'danger' : 'plain'} />}
+      {failed && !caption && (
+        <p className="rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-[13px] leading-relaxed text-danger-700">
+          This example is meant to fail — the engine refuses it before anything runs.
+        </p>
       )}
+
+      <CodeSurface code={code} tone={flagged ? 'danger' : 'plain'} />
 
       {expect && (
-        <div>
-          <div className="mb-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
-            {expect.label ?? 'Result'}
-          </div>
-          <ResultTable columns={expect.columns} rows={expect.rows} />
-        </div>
+        <TableCard
+          label={expect.label ?? 'Result'}
+          columns={expect.columns}
+          rows={expect.rows}
+        />
       )}
-    </div>
+    </BlockCard>
   )
 }

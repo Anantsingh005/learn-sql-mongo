@@ -1,3 +1,6 @@
+import BlockCard from './BlockCard.jsx'
+import { JoinIcon } from './BlockIcons.jsx'
+
 const TYPES = [
   {
     sql: 'INNER JOIN',
@@ -33,62 +36,61 @@ const SIDES = ['left', 'right']
 
 export default function JoinMap({ accent = '#1554c7', ink = accent }) {
   return (
-    <div className="rounded-2xl border border-line/80 bg-white p-3.5 shadow-[0_2px_14px_-10px_rgba(16,42,67,0.25)] sm:p-4">
-      <div className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">
-        Join types · which rows survive
-      </div>
+    <BlockCard
+      icon={<JoinIcon className="h-4 w-4" />}
+      title="Join types"
+      tone="plum"
+      bodyClassName="p-4 sm:p-5"
+    >
+      <div className="overflow-x-auto">
+        <div className="min-w-[280px] space-y-2">
+          {TYPES.map((t) => (
+            <div
+              key={t.sql}
+              className="rounded-xl border border-line bg-mist/30 p-2.5 transition-colors hover:bg-white"
+            >
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <code className="font-mono text-[12px] font-bold" style={{ color: ink }}>
+                  {t.sql}
+                </code>
+                {t.alias && <span className="font-mono text-[10px] text-muted">{t.alias}</span>}
+              </div>
 
-      <div className="space-y-2">
-        {TYPES.map((t) => (
-          <div
-            key={t.sql}
-            className="rounded-xl border border-line bg-white/60 p-2.5 transition-colors hover:border-line hover:bg-white"
-          >
-            <div className="flex flex-wrap items-baseline gap-x-2">
-              <code className="font-mono text-[12px] font-bold" style={{ color: ink }}>
-                {t.sql}
-              </code>
-              {t.alias && (
-                <span className="font-mono text-[10px] text-body">{t.alias}</span>
-              )}
+              <div className="mt-2 flex items-center gap-2">
+                {SIDES.map((side) => {
+                  const lost = t.dropped === side || t.dropped === 'both'
+                  return (
+                    <div key={side} className="flex flex-1 items-center gap-1.5">
+                      <div
+                        className={`h-6 flex-1 rounded border ${
+                          lost ? 'border-danger-200 bg-danger-50' : 'border-line bg-line/60'
+                        }`}
+                      />
+                      <span
+                        className={`shrink-0 font-mono text-[9px] uppercase tracking-wider ${
+                          lost ? 'text-danger-600' : 'text-leaf-600'
+                        }`}
+                      >
+                        {side}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <p className="mt-1.5 text-[11px] leading-snug text-muted">{t.keeps}</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-body">
+                <span className="text-danger-600/90">Drops:</span> {t.drops}
+              </p>
             </div>
+          ))}
 
-            <div className="mt-2 flex items-center gap-2">
-              {SIDES.map((side) => {
-                const lost = t.dropped === side || t.dropped === 'both'
-                return (
-                  <div key={side} className="flex flex-1 items-center gap-1.5">
-                    <div
-                      className={`h-6 flex-1 rounded border ${
-                        lost
-                          ? 'border-danger-200 bg-danger-50'
-                          : 'border-line bg-line/60'
-                      }`}
-                    />
-                    <span
-                      className={`shrink-0 font-mono text-[9px] uppercase tracking-wider ${
-                        lost ? 'text-danger-600' : 'text-leaf-600'
-                      }`}
-                    >
-                      {side}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-
-            <p className="mt-1.5 text-[11px] leading-snug text-muted">{t.keeps}</p>
-            <p className="mt-0.5 text-[11px] leading-snug text-body">
-              <span className="text-danger-600/90">Drops:</span> {t.drops}
-            </p>
-          </div>
-        ))}
+          <p className="pt-1 text-[11px] leading-relaxed text-muted">
+            Red means those rows disappear. A red side is how a join quietly loses data you did
+            not know was there.
+          </p>
+        </div>
       </div>
-
-      <p className="mt-3 text-[11px] leading-relaxed text-muted">
-        Red means those rows disappear. A red side is how a join quietly loses
-        data you did not know was there.
-      </p>
-    </div>
+    </BlockCard>
   )
 }
