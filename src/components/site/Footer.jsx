@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { useInView } from '../../hooks/useInView.js'
-import { submitFeedback, FEEDBACK_SUBJECTS } from '../../lib/feedback.js'
+import { submitFeedback, FEEDBACK_SUBJECTS, OPEN_FEEDBACK_EVENT, FEEDBACK_CONTACT_HREF } from '../../lib/feedback.js'
 import { ENTER_POP } from './motion.js'
 
 const FOOTER_LINKS = {
@@ -20,7 +20,7 @@ const FOOTER_LINKS = {
   social: [
     {
       label: 'Contact',
-      href: 'https://mail.google.com/mail/u/0/#inbox?compose=XBcJlDMdDMQtMZdGDPLxfKlsVlPRWDcVwsDkkkqnzhCjlNTvqSwvTWpVxHZGxcXrRtbTCnlFLrdXTrNQ',
+      href: FEEDBACK_CONTACT_HREF,
       isEmail: true,
     },
     { label: 'GitHub', href: 'https://github.com/Anantsingh005', external: true },
@@ -217,6 +217,13 @@ export default function Footer() {
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [columnsRef, columnsInView] = useInView()
   const contactHref = FOOTER_LINKS.social.find((l) => l.isEmail)?.href ?? 'mailto:'
+
+  // Other screens can request the feedback form by dispatching OPEN_FEEDBACK_EVENT.
+  useEffect(() => {
+    const open = () => setFeedbackOpen(true)
+    window.addEventListener(OPEN_FEEDBACK_EVENT, open)
+    return () => window.removeEventListener(OPEN_FEEDBACK_EVENT, open)
+  }, [])
 
   const feedbackClass =
     'soft-pulse inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_-16px_rgba(176,31,130,0.95)] transition-colors duration-150 hover:bg-brand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 focus-visible:ring-offset-plum-700'

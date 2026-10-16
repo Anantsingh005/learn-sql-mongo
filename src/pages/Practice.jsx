@@ -4,29 +4,47 @@ import {
   PRACTICE_TOPICS,
   PRACTICE_DIFFICULTIES,
   PRACTICE_TYPES,
+  practiceTopicOf,
 } from '../data/practice/practiceQuestions.js'
 import { loadPracticeQuestions, countPracticeQuestions } from '../data/practice/practiceQuestions.js'
 import { chapterSlugForQuestion } from '../data/academy/lessonFor.js'
 import { CHAPTERS } from '../data/academy/book.js'
+import { getQuizHelp } from '../data/quizHelp.js'
+import { useAuth } from '../context/AuthContext.jsx'
+import { openFeedbackForm, FEEDBACK_CONTACT_HREF } from '../lib/feedback.js'
 import { PracticeEngine, PRACTICE_STATUS } from '../engine/PracticeEngine.js'
 import { buildCheckQuery } from '../engine/queryCheck.js'
 import QueryRunner from '../engine/QueryRunner.js'
 import useQuizEngine from '../hooks/useQuizEngine.js'
 import SqlEditor from '../components/quiz/SqlEditor.jsx'
+import { OptionButton } from '../components/quiz/QuestionCard.jsx'
 import SchemaPanel from '../components/quiz/SchemaPanel.jsx'
 import HintReveal from '../components/quiz/HintReveal.jsx'
+import SqlCode from '../components/academy/SqlCode.jsx'
+import CopyButton from '../components/academy/CopyButton.jsx'
 import { useInView } from '../hooks/useInView.js'
 import { useReducedMotion } from '../hooks/useReducedMotion.js'
+import { useCountUp } from '../hooks/useCountUp.js'
 import { stagger } from '../components/site/motion.js'
 import { ArrowRightIcon, CodeIcon, LeafIcon } from '../components/site/icons.jsx'
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D']
 const CHAPTER_BY_SLUG = new Map(CHAPTERS.map((c) => [c.slug, c]))
-const TYPE_LABELS = { mc: 'Multiple choice', write: 'Write a query', bug: 'Fix the bug' }
-const TYPE_COLORS = {
-  mc: 'bg-brand-50 text-brand-700',
-  write: 'bg-leaf-50 text-leaf-700',
-  bug: 'bg-amber-50 text-amber-700',
+
+// Chips that describe the current question. `practice` is the current dataset's
+// type for a multiple-choice item; `mc` is kept for the legacy bank. Icons are
+// function declarations, so referencing them here is safe (hoisted).
+const TYPE_META = {
+  practice: { label: 'Multiple Choice', tone: 'border-brand-200 bg-brand-50 text-brand-700', Icon: ListIcon },
+  mc: { label: 'Multiple Choice', tone: 'border-brand-200 bg-brand-50 text-brand-700', Icon: ListIcon },
+  write: { label: 'Write a Query', tone: 'border-leaf-200 bg-leaf-50 text-leaf-700', Icon: CodeIcon },
+  bug: { label: 'Fix the Bug', tone: 'border-amber-200 bg-amber-50 text-amber-700', Icon: BugIcon },
+}
+
+const DIFFICULTY_META = {
+  easy: { label: 'Easy', tone: 'border-leaf-200 bg-leaf-50 text-leaf-700' },
+  medium: { label: 'Medium', tone: 'border-amber-200 bg-amber-50 text-amber-700' },
+  hard: { label: 'Hard', tone: 'border-danger-200 bg-danger-50 text-danger-700' },
 }
 
 function In({ size = 18, children, className = '', strokeWidth = 2, viewBox = '0 0 24 24' }) {
@@ -149,9 +167,107 @@ function CheckIcon(props) {
   )
 }
 
-function StarIcon({ className = '' }) {
+function XIcon(props) {
   return (
-    <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" className={className} aria-hidden="true">
+    <In {...props}>
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </In>
+  )
+}
+
+function BookmarkIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M6 4h12v16l-6-4-6 4V4Z" />
+    </In>
+  )
+}
+
+function StopIcon(props) {
+  return (
+    <In {...props}>
+      <rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" />
+    </In>
+  )
+}
+
+function SlidersIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M4 7h8" />
+      <path d="M16 7h4" />
+      <circle cx="14" cy="7" r="2" />
+      <path d="M4 17h8" />
+      <path d="M16 17h4" />
+      <circle cx="14" cy="17" r="2" />
+    </In>
+  )
+}
+
+function ListIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M8 6h12" />
+      <path d="M8 12h12" />
+      <path d="M8 18h12" />
+      <path d="M4 6h.01" />
+      <path d="M4 12h.01" />
+      <path d="M4 18h.01" />
+    </In>
+  )
+}
+
+function BugIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M8 9a4 4 0 0 1 8 0v4a4 4 0 0 1-8 0V9Z" />
+      <path d="M12 5v2M8.5 7.5 6.8 5.8M15.5 7.5l1.7-1.7" />
+      <path d="M4.5 12H8M16 12h3.5M5 16l2.6-1.2M19 16l-2.6-1.2M6.5 20l2.3-2.4M17.5 20l-2.3-2.4" />
+    </In>
+  )
+}
+
+function DifficultyIcon(props) {
+  return (
+    <In {...props}>
+      <path d="M6 19v-4" />
+      <path d="M12 19v-8" />
+      <path d="M18 19V7" />
+    </In>
+  )
+}
+
+function ChevronIcon(props) {
+  return (
+    <In {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </In>
+  )
+}
+
+function HelpIcon(props) {
+  return (
+    <In {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.6 9.3a2.5 2.5 0 0 1 4.9.7c0 1.7-2.5 2.1-2.5 3.7" />
+      <path d="M12 17h.01" />
+    </In>
+  )
+}
+
+function LockIcon(props) {
+  return (
+    <In {...props}>
+      <rect x="5" y="10.5" width="14" height="9.5" rx="2" />
+      <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+    </In>
+  )
+}
+
+function StarIcon({ size = 12, className = '' }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" className={className} aria-hidden="true">
       <path d="M12 2.3l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.6 6.2 20.1l1.6-6.6L2.6 9.1l6.8-.5L12 2.3Z" />
     </svg>
   )
@@ -509,203 +625,562 @@ function MongoPracticeCard() {
   )
 }
 
-function Chip({ children, className }) {
+function StatTile({ icon: Icon, iconClass, value, label }) {
   return (
-    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${className}`}>
+    <div className="flex items-center gap-2">
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconClass}`}>
+        <Icon size={15} strokeWidth={2.6} />
+      </span>
+      <span className="flex min-w-0 flex-col leading-tight">
+        <span key={value} className="pop-in font-mono text-sm font-bold text-ink">
+          {value}
+        </span>
+        <span className="text-[11px] text-muted">{label}</span>
+      </span>
+    </div>
+  )
+}
+
+function PracticeStats({ snapshot, total }) {
+  const frac = total > 0 ? Math.min((snapshot.index + 1) / total, 1) : 0
+  return (
+    <div className="grid grid-cols-2 items-center gap-3 min-[700px]:flex min-[700px]:gap-5">
+      <div className="col-span-2 flex min-w-0 flex-col gap-1.5 min-[700px]:col-auto min-[700px]:flex-1">
+        <span className="font-mono text-xs text-muted">
+          Question <span className="font-bold text-ink">{snapshot.index + 1}</span> / {total}
+        </span>
+        <div
+          role="progressbar"
+          aria-label="Question progress"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={snapshot.index + 1}
+          aria-valuetext={`Question ${snapshot.index + 1} of ${total}`}
+          className="h-1.5 w-full overflow-hidden rounded-full bg-line/70"
+        >
+          <div
+            className="h-full w-full origin-left rounded-full bg-brand-500 transition-transform duration-500 ease-out motion-reduce:transition-none"
+            style={{ transform: `scaleX(${frac})` }}
+          />
+        </div>
+      </div>
+
+      <StatTile icon={CheckIcon} iconClass="bg-success-50 text-success" value={snapshot.correct} label="Correct" />
+      <StatTile icon={XIcon} iconClass="bg-danger-50 text-danger-700" value={snapshot.wrong} label="Wrong" />
+      <StatTile icon={BookmarkIcon} iconClass="bg-brand-50 text-brand-600" value={snapshot.answered} label="Practiced" />
+
+      <div className="hidden h-9 w-px shrink-0 bg-line min-[700px]:block" aria-hidden="true" />
+
+      <StatTile icon={StarIcon} iconClass="bg-amber-50 text-amber-600" value={snapshot.score} label="Score" />
+    </div>
+  )
+}
+
+// A question prompt is stored as "<sql block>\n\n<sentence>" when it carries
+// SQL, or as a plain sentence otherwise. Split it so the SQL and the question
+// sentence can be shown in their own surfaces.
+function splitQuestion(text) {
+  if (typeof text !== 'string') return { sql: null, sentence: '' }
+  const splitAt = text.indexOf('\n\n')
+  if (splitAt === -1) return { sql: null, sentence: text }
+  return { sql: text.slice(0, splitAt).trimEnd(), sentence: text.slice(splitAt + 2).trim() }
+}
+
+// Legacy questions sometimes embed a "(pass 3)" marker in the prompt text. The
+// session's pass cycle is not surfaced to the player, so strip it from display.
+function stripPassMarkers(text) {
+  return String(text ?? '')
+    .replace(/\(\s*pass\s+\d+\s*\)/gi, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim()
+}
+
+// Small keycap used by the desktop keyboard-shortcut hint line. Decorative —
+// the shortcuts themselves are described in the surrounding sentence text.
+function Kbd({ children }) {
+  return (
+    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-line bg-mist px-1 font-mono text-[10px] font-bold text-body">
+      {children}
+    </kbd>
+  )
+}
+
+// Desktop-only hint describing the session keyboard shortcuts. Rendered under
+// the actions; hidden on touch-first widths where there is no physical keyboard.
+function KeyboardHint({ children }) {
+  return (
+    <p className="hidden flex-wrap items-center gap-1.5 text-[11px] font-medium text-muted min-[1024px]:flex">
+      {children}
+    </p>
+  )
+}
+
+function MetaChip({ tone, icon: Icon, children }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${tone}`}>
+      {Icon && <Icon size={13} strokeWidth={2.2} />}
       {children}
     </span>
   )
 }
 
-function PracticeHUD({ snapshot }) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-line bg-white px-5 py-4">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-100 via-plum-100 to-brand-100 opacity-70" />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="rounded-md bg-line px-2 py-1 font-mono text-xs text-muted">
-            Q <span className="font-bold text-brand-700">{snapshot.index + 1}</span>/{snapshot.total}
-          </span>
-          {snapshot.pass > 0 && (
-            <span className="rounded-md bg-plum-50 px-2 py-1 font-mono text-xs font-bold text-plum-700">
-              pass {snapshot.pass + 1}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-muted">
-            {snapshot.correct}
-            <span className="mx-1 text-body">/</span>
-            {snapshot.graded} correct
-          </span>
-          <span className="font-mono text-xs text-muted">{snapshot.wrong} wrong</span>
-          <span className="font-mono text-xs text-muted">{snapshot.answered} practiced</span>
-          <span className="font-mono text-sm text-muted">
-            Score{' '}
-            <span className="text-lg font-bold text-amber-700 drop-shadow-[0_0_10px_rgba(#a5680f,0.22)]">
-              {snapshot.score}
-            </span>
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function PracticeButton({ option, label, selected, onSelect, disabled }) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      disabled={disabled}
-      className={`group relative flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors disabled:cursor-not-allowed ${
-        selected
-          ? 'pop-on pop-on-indigo border-brand-200 bg-brand-50 text-brand-700'
-          : 'border-line bg-line/60 text-muted hover:border-line hover:bg-line'
-      }`}
-    >
-      <span
-        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md font-mono text-xs font-bold ${
-          selected ? 'bg-brand-600 text-white' : 'bg-line text-muted group-hover:bg-line-soft'
-        }`}
-      >
-        {label}
-      </span>
-      <code className="whitespace-pre-wrap font-mono text-[13px] leading-relaxed">{option}</code>
-    </button>
-  )
-}
-
-function QuestionView({ question, selected, onSelect, isFeedback }) {
-  const diffColor =
-    question.difficulty === 'easy'
-      ? 'bg-line text-muted'
-      : question.difficulty === 'medium'
-        ? 'bg-brand-50 text-brand-700'
-        : 'bg-danger-50 text-danger-700'
+function QuestionMeta({ question }) {
+  const type = TYPE_META[question.type] ?? TYPE_META.practice
+  const diff = DIFFICULTY_META[question.difficulty]
   const chapter = CHAPTER_BY_SLUG.get(chapterSlugForQuestion(question))
   return (
-    <article className="rounded-2xl border border-line bg-white p-6">
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <Chip className={TYPE_COLORS[question.type] ?? 'bg-brand-50 text-brand-700'}>
-          {TYPE_LABELS[question.type] ?? 'Multiple choice'}
-        </Chip>
-        <Chip className={diffColor}>{question.difficulty}</Chip>
-        <span className="text-muted">{question.subtopic}</span>
-        {chapter && (
-          <Link
-            to={`/academy/sql/${chapter.slug}`}
-            className="rounded-full border border-line px-2.5 py-0.5 text-muted transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
-          >
-            📖 Ch {chapter.number} · {chapter.title}
-          </Link>
-        )}
-      </div>
-
-      <h2 className="mt-3 whitespace-pre-wrap font-mono text-lg font-medium leading-relaxed text-body">
-        {question.question}
-      </h2>
-
-      {question.type === 'bug' && question.buggyQuery && (
-        <div className="mt-4">
-          <div className="mb-1 text-xs font-medium text-muted">Buggy query — find the bug:</div>
-          <pre className="overflow-x-auto rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 font-mono text-[13px] leading-relaxed text-amber-700">
-            {question.buggyQuery}
-          </pre>
-        </div>
+    <div className="quiz-fade-swap flex flex-wrap items-center gap-2">
+      <MetaChip tone={type.tone} icon={type.Icon}>
+        {type.label}
+      </MetaChip>
+      {diff && (
+        <MetaChip tone={diff.tone} icon={DifficultyIcon}>
+          {diff.label}
+        </MetaChip>
       )}
-
-      {(question.type === 'write' || question.type === 'bug') && <SchemaPanel schema={question.schema} />}
-
-      {question.type === 'mc' && question.schema && <SchemaPanel schema={question.schema} />}
-
-      {question.type === 'mc' && (
-        <div className="mt-4 flex flex-col gap-2">
-          {question.options.map((opt, i) => (
-            <PracticeButton
-              key={i}
-              label={OPTION_LABELS[i]}
-              option={opt}
-              selected={selected === opt}
-              onSelect={() => onSelect(opt)}
-              disabled={isFeedback}
-            />
-          ))}
-        </div>
+      {question.subtopic && (
+        <MetaChip tone="border-line bg-mist/60 text-body">{question.subtopic}</MetaChip>
       )}
-    </article>
-  )
-}
-
-function QuerySection({ question, onSubmit, disabled }) {
-  return (
-    <div className="flex flex-col gap-3">
-      {!disabled && <HintReveal hint={question.hint} />}
-      <SqlEditor key={question.id} question={question} onSubmit={onSubmit} disabled={disabled} />
+      {chapter && (
+        <Link
+          to={`/academy/sql/${chapter.slug}`}
+          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-[11px] font-medium text-muted outline-none transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+        >
+          <BookIcon size={13} strokeWidth={2} />
+          Ch {chapter.number} · {chapter.title}
+        </Link>
+      )}
     </div>
   )
 }
 
-function Feedback({ answer, onNext }) {
-  if (!answer) return null
-  const correct = answer.correct
-  const isQuery = answer.type === 'write' || answer.type === 'bug'
+// Dark "SQL Query" card. Each line gets its own number gutter and is tokenised
+// by the shared academy highlighter, so the colours match the rest of the app.
+function SqlCard({ sql }) {
+  if (!sql) return null
+  const lines = sql.replace(/\n$/, '').split('\n')
   return (
-    <div className="rounded-2xl border p-6">
-      <div
-        className={`mb-4 flex items-center gap-3 rounded-lg px-4 py-3 ${
-          correct ? 'border border-leaf-200 bg-leaf-50' : 'border border-danger-200 bg-danger-50'
-        }`}
-      >
-        <span className={`text-xl font-black ${correct ? 'text-leaf-700' : 'text-danger-700'}`}>
-          {answer.skipped ? 'Skipped' : correct ? 'Correct!' : 'Incorrect'}
-        </span>
-        {answer.reason && <span className="text-sm text-muted">{answer.reason}</span>}
+    <div className="quiz-card-swap overflow-hidden rounded-2xl border border-brand-800 bg-ink shadow-[0_1px_2px_rgba(45,0,34,0.3)]">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2">
+        <div className="flex items-center gap-2.5">
+          <span className="flex items-center gap-1.5" aria-hidden="true">
+            <span className="h-2.5 w-2.5 rounded-full bg-brand-500/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-leaf-400/70" />
+          </span>
+          <span className="font-mono text-xs font-semibold tracking-wide text-paper/80">SQL Query</span>
+        </div>
+        <CopyButton text={sql} tone="dark" />
       </div>
+      <pre className="overflow-x-auto px-4 py-3 font-mono text-[13px] leading-relaxed">
+        {lines.map((line, i) => (
+          <span key={i} className="flex">
+            <span className="mr-4 w-6 shrink-0 select-none text-right text-paper/30" aria-hidden="true">
+              {i + 1}
+            </span>
+            <span className="min-w-0 flex-1 whitespace-pre">
+              <SqlCode code={line || ' '} tone="dark" keepWhitespace />
+            </span>
+          </span>
+        ))}
+      </pre>
+    </div>
+  )
+}
 
-      {isQuery && answer.answer != null && (
-        <div className="mt-2">
-          <p className="mb-1 text-xs font-medium text-muted">Your query:</p>
-          <pre className="overflow-x-auto rounded-lg border border-line bg-white px-3 py-2 font-mono text-[13px] text-leaf-700">
-            {answer.answer}
-          </pre>
-        </div>
-      )}
+// The question itself, on a soft lavender band beneath the code card.
+function AskBand({ text }) {
+  if (!text) return null
+  return (
+    <div className="quiz-card-swap rounded-xl border border-plum-100 bg-plum-50 px-4 py-3">
+      <p className="text-sm font-medium leading-relaxed text-body">{text}</p>
+    </div>
+  )
+}
 
-      {isQuery && answer.actual && (
-        <div className="mt-2">
-          <p className="mb-1 text-xs font-medium text-muted">Actual result (rows returned: {answer.actual.rows?.length ?? 0}):</p>
-          <pre className="overflow-x-auto rounded-lg border border-line bg-white px-3 py-2 font-mono text-[13px] text-muted">
-            {JSON.stringify(answer.actual, null, 2)}
-          </pre>
+function VerdictBlock({ answer, explanation, onNext }) {
+  if (!answer) return null
+  const skipped = answer.skipped
+  const correct = answer.correct
+  const tone = skipped
+    ? { box: 'border-line bg-mist/60', text: 'text-muted' }
+    : correct
+      ? { box: 'border-leaf-200 bg-leaf-50', text: 'text-leaf-700' }
+      : { box: 'border-danger-200 bg-danger-50', text: 'text-danger-700' }
+  const badge = skipped ? 'bg-muted' : correct ? 'bg-leaf-500' : 'bg-danger-500'
+  const detail = explanation || answer.reason
+  return (
+    <div className="flex flex-col gap-3 border-t border-line pt-4">
+      <div className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${tone.box}`}>
+        <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white ${badge}`}>
+          {skipped ? (
+            <span className="h-1.5 w-1.5 rounded-full bg-white" />
+          ) : correct ? (
+            <CheckIcon size={12} strokeWidth={3} />
+          ) : (
+            <XIcon size={12} strokeWidth={3} />
+          )}
+        </span>
+        <div className="min-w-0">
+          <p className={`text-sm font-bold ${tone.text}`}>
+            {skipped ? 'Skipped' : correct ? 'Correct!' : 'Not quite'}
+          </p>
+          {detail && <p className="mt-1 text-sm leading-relaxed text-body">{detail}</p>}
         </div>
-      )}
-
-      {isQuery && !answer.skipped && answer.question.fixedQuery && (
-        <div className="mt-2">
-          <p className="mb-1 text-xs font-medium text-leaf-700">Fixed query:</p>
-          <pre className="overflow-x-auto rounded-lg border border-leaf-200 bg-leaf-50 px-3 py-2 font-mono text-[13px] text-leaf-700">
-            {answer.question.fixedQuery}
-          </pre>
-        </div>
-      )}
-
-      {answer.question.explanation && (
-        <div className="mt-3 rounded-lg border border-line bg-line/50 px-4 py-3">
-          <div className="text-sm font-semibold text-muted">Why</div>
-          <p className="mt-1 text-sm leading-relaxed text-muted">{answer.question.explanation}</p>
-        </div>
-      )}
-      <div className="mt-5 flex items-center justify-end">
+      </div>
+      <div className="flex justify-end">
         <button
           type="button"
           onClick={onNext}
-          className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700"
+          className="group inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white shadow-sm shadow-brand-600/20 outline-none transition hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 motion-safe:active:scale-[0.97]"
         >
           Next question
+          <span aria-hidden="true" className="transition-transform motion-safe:group-hover:translate-x-0.5">→</span>
         </button>
       </div>
     </div>
+  )
+}
+
+function MultipleChoiceArea({ question, selected, onSelect, isFeedback, answer, onSubmit, onSkip, onNext }) {
+  const chosen = isFeedback ? answer?.selected : selected
+  const correctText = question.correctAnswer
+  return (
+    <div className="flex flex-col gap-4">
+      <div role="radiogroup" aria-label="Answer choices" className="flex flex-col gap-2.5">
+        {question.options.map((opt, i) => {
+          let state = 'default'
+          if (isFeedback) {
+            if (opt === correctText) state = 'correct'
+            else if (opt === chosen) state = 'wrong'
+            else state = 'muted'
+          } else if (opt === selected) {
+            state = 'selected'
+          }
+          return (
+            <OptionButton
+              key={i}
+              index={i}
+              label={OPTION_LABELS[i] ?? String(i + 1)}
+              text={opt}
+              state={state}
+              radio
+              animate
+              checked={opt === chosen}
+              onSelect={() => onSelect(opt)}
+              disabled={isFeedback}
+            />
+          )
+        })}
+      </div>
+
+      {isFeedback ? (
+        <VerdictBlock answer={answer} explanation={question.explanation} onNext={onNext} />
+      ) : (
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={onSkip}
+              className="press inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-muted outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+            >
+              Skip
+            </button>
+            <button
+              type="button"
+              disabled={selected === null}
+              onClick={() => onSubmit(selected)}
+              className="group inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white shadow-sm shadow-brand-600/20 outline-none transition hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 motion-safe:enabled:active:scale-[0.97]"
+            >
+              Submit
+              <span aria-hidden="true" className="transition-transform motion-safe:group-hover:translate-x-0.5">→</span>
+            </button>
+          </div>
+
+          <KeyboardHint>
+            <Kbd>A</Kbd>–<Kbd>D</Kbd> choose an option
+            <span aria-hidden="true" className="text-line">·</span>
+            <Kbd>Enter</Kbd> submit
+            <span aria-hidden="true" className="text-line">·</span>
+            <Kbd>S</Kbd> skip
+          </KeyboardHint>
+        </>
+      )}
+    </div>
+  )
+}
+
+function QuerySection({ question, onSubmit, disabled, isFeedback, snapshot, answer, onNext, onSkip }) {
+  // Practice answers store the run under `actual`; the shared editor expects
+  // `actualResult`. Map it across without touching how the query is checked.
+  const editorAnswer = answer ? { ...answer, actualResult: answer.actual } : null
+  return (
+    <div className="quiz-fade-swap flex flex-col gap-3">
+      <SqlEditor
+        key={question.id}
+        question={question}
+        onSubmit={onSubmit}
+        disabled={disabled}
+        isFeedback={isFeedback}
+        snapshot={snapshot}
+        answer={editorAnswer}
+        nextLabel="Next question"
+        onNext={onNext}
+        onSkip={onSkip}
+        showShortcutHint={false}
+      />
+      {!isFeedback && (
+        <KeyboardHint>
+          <Kbd>Ctrl</Kbd>+<Kbd>Enter</Kbd> run your query
+          <span aria-hidden="true" className="text-line">·</span>
+          <Kbd>S</Kbd> skip
+        </KeyboardHint>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Session rail
+//
+// The right-hand column of the practice screen. Everything here reads from the
+// live snapshot / current question; no card hard-codes text that depends on the
+// session, and a card whose data is missing simply renders nothing.
+// ---------------------------------------------------------------------------
+
+// The rail's two data cards start expanded on desktop and collapsed on phones,
+// mirroring the schema panel's mobile behaviour.
+const RAIL_OPEN_QUERY = '(min-width: 700px)'
+const RAIL_TOPIC_ORDER = ['table-query', 'joins', 'aggregation']
+
+function railDefaultOpen() {
+  if (typeof window === 'undefined' || !window.matchMedia) return true
+  return window.matchMedia(RAIL_OPEN_QUERY).matches
+}
+
+function RailCard({ icon, label, children }) {
+  return (
+    <section className="rounded-2xl border border-line bg-white p-4 shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
+      <div className="flex items-center gap-2 text-brand-600">
+        {icon}
+        <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-body">{label}</h3>
+      </div>
+      <div className="mt-3">{children}</div>
+    </section>
+  )
+}
+
+function CollapsibleRailCard({ icon, label, defaultOpen = true, children }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <section className="rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(16,42,67,0.05)]">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left outline-none transition-colors hover:bg-mist/50 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-inset"
+      >
+        <span className="flex items-center gap-2 text-brand-600">
+          {icon}
+          <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-body">{label}</span>
+        </span>
+        <ChevronIcon
+          size={15}
+          strokeWidth={2.4}
+          className={`shrink-0 text-muted transition-transform duration-200 motion-reduce:transition-none ${open ? '' : '-rotate-90'}`}
+        />
+      </button>
+      {open && <div className="border-t border-line px-4 py-3">{children}</div>}
+    </section>
+  )
+}
+
+function AccuracyRing({ pct, size = 92, stroke = 9 }) {
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const clamped = Math.max(0, Math.min(100, pct))
+  // Hold the arc empty for the first frame, then release it so the dashoffset
+  // transition sweeps round to the live value. With reduced motion the
+  // transition is switched off, so the ring simply lands on its value.
+  const [primed, setPrimed] = useState(true)
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setPrimed(false))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+  const offset = primed ? circumference : circumference * (1 - clamped / 100)
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90" aria-hidden="true">
+      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke} className="stroke-line" />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        className="stroke-brand-500 transition-[stroke-dashoffset] duration-700 ease-out motion-reduce:transition-none"
+      />
+    </svg>
+  )
+}
+
+function SessionCard({ snapshot }) {
+  const answered = snapshot.graded
+  const skipped = snapshot.skipped
+  const accuracy = answered > 0 ? Math.round((snapshot.correct / answered) * 100) : 0
+  const shown = useCountUp(accuracy, 700)
+  const caption = answered === 0 ? 'Answer a question to start.' : "Keep going! You're doing great!"
+  return (
+    <RailCard icon={<TargetIcon size={15} strokeWidth={2.4} />} label="Your Session">
+      <div className="flex items-center gap-4">
+        <div className="relative shrink-0" style={{ width: 92, height: 92 }}>
+          <AccuracyRing pct={accuracy} />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-mono text-2xl font-black tabular-nums text-ink">{shown}%</span>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-ink">
+            {answered} answered, {skipped} skipped
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-muted">{caption}</p>
+        </div>
+      </div>
+    </RailCard>
+  )
+}
+
+function ByTopicCard({ snapshot }) {
+  const stats = new Map()
+  for (const answer of snapshot.answers) {
+    if (answer.skipped) continue
+    const topic = practiceTopicOf(answer.question) ?? 'other'
+    const current = stats.get(topic) ?? { correct: 0, answered: 0 }
+    current.answered += 1
+    if (answer.correct) current.correct += 1
+    stats.set(topic, current)
+  }
+  const rows = [...stats.entries()]
+    .filter(([, value]) => value.answered > 0)
+    .sort((a, b) => {
+      const ai = RAIL_TOPIC_ORDER.indexOf(a[0])
+      const bi = RAIL_TOPIC_ORDER.indexOf(b[0])
+      return (ai === -1 ? RAIL_TOPIC_ORDER.length : ai) - (bi === -1 ? RAIL_TOPIC_ORDER.length : bi)
+    })
+  if (rows.length === 0) return null
+  return (
+    <CollapsibleRailCard
+      icon={<ChartIcon size={15} strokeWidth={2.4} />}
+      label="By Topic"
+      defaultOpen={railDefaultOpen()}
+    >
+      <div className="flex flex-col gap-3">
+        {rows.map(([topic, value]) => {
+          const pct = Math.round((value.correct / value.answered) * 100)
+          return (
+            <div key={topic}>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-xs font-semibold text-body">{PRACTICE_TOPICS[topic] ?? topic}</span>
+                <span className="font-mono text-[11px] text-muted">
+                  {value.correct}/{value.answered}
+                </span>
+              </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-line/70">
+                <div
+                  className="bar-grow h-full rounded-full bg-brand-500 transition-[width] duration-500 ease-out motion-reduce:transition-none"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </CollapsibleRailCard>
+  )
+}
+
+function LearnTopicCard({ question }) {
+  const chapter = CHAPTER_BY_SLUG.get(chapterSlugForQuestion(question))
+  if (!chapter) return null
+  return (
+    <RailCard icon={<BookIcon size={15} strokeWidth={2.4} />} label="Learn This Topic">
+      <p className="text-sm font-bold text-ink">
+        Ch {chapter.number} · {chapter.title}
+      </p>
+      <Link
+        to={`/academy/sql/${chapter.slug}`}
+        className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-semibold text-brand-700 outline-none transition-colors hover:text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+      >
+        Read the lesson
+        <ArrowRightIcon size={14} strokeWidth={2.4} />
+      </Link>
+    </RailCard>
+  )
+}
+
+function QuickTipsCard({ question }) {
+  const tips = (getQuizHelp(question)?.tips ?? []).filter(Boolean)
+  if (tips.length === 0) return null
+  return (
+    <CollapsibleRailCard
+      icon={<LeafIcon size={15} strokeWidth={1.9} />}
+      label="Quick Tips"
+      defaultOpen={railDefaultOpen()}
+    >
+      <ul className="flex flex-col gap-2">
+        {tips.map((tip) => (
+          <li key={tip} className="flex gap-2 text-sm leading-relaxed text-body">
+            <CheckIcon size={14} strokeWidth={2.6} className="mt-0.5 shrink-0 text-leaf-600" />
+            <span>{tip}</span>
+          </li>
+        ))}
+      </ul>
+    </CollapsibleRailCard>
+  )
+}
+
+function NeedHelpCard({ question, isGuest }) {
+  const help = getQuizHelp(question)
+  const isQuery = question.type === 'write' || question.type === 'bug'
+  const hasHint = isQuery && Boolean(question.hint)
+  const feedbackClass =
+    'mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-line bg-white px-4 text-sm font-semibold text-body outline-none transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2'
+  return (
+    <RailCard icon={<HelpIcon size={15} strokeWidth={2.4} />} label="Need Help?">
+      {hasHint ? (
+        isGuest ? (
+          <div className="flex items-start gap-2.5 rounded-xl border border-line bg-mist/60 px-3.5 py-2.5">
+            <LockIcon size={15} strokeWidth={2.2} className="mt-0.5 shrink-0 text-muted" />
+            <p className="text-sm leading-relaxed text-muted">
+              <Link to="/auth?mode=signup" className="font-semibold text-brand-700 hover:underline">
+                Create an account
+              </Link>{' '}
+              to use hints.
+            </p>
+          </div>
+        ) : (
+          <HintReveal hint={question.hint} label="View Hint" openLabel="Hide Hint" />
+        )
+      ) : help?.quickInfo ? (
+        <p className="rounded-xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white px-3.5 py-2.5 text-sm leading-relaxed text-brand-700">
+          {help.quickInfo}
+        </p>
+      ) : null}
+
+      {isGuest ? (
+        <a href={FEEDBACK_CONTACT_HREF} target="_blank" rel="noopener noreferrer" className={feedbackClass}>
+          Send Feedback
+          <ArrowRightIcon size={14} strokeWidth={2.4} />
+        </a>
+      ) : (
+        <button type="button" onClick={openFeedbackForm} className={feedbackClass}>
+          Send Feedback
+          <ArrowRightIcon size={14} strokeWidth={2.4} />
+        </button>
+      )}
+    </RailCard>
   )
 }
 
@@ -1305,7 +1780,7 @@ function Picker({ topic, difficulty, types, onTopic, onDifficulty, onTypes, bank
                 <button
                   type="button"
                   onClick={onRetry}
-                  className="mt-3 inline-flex items-center gap-2 rounded-lg bg-danger-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-danger-700/90 focus-visible:ring-2 focus-visible:ring-danger-700 focus-visible:ring-offset-2"
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg bg-danger-700 px-4 text-sm font-semibold text-white outline-none transition-colors hover:bg-danger-700/90 focus-visible:ring-2 focus-visible:ring-danger-700 focus-visible:ring-offset-2"
                 >
                   Retry
                 </button>
@@ -1448,6 +1923,85 @@ function Results({ snapshot, onReplay, onChangeSettings }) {
   )
 }
 
+// Shimmering placeholder block used by the loading skeleton.
+function Skel({ className = '' }) {
+  return <span aria-hidden="true" className={`shimmer block rounded-md bg-line ${className}`} />
+}
+
+// Shown while the first question of a session is being prepared. Mirrors the
+// session layout so the page does not jump when the real question arrives.
+function SessionSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="mx-auto grid w-full max-w-[1400px] grid-cols-1 items-start gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_320px]"
+    >
+      <span className="sr-only">Loading question…</span>
+      <div className="min-w-0">
+        <div className="rounded-2xl border border-line bg-white p-6">
+          <div className="flex flex-col gap-4 border-b border-line pb-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Skel className="h-8 w-52 rounded-full" />
+              <Skel className="h-11 w-32 rounded-lg" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Skel className="h-4 w-40" />
+              <Skel className="h-1.5 w-full rounded-full" />
+            </div>
+          </div>
+          <div className="mt-6 flex flex-col gap-4">
+            <div className="flex gap-2">
+              <Skel className="h-7 w-28 rounded-full" />
+              <Skel className="h-7 w-20 rounded-full" />
+              <Skel className="h-7 w-24 rounded-full" />
+            </div>
+            <Skel className="h-40 w-full rounded-2xl" />
+            <Skel className="h-12 w-full rounded-xl" />
+            <div className="flex flex-col gap-2.5">
+              {[0, 1, 2, 3].map((i) => (
+                <Skel key={i} className="h-14 w-full rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="hidden min-w-0 flex-col gap-4 min-[1100px]:flex">
+        <Skel className="h-40 w-full rounded-2xl" />
+        <Skel className="h-28 w-full rounded-2xl" />
+        <Skel className="h-28 w-full rounded-2xl" />
+      </div>
+    </div>
+  )
+}
+
+// Friendly dead-end when the filters chosen on the setup screen match no
+// questions. The button returns to the setup screen with the filters cleared.
+function EmptyState({ onBack }) {
+  return (
+    <div className="mx-auto mt-6 max-w-lg text-center sm:mt-12">
+      <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+        <TargetIcon size={30} strokeWidth={2} />
+      </span>
+      <h2 className="mt-5 text-2xl font-black tracking-tight text-ink">
+        No questions match those filters
+      </h2>
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
+        Every combination has a gap now and then. Head back and try another topic, level, or
+        question type — there is plenty to practice.
+      </p>
+      <button
+        type="button"
+        onClick={onBack}
+        className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-600 px-6 font-semibold text-white shadow-sm shadow-brand-600/25 outline-none transition-colors hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
+      >
+        Back to setup
+        <ArrowRightIcon size={16} strokeWidth={2.4} />
+      </button>
+    </div>
+  )
+}
+
 function Practice() {
   const [params, setParams] = useSearchParams()
   const { type: types, topic, level: difficulty } = parseFilterParams(params)
@@ -1461,6 +2015,8 @@ function Practice() {
   const [engine, setEngine] = useState(null)
   const [selected, setSelected] = useState(null)
   const snapshot = useQuizEngine(engine)
+  const { user, configured } = useAuth()
+  const isGuest = configured && !user
 
   // Selecting a chip rewrites the matching query param, so the choice is
   // shareable, survives reload, and is restored on back/forward navigation.
@@ -1502,6 +2058,66 @@ function Practice() {
     return () => engine?.destroy()
   }, [engine])
 
+  // Session keyboard shortcuts. A–D pick an option, Enter submits, S skips.
+  // Everything is ignored while focus is inside a form control (so typing in
+  // the SQL editor and pressing Enter/S never triggers these), and Ctrl/Cmd and
+  // Alt are reserved for the editor's own shortcuts (e.g. Ctrl+Enter to run).
+  useEffect(() => {
+    if (!engine || !snapshot) return undefined
+    const status = snapshot.status
+    if (status !== PRACTICE_STATUS.QUESTION && status !== PRACTICE_STATUS.FEEDBACK) return undefined
+
+    const isEditable = (node) =>
+      node instanceof Element && node.closest('input, textarea, select, [contenteditable="true"]')
+    const isInteractive = (node) => node instanceof Element && node.closest('button, a')
+
+    const onKeyDown = (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return
+      if (isEditable(event.target)) return
+
+      const key = event.key.toLowerCase()
+      const current = snapshot.current
+      const isChoice = Array.isArray(current?.options) && current.options.length > 0
+
+      if (status === PRACTICE_STATUS.FEEDBACK) {
+        if (key === 'enter' && !isInteractive(event.target)) {
+          event.preventDefault()
+          setSelected(null)
+          engine.next()
+        }
+        return
+      }
+
+      // In-progress question: ignore while a query answer is still running.
+      if (snapshot.runningAnswer) return
+
+      if (key === 'enter') {
+        if (isChoice && selected != null && !isInteractive(event.target)) {
+          event.preventDefault()
+          engine.submit(selected)
+        }
+        return
+      }
+
+      if (key === 's') {
+        // Both multiple-choice and query questions offer a Skip affordance.
+        event.preventDefault()
+        engine.skip()
+        return
+      }
+
+      if (!isChoice) return
+      const index = ['a', 'b', 'c', 'd'].indexOf(key)
+      if (index !== -1 && index < current.options.length) {
+        event.preventDefault()
+        setSelected(current.options[index])
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [engine, snapshot, selected])
+
   const handleStart = (startOptions = { topic, difficulty, types }) => {
     const nextEngine = new PracticeEngine(bank, { checkQuery: buildCheckQuery(QueryRunner) })
     setEngine((prev) => {
@@ -1529,6 +2145,10 @@ function Practice() {
   if (!engine) {
     if (!game) return <GameSelect onPick={setGame} />
     if (game === 'mongo') return <MongoComingSoon onBack={() => setGame(null)} />
+    const available = loading || loadError ? null : countPracticeQuestions(bank ?? [], topic, difficulty, types)
+    if (available === 0) {
+      return <EmptyState onBack={() => setParams(new URLSearchParams())} />
+    }
     return (
       <Picker
         topic={topic}
@@ -1551,12 +2171,12 @@ function Practice() {
     return <Results snapshot={snapshot} onReplay={() => handleStart({ topic, difficulty, types })} onChangeSettings={handleChangeSettings} />
   }
 
-  if (!snapshot || snapshot.status === PRACTICE_STATUS.READY) return null
+  if (!snapshot || snapshot.status === PRACTICE_STATUS.READY) return <SessionSkeleton />
 
   const question = snapshot.current
   const isFeedback = snapshot.status === PRACTICE_STATUS.FEEDBACK
   const lastAnswer = snapshot.answers[snapshot.answers.length - 1]
-  const isMc = question.type === 'mc'
+  const isChoice = Array.isArray(question.options) && question.options.length > 0
   const summary = [
     PRACTICE_TYPES[snapshot.types] ?? snapshot.types,
     snapshot.topic !== 'all' ? PRACTICE_TOPICS[snapshot.topic] : 'All topics',
@@ -1565,84 +2185,112 @@ function Practice() {
     .filter(Boolean)
     .join(' · ')
 
+  const hasSchema = Boolean(question.schema)
+  // Same source of truth as the setup screen's "N questions available": both go
+  // through countPracticeQuestions -> selectPracticeQuestions, so the deck size
+  // and the picker count can never disagree.
+  const total = countPracticeQuestions(bank ?? [], snapshot.topic, snapshot.difficulty, snapshot.types)
+
+  // Announced to screen readers whenever feedback appears. Kept as one always-
+  // mounted polite region so the message is reliably read out.
+  const liveMessage = (() => {
+    if (!isFeedback || !lastAnswer) return ''
+    if (lastAnswer.skipped) return 'Question skipped.'
+    if (lastAnswer.correct) return 'Correct.'
+    const answer = question.options?.[question.correctAnswer]
+    return answer ? `Not quite. The correct answer is ${answer}.` : 'Not quite.'
+  })()
+
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-medium text-muted">{summary}</span>
-        <button
-          type="button"
-          onClick={() => engine.end()}
-          className="rounded-lg border border-danger-200 px-4 py-1.5 text-sm font-semibold text-danger-700 transition-colors hover:bg-danger-50"
-        >
-          End practice
-        </button>
+    <div className="mx-auto w-full max-w-[1400px]">
+      <div role="status" aria-live="polite" className="sr-only">
+        {liveMessage}
       </div>
-
-      <PracticeHUD snapshot={snapshot} />
-
-      <QuestionView
-        key={question.id + String(isFeedback)}
-        question={question}
-        selected={selected}
-        onSelect={(opt) => !isFeedback && setSelected(opt)}
-        isFeedback={isFeedback}
-      />
-
-      {!isMc && !isFeedback && (
-        <QuerySection
-          question={question}
-          onSubmit={(sql) => engine.submitQuery(sql)}
-          disabled={snapshot.runningAnswer}
-        />
-      )}
-
-      {!isFeedback && (
-        isMc ? (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-muted">
-              {selected === null ? 'Select an answer above' : 'Ready to submit'}
-            </span>
-            <div className="flex items-center gap-2">
+      <div className="grid grid-cols-1 items-start gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-w-0 flex-col gap-4">
+        <article className="enter-rise rounded-2xl border border-line bg-white p-6">
+          <div className="flex flex-col gap-4 border-b border-line pb-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full border border-line bg-mist/60 px-3 py-1.5 text-xs font-medium text-muted">
+                <SlidersIcon size={14} strokeWidth={2} />
+                {summary}
+              </span>
               <button
                 type="button"
-                onClick={() => engine.skip()}
-                className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted transition-colors hover:bg-line"
+                onClick={() => engine.end()}
+                className="press inline-flex min-h-11 items-center gap-2 rounded-lg border border-danger-200 px-4 text-sm font-semibold text-danger-700 outline-none transition-colors hover:bg-danger-50 focus-visible:ring-2 focus-visible:ring-danger-500 focus-visible:ring-offset-2"
               >
-                Skip
-              </button>
-              <button
-                type="button"
-                disabled={selected === null}
-                onClick={() => engine.submit(selected)}
-                className="rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Submit
+                <StopIcon size={13} strokeWidth={2} />
+                End practice
               </button>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-muted">Run your query above, then check it</span>
-            <button
-              type="button"
-              onClick={() => engine.skip()}
-              className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted transition-colors hover:bg-line"
-            >
-              Skip
-            </button>
-          </div>
-        )
-      )}
 
-      {isFeedback && (
-        <Feedback
-          answer={lastAnswer}
-          onNext={() => {
-            setSelected(null)
-            engine.next()
-          }}
-        />
-      )}
+            <PracticeStats snapshot={snapshot} total={total} />
+          </div>
+
+          <div
+            key={question.id}
+            className={`mt-6 grid grid-cols-1 items-start gap-6 ${
+              hasSchema ? 'min-[1300px]:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]' : ''
+            }`}
+          >
+            <div className="flex min-w-0 flex-col gap-4">
+              <QuestionMeta question={question} />
+
+              <SqlCard sql={question.sql ?? splitQuestion(question.question).sql} />
+
+              <AskBand
+                text={stripPassMarkers(question.ask ?? splitQuestion(question.question).sentence)}
+              />
+
+              {isChoice ? (
+                <MultipleChoiceArea
+                  question={question}
+                  selected={selected}
+                  onSelect={(opt) => !isFeedback && setSelected(opt)}
+                  isFeedback={isFeedback}
+                  answer={lastAnswer}
+                  onSubmit={(opt) => engine.submit(opt)}
+                  onSkip={() => engine.skip()}
+                  onNext={() => {
+                    setSelected(null)
+                    engine.next()
+                  }}
+                />
+              ) : (
+                <QuerySection
+                  question={question}
+                  onSubmit={(sql) => engine.submitQuery(sql)}
+                  disabled={snapshot.runningAnswer}
+                  isFeedback={isFeedback}
+                  snapshot={snapshot}
+                  answer={lastAnswer}
+                  onSkip={() => engine.skip()}
+                  onNext={() => {
+                    setSelected(null)
+                    engine.next()
+                  }}
+                />
+              )}
+            </div>
+
+            {hasSchema && (
+              <div className="min-w-0 min-[1300px]:sticky min-[1300px]:top-[86px]">
+                <SchemaPanel schema={question.schema} cascade className="" />
+              </div>
+            )}
+          </div>
+        </article>
+      </div>
+
+      <aside className="rail-enter flex min-w-0 flex-col gap-4 min-[1100px]:sticky min-[1100px]:top-[86px]">
+        <SessionCard snapshot={snapshot} />
+        <ByTopicCard snapshot={snapshot} />
+        <LearnTopicCard question={question} />
+        <QuickTipsCard question={question} />
+        <NeedHelpCard question={question} isGuest={isGuest} />
+      </aside>
+      </div>
     </div>
   )
 }

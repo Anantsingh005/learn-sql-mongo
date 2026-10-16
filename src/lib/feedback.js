@@ -1,5 +1,18 @@
 import { supabase } from './supabase.js'
 
+// Lets a screen elsewhere (e.g. the practice session rail) open the feedback
+// modal that lives in the Footer, instead of duplicating the form.
+export const OPEN_FEEDBACK_EVENT = 'dbquiz:open-feedback'
+
+// Shared contact fallback used wherever feedback is offered to signed-out
+// visitors, so the address lives in one place (footer + practice rail).
+export const FEEDBACK_CONTACT_HREF =
+  'https://mail.google.com/mail/u/0/#inbox?compose=XBcJlDMdDMQtMZdGDPLxfKlsVlPRWDcVwsDkkkqnzhCjlNTvqSwvTWpVxHZGxcXrRtbTCnlFLrdXTrNQ'
+
+export function openFeedbackForm() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(OPEN_FEEDBACK_EVENT))
+}
+
 export const FEEDBACK_SUBJECTS = [
   { value: 'bug', label: 'Bug Report' },
   { value: 'feature', label: 'Feature Request' },

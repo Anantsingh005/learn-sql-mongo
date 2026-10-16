@@ -183,7 +183,7 @@ function SparkStar({ className, style }) {
   )
 }
 
-function OptionButton({ label, text, state, onSelect, disabled, index }) {
+export function OptionButton({ label, text, state, onSelect, disabled, index, radio = false, checked = false, animate = false }) {
   const showCheck = state === 'correct' || state === 'selected'
   const showCross = state === 'wrong'
   const stateAnim =
@@ -197,13 +197,15 @@ function OptionButton({ label, text, state, onSelect, disabled, index }) {
   return (
     <button
       type="button"
+      role={radio ? 'radio' : undefined}
       onClick={onSelect}
       disabled={disabled}
-      aria-pressed={state === 'selected'}
-      className={`${ENTER_POP} ${stateAnim} group relative flex w-full items-start gap-3 rounded-xl border px-4 py-3 text-left transition disabled:cursor-not-allowed motion-safe:enabled:hover:-translate-y-0.5 motion-safe:enabled:active:scale-[0.99] ${
+      aria-pressed={radio ? undefined : state === 'selected'}
+      aria-checked={radio ? checked : undefined}
+      className={`${animate ? ENTER_POP : ''} ${stateAnim} group relative flex min-h-11 w-full items-start gap-3 rounded-xl border px-4 py-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed motion-safe:enabled:hover:-translate-y-0.5 motion-safe:enabled:active:scale-[0.99] ${
         OPTION_TONE[state] ?? OPTION_TONE.default
       }`}
-      style={stagger(index, 60)}
+      style={animate ? stagger(index, 60) : undefined}
     >
       <span
         className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold transition-colors ${

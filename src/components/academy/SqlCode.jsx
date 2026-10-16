@@ -40,9 +40,28 @@ const CLASSES = {
   punct: 'text-muted',
   name: 'text-body',
   text: 'text-body',
+  space: 'text-body',
 }
 
-function tokenize(code) {
+// Same token colours, retuned for a dark (ink) surface. Kept light enough to
+// hold contrast on #2d0022 without leaving the brand/leaf/amber families.
+const DARK_CLASSES = {
+  keyword: 'text-brand-300',
+  function: 'text-brand-200',
+  string: 'text-leaf-200',
+  number: 'text-amber-200',
+  comment: 'text-paper/50 italic',
+  punct: 'text-paper/60',
+  name: 'text-paper',
+  text: 'text-paper',
+  space: 'text-paper',
+}
+
+// Whitespace is normally consumed but not emitted (the light surfaces lean on
+// the surrounding markup for spacing). `keepWhitespace` emits it as tokens
+// instead, so a caller that renders raw SQL — like the practice code card —
+// gets its spaces back without changing any existing caller's output.
+function tokenize(code, keepWhitespace = false) {
   const out = []
   let i = 0
 
@@ -60,7 +79,7 @@ function tokenize(code) {
         if (KEYWORDS.has(lower)) out.push({ kind: 'keyword', text })
         else if (FUNCTIONS.has(lower)) out.push({ kind: 'function', text })
         else out.push({ kind: 'name', text })
-      } else if (kind !== 'space') {
+      } else if (kind !== 'space' || keepWhitespace) {
         out.push({ kind, text })
       }
 
@@ -78,11 +97,12 @@ function tokenize(code) {
   return out
 }
 
-export default function SqlCode({ code }) {
+export default function SqlCode({ code, tone = 'light', keepWhitespace = false }) {
+  const classes = tone === 'dark' ? DARK_CLASSES : CLASSES
   return (
     <code className="block">
-      {tokenize(code).map((t, i) => (
-        <span key={i} className={CLASSES[t.kind]}>
+      {tokenize(code, keepWhitespace).map((t, i) => (
+        <span key={i} className={classes[t.kind]}>
           {t.text}
         </span>
       ))}

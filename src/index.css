@@ -1822,3 +1822,62 @@ body:has(.sqlbook-page) {
     transform: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Practice session motion pass (the session screen only).
+   Entrance for the card and its rail, question-to-question swaps, answer
+   feedback and the stat read-outs. Transform/opacity only, reusing the quiz
+   keyframes above, and every rule lives inside the no-preference query so a
+   reduced-motion visitor lands on static content with no tweens.
+   --------------------------------------------------------------------------- */
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The rail arrives after the main card has begun rising, one card at a
+     time. `backwards` holds each card off-screen until its beat comes, and
+     cards that mount later (By Topic once an answer lands) still animate in. */
+  .rail-enter > * {
+    animation: quiz-slide-in-right 480ms var(--ease-out-soft) backwards;
+  }
+
+  .rail-enter > *:nth-child(1) {
+    animation-delay: 260ms;
+  }
+
+  .rail-enter > *:nth-child(2) {
+    animation-delay: 360ms;
+  }
+
+  .rail-enter > *:nth-child(3) {
+    animation-delay: 460ms;
+  }
+
+  .rail-enter > *:nth-child(4) {
+    animation-delay: 560ms;
+  }
+
+  .rail-enter > *:nth-child(5) {
+    animation-delay: 660ms;
+  }
+
+  /* Accuracy / score / correctness bars sweep out from zero as their row
+     lands, so a freshly added topic never appears already filled in. */
+  .bar-grow {
+    transform-origin: left center;
+    animation: bar-grow 520ms var(--ease-out-soft) both;
+  }
+
+  /* Small confirm tick: a stat number, the copy button's check, or an
+     answer's check badge. Retriggers whenever the element remounts. */
+  .pop-in {
+    animation: quiz-opt-pop 280ms var(--ease-3d);
+  }
+}

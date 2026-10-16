@@ -14,7 +14,7 @@
  *
  * Usage: node scripts/browser-practice-picker.mjs
  */
-import { spawn } from 'node:child_process'
+import { spawn, execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
@@ -110,9 +110,9 @@ async function waitFor(ws, expr, label, ms = 15000) {
   throw new Error('timeout: ' + label)
 }
 
-async function goto(ws, url, readyExpr, label) {
-  await ev(ws, `location.href = ${JSON.stringify(url)}`)
-  await waitFor(ws, readyExpr, label)
+async function goto(ws, url, readyExpr, label, ms = 15000) {
+  await send(ws, 'Page.navigate', { url })
+  await waitFor(ws, readyExpr, label, ms)
 }
 
 const steps = []
@@ -127,6 +127,8 @@ const fail = (s) => {
 const check = (ok, s) => (ok ? pass(s) : fail(s))
 
 const PICKER_READY = `document.body.innerText.includes('Pick Your Practice')`
+const EMPTY_READY = `document.body.innerText.includes('No questions match those filters')`
+const SESSION_READY = `document.body.innerText.includes('End practice')`
 const READ_COUNT = `(() => {
   const el = document.querySelector('[role="status"]')
   if (!el || /Loading/.test(el.textContent)) return null
@@ -209,7 +211,13 @@ async function main() {
     })
 
     // 0. Bare /practice shows the mode select; the SQL card opens the picker.
-    await goto(ws, `${BASE}/practice`, `document.body.innerText.includes('SQL Practice')`, 'game select')
+    await goto(
+      ws,
+      `${BASE}/practice`,
+      `[...document.querySelectorAll('button')].some((b) => b.textContent.includes('SQL Practice'))`,
+      'game select',
+      45000,
+    )
     pass('bare /practice renders the mode select')
     await waitFor(
       ws,
@@ -226,20 +234,31 @@ async function main() {
 
     // 1. Counts vs the real bank for several combinations.
     for (const combo of COMBOS) {
-      const [topic, level, type, want, label] = combo
+      const [, , , want, label] = combo
+      if (want === 0) {
+        await goto(ws, comboUrl(combo), EMPTY_READY, `empty ${label}`)
+        check(
+          await ev(ws, `!document.body.innerText.includes('Pick Your Practice')`),
+          `${label} shows the empty screen, not the picker`,
+        )
+        continue
+      }
       await goto(ws, comboUrl(combo), PICKER_READY, `picker ${label}`)
       const got = await readCount(ws, want)
       check(got === want, `count ${label}: bank=${want} ui=${got}`)
-      if (want !== 0) {
-        check((await startDisabled(ws)) === false, `Start enabled for ${label}`)
-      }
+      check((await startDisabled(ws)) === false, `Start enabled for ${label}`)
     }
 
-    // 2. An empty combination disables Start (and shakes the count).
-    await goto(ws, comboUrl(['joins', 'easy', 'write']), PICKER_READY, 'empty combo')
-    const emptyCount = await readCount(ws, 0)
-    check(emptyCount === 0, 'empty combo shows 0')
-    check((await startDisabled(ws)) === true, 'Start disabled for empty combo')
+    // 2. A deep-linked empty combination shows the friendly empty screen; its
+    // button returns to the (now populated) setup screen.
+    await goto(ws, comboUrl(['joins', 'easy', 'write']), EMPTY_READY, 'empty combo')
+    check(
+      await ev(ws, `!document.body.innerText.includes('Pick Your Practice')`),
+      'empty combo replaces the picker',
+    )
+    await ev(ws, `[...document.querySelectorAll('button')].find((b) => b.textContent.includes('Back to setup')).click()`)
+    await waitFor(ws, PICKER_READY, 'back to setup')
+    pass('Back to setup returns to the picker')
 
     // 3. Start a session from a non-empty combination.
     await goto(ws, comboUrl(['table-query', 'easy', null]), PICKER_READY, 'table easy')
@@ -247,7 +266,7 @@ async function main() {
     await ev(ws, `[...document.querySelectorAll('button')].find((b) => b.textContent.includes('Start Practicing')).click()`)
     await waitFor(
       ws,
-      `document.body.innerText.includes('End practice') && /Q\\s*1\\//.test(document.body.innerText)`,
+      `document.body.innerText.includes('End practice') && /Question\\s*1\\s*\\//.test(document.body.innerText)`,
       'session started',
       20000,
     )
@@ -320,28 +339,30 @@ async function main() {
     )
     check(pulse === 'picker-cta-pulse', `enabled CTA pulses (got ${pulse})`)
 
-    // 8. Hover lifts a chip (transform-only change). Wait for the entrance
-    // cascade to settle so the chip stays under the pointer.
-    await ev(ws, `document.querySelector('[aria-labelledby="practice-filter-type-label"]').scrollIntoView({ block: 'center' })`)
+    // 8. Hover lifts a chip (transform-only change). Target an unselected,
+    // enabled chip — selected/disabled chips intentionally do not lift. Wait for
+    // the entrance cascade to settle so the chip stays under the pointer.
+    const UNSELECTED_CHIP = `[...document.querySelectorAll('[role="radio"]')].find((c) => c.getAttribute('aria-checked') !== 'true' && c.getAttribute('aria-disabled') !== 'true')`
+    await ev(ws, `(() => { const c = ${UNSELECTED_CHIP}; if (c) c.scrollIntoView({ block: 'center' }) })()`)
     await sleep(1300)
     const before = await ev(ws, `(() => {
-      const c = document.querySelector('[role="radio"]')
+      const c = ${UNSELECTED_CHIP}
       const s = getComputedStyle(c)
       return s.transform + '|' + s.translate + '|' + s.scale
     })()`)
     const box = await ev(ws, `(() => {
-      const c = document.querySelector('[role="radio"]')
+      const c = ${UNSELECTED_CHIP}
       const r = c.getBoundingClientRect()
-      return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, label: c.textContent.trim() }
     })()`)
     await send(ws, 'Input.dispatchMouseEvent', { type: 'mouseMoved', x: box.x, y: box.y })
     await sleep(450)
     const after = await ev(ws, `(() => {
-      const c = document.querySelector('[role="radio"]')
+      const c = ${UNSELECTED_CHIP}
       const s = getComputedStyle(c)
       return s.transform + '|' + s.translate + '|' + s.scale
     })()`)
-    check(before !== after, `chip hover changes transform (${before} -> ${after})`)
+    check(before !== after, `chip "${box.label}" hover changes transform (${before} -> ${after})`)
 
     // 9. Reduced motion: every picker animation is off.
     await send(ws, 'Emulation.setEmulatedMedia', { media: '', features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
@@ -364,10 +385,101 @@ async function main() {
       `reduced motion disables picker animations (${JSON.stringify(reduced)})`,
     )
 
+    // 10. Session screen: a11y semantics, keyboard shortcuts, touch targets,
+    // and no horizontal scroll at multiple widths.
+    const pressKey = (k) =>
+      ev(ws, `window.dispatchEvent(new KeyboardEvent('keydown', { key: ${JSON.stringify(k)}, bubbles: true }))`)
+
+    await send(ws, 'Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
+    await goto(ws, `${BASE}/practice?type=mcq`, PICKER_READY, 'mc picker')
+    await ev(ws, `[...document.querySelectorAll('button')].find((b) => b.textContent.includes('Start Practicing')).click()`)
+    await waitFor(ws, SESSION_READY, 'mc session', 20000)
+    pass('multiple-choice session starts')
+
+    const radiogroup = await ev(ws, `(() => {
+      const g = document.querySelector('[role="radiogroup"]')
+      if (!g) return null
+      const opts = [...g.querySelectorAll('[role="radio"]')]
+      return { label: g.getAttribute('aria-label'), count: opts.length, checked: opts.filter((o) => o.getAttribute('aria-checked') === 'true').length }
+    })()`)
+    check(!!radiogroup && radiogroup.count >= 2, `options form a labelled radiogroup (${JSON.stringify(radiogroup)})`)
+    check(radiogroup?.checked === 0, 'no option is checked before choosing')
+
+    await pressKey('b')
+    await sleep(150)
+    check(
+      (await ev(ws, `document.querySelectorAll('[role="radio"][aria-checked="true"]').length`)) === 1,
+      'pressing B selects exactly one option',
+    )
+
+    const progressbar = await ev(ws, `(() => {
+      const p = document.querySelector('[role="progressbar"]')
+      return p ? { now: p.getAttribute('aria-valuenow'), max: p.getAttribute('aria-valuemax') } : null
+    })()`)
+    check(!!progressbar?.now, `progress exposes role=progressbar (${JSON.stringify(progressbar)})`)
+
+    await pressKey('Enter')
+    await waitFor(ws, `document.body.innerText.includes('Next question')`, 'mc feedback', 8000)
+    const live = await ev(
+      ws,
+      `(() => { const r = document.querySelector('[role="status"][aria-live="polite"]'); return r ? r.textContent.trim() : '' })()`,
+    )
+    check(/Correct|Not quite|skipped/.test(live), `verdict announced in the live region ("${live}")`)
+
+    await pressKey('Enter')
+    await waitFor(
+      ws,
+      `!document.body.innerText.includes('Next question') && /Question\\s*2\\s*\\//.test(document.body.innerText)`,
+      'mc advanced',
+      8000,
+    )
+    pass('Enter advances from feedback to the next question')
+
+    // S skips the current choice question (both types offer a Skip control).
+    await pressKey('s')
+    await waitFor(ws, `document.body.innerText.includes('Skipped')`, 'mc skip', 8000)
+    const skipLive = await ev(
+      ws,
+      `(() => { const r = document.querySelector('[role="status"][aria-live="polite"]'); return r ? r.textContent.trim() : '' })()`,
+    )
+    check(/skipped/i.test(skipLive), `S skips a choice question and announces it ("${skipLive}")`)
+    await pressKey('Enter')
+    await waitFor(ws, `!document.body.innerText.includes('Next question')`, 'mc advanced after skip', 8000)
+    pass('Enter advances after a skip')
+
+    const smallTargets = await ev(ws, `(() => {
+      const small = []
+      for (const b of document.querySelectorAll('button, [role="radio"]')) {
+        const r = b.getBoundingClientRect()
+        if (r.height > 0 && r.height < 44) small.push(b.textContent.trim().slice(0, 24) + ':' + Math.round(r.height))
+      }
+      return small
+    })()`)
+    check(smallTargets.length === 0, `every session control is >=44px tall (${JSON.stringify(smallTargets)})`)
+
+    for (const [w, label] of [[1440, '1440'], [1200, '1200'], [1024, '1024'], [390, '390']]) {
+      await send(ws, 'Emulation.setDeviceMetricsOverride', { width: w, height: 900, deviceScaleFactor: 1, mobile: w < 700 })
+      await sleep(350)
+      const o = await ev(ws, `document.documentElement.scrollWidth - document.documentElement.clientWidth`)
+      check(o <= 0, `no horizontal scroll on the session at ${label} (${o})`)
+    }
+
     ws.close()
   } finally {
-    if (chrome) chrome.kill()
-    server.kill()
+    const killTree = (proc) => {
+      if (!proc) return
+      if (process.platform === 'win32') {
+        try {
+          execFileSync('taskkill', ['/pid', String(proc.pid), '/T', '/F'], { stdio: 'ignore' })
+          return
+        } catch {}
+      }
+      try {
+        proc.kill()
+      } catch {}
+    }
+    killTree(chrome)
+    killTree(server)
   }
 
   const failures = steps.filter((s) => s.startsWith('FAIL'))

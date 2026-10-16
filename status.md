@@ -1,8 +1,53 @@
 # Project Status
 
-Last updated: 2026-10-15
+Last updated: 2026-10-16
 
-## Current session (2026-10-15): SQL book chapter reader rebuild — shared card system, right rail, mobile drawer
+## Current session (2026-10-16): practice session screen rebuild — stats HUD, dark SQL card, session rail, keyboard shortcuts
+
+A visual-and-interaction rebuild of the **practice session screen** (the quiz play view at `/practice` once a session has started), following the earlier picker redesign. The old screen was a narrow single column with a plain HUD, a mono prompt block and an ad-hoc feedback box; it is now a wide two-column layout (question card + sticky session rail), the question prompt is split into a dark syntax-highlighted SQL card and a lavender ask band, and the whole screen is keyboard-driven (A–D / Enter / Skip). **No engine, scoring, persistence, Supabase or question-bank change** — the practice dataset type `practice` is now treated as a first-class MCQ alias, and the only non-presentation imports added are `getQuizHelp`, `useAuth` and the feedback helpers. 11 files modified; all uncommitted at write time.
+
+### `src/pages/Practice.jsx` (largest single change)
+
+- **Session layout** is now a `min-[1100px]` two-column grid (`minmax(0,1fr) 320px`): the question article on the left, a sticky session rail on the right. The article header carries a summary chip (sliders icon + type · topic · level), an **End practice** button, and a new **`PracticeStats`** row.
+- **`PracticeStats`** replaces the old `PracticeHUD`: a labelled `role="progressbar"` with a scaleX progress fill, plus four `StatTile`s (Correct / Wrong / Practiced / Score) with icon chips and `pop-in` numbers, separated by a vertical rule. The total is computed by the same `countPracticeQuestions` call the picker uses, so the deck size and the setup screen's live count can never disagree.
+- **Question composition.** `splitQuestion` splits a stored prompt at `\n\n` into SQL + sentence; `stripPassMarkers` removes legacy "(pass N)" text. The SQL renders in a new **`SqlCard`** — a dark `bg-ink` window with traffic-light dots, a per-line number gutter, the shared academy `SqlCode` highlighter in a new dark tone, and a dark `CopyButton`. The sentence renders in an **`AskBand`** (lavender plum surface). `QuestionMeta` shows type/difficulty/subtopic chips (`practice` type alias included via `TYPE_META`) and a chapter deep-link.
+- **Multiple choice** now reuses the quiz's exported `OptionButton` as a `role="radiogroup"` of `role="radio"` buttons with correct/wrong/muted/selected states, plus Skip + Submit actions and a desktop-only `KeyboardHint` (A–D · Enter · Skip). Feedback renders a **`VerdictBlock`** (Correct / Not quite / Skipped + explanation + Next question).
+- **Query questions** (`write`/`bug`) pass the practice answer through `SqlEditor`'s new `answer`/`nextLabel`/`onSkip`/`showShortcutHint` props (practice stores the run under `actual`, mapped to `actualResult` at the call site), so the shared editor's comparison UI drives feedback here too.
+- **Session rail** (new): `SessionCard` (animated `AccuracyRing` + `useCountUp` percentage + answered/skipped counts), `ByTopicCard` (per-topic accuracy bars via `practiceTopicOf`, collapsible, appears once an answer lands), `LearnTopicCard` (chapter deep-link), `QuickTipsCard` (`getQuizHelp` tips, collapsible), `NeedHelpCard` (hint for signed-in users, `quickInfo` fallback, guest lock note, Send Feedback → `openFeedbackForm()` for users or the shared contact mailto for guests). Rail cards enter with staggered `rail-enter` slides; data cards default open ≥700px, collapsed below.
+- **Keyboard shortcuts.** A–D select an option, Enter submits (or advances from feedback), S skips. Ignored while focus is in a form control and while a query is running; Ctrl/Cmd/Alt are reserved for the editor. A persistent `sr-only` live region announces Correct / Not quite / Skipped on every feedback.
+- **Empty / loading states.** A filter combination matching zero questions now renders a friendly **`EmptyState`** ("No questions match those filters" + Back to setup that clears the params) instead of the picker; a **`SessionSkeleton`** (shimmer mirroring the real two-column layout) replaces the old `null` while the first question prepares.
+
+### Shared component changes
+
+- **`SchemaPanel.jsx`** — the `variant="compact"` branch is gone; one layout now renders each table through a new exported **`SchemaTable`** (own `overflow-x-auto` wrapper, `w-max min-w-full` table so wide schemas scroll inside the card and never widen the page, zebra rows, italic `NULL`, row-count caption). An opt-in `cascade` prop (practice turns it on, quiz untouched) adds `trow` staggered row rise + `quiz-fade-swap` panel fade. The header button gained `min-h-11` + focus ring.
+- **`SqlEditor.jsx`** — new optional props `answer` (explicit answer instead of reading the snapshot tail), `nextLabel`, `onSkip` (Skip button beside Run/Submit), `showShortcutHint`; the feedback status line now distinguishes **Skipped**; all action buttons gained `min-h-11` and focus-visible rings. Quiz call sites unchanged (all new props optional).
+- **`QuestionCard.jsx`** — `OptionButton` is now exported and gained `radio`/`checked`/`animate` props: `role="radio"` + `aria-checked` when used as a radio, entrance stagger and `ENTER_POP` only when `animate` is set, plus a focus ring. Quiz usage byte-identical in behaviour.
+- **`SqlCode.jsx`** — new `tone="dark"` palette (`DARK_CLASSES`: brand-300 keywords, leaf-200 strings, amber-200 numbers, paper surfaces) for ink backgrounds, and `keepWhitespace` so raw SQL keeps its spaces when rendered line-by-line (existing callers' output unchanged).
+- **`CopyButton.jsx`** — new `tone="dark"` variant (white/15 borders, paper text, leaf "Copied" state, ink-offset focus ring) and a `pop-in` on the check icon.
+- **`HintReveal.jsx`** — `min-h-11` + focus ring only.
+
+### Supporting
+
+- **`src/lib/feedback.js`** — new `OPEN_FEEDBACK_EVENT` (`dbquiz:open-feedback`), `openFeedbackForm()` dispatcher, and `FEEDBACK_CONTACT_HREF` extracted so the footer and the practice rail share one address.
+- **`src/components/site/Footer.jsx`** — listens for `OPEN_FEEDBACK_EVENT` and opens its existing modal; the Contact link now reads `FEEDBACK_CONTACT_HREF`.
+- **`src/index.css`** — a practice-session motion pass: `bar-grow` keyframe + `.bar-grow` (topic bars sweep from zero), `.rail-enter > *` staggered `quiz-slide-in-right` (260–660ms delays, `backwards`), and `.pop-in` (`quiz-opt-pop`) for stat/copy/check confirms — all inside `prefers-reduced-motion: no-preference`.
+
+### `scripts/browser-practice-picker.mjs`
+
+- Extended from picker-only to picker **+ session** E2E: deep-linked empty combos now assert the EmptyState and its Back-to-setup button; the hover probe targets an unselected enabled chip (fixing the known false failure from the previous session); a new session section asserts the MC radiogroup semantics, A–D/Enter/S keyboard flow (select → feedback live region → advance → skip → advance), the `role="progressbar"` values, every control ≥44px, and no horizontal scroll at 1440/1200/1024/390. `goto` uses `Page.navigate` with longer timeouts, and cleanup kills the Chrome/dev-server tree via `taskkill /T` on Windows.
+
+### Verified
+
+`npm run build` → success (1.25s; chunk-size warning only) · `npx oxlint src scripts` → no errors; only the long-standing `set-state-in-effect` / `exhaustive-deps` / `only-export-components` baseline warnings remain, none in the touched files beyond `ChapterOutline.jsx:300/304` recorded last session.
+
+### Known leftover
+
+- The untracked `src/data/practice/practice-questions (1).json` is a browser-download duplicate of `practice-questions.json` (883KB vs the real 941KB) — not referenced by any import; deliberately left uncommitted and safe to delete.
+- The full E2E gate was not re-run in this session (only build + lint); `node scripts/browser-practice-picker.mjs` should be run before trusting the session shortcuts and empty-state claims end-to-end.
+
+**Not done:** no human has looked at the rendered session screen; the dark SqlCard contrast, rail stickiness and skeleton are verified only by reading the diff and the build.
+
+## Previous session (2026-10-15): SQL book chapter reader rebuild — shared card system, right rail, mobile drawer
 
 A visual-and-interaction rebuild of the SQL book **chapter reader** (`/academy/sql/:chapterSlug`). The lesson used to be a flat column of ad-hoc boxes; every content block now renders through one card shell, the page gets a real three-column layout (Contents | paper sheet | tools rail), and the whole screen is reachable from a phone through a slide-over drawer. **No chapter data, lesson prose, quiz engine, progress keys or routing changed** — the only non-presentation code touched is the `useCountUp` hook. 16 files modified, 1 deleted (`Console.jsx`), 8 new. All uncommitted at write time.
 

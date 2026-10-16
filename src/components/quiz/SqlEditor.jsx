@@ -64,7 +64,7 @@ function ComparisonResult({ answer, question }) {
   )
 }
 
-function SqlEditor({ question, onSubmit, isFeedback = false, snapshot, onNext, disabled = false }) {
+function SqlEditor({ question, onSubmit, isFeedback = false, snapshot, onNext, disabled = false, answer: answerProp, nextLabel, onSkip, showShortcutHint = true }) {
   const isBug = question.type === 'bug'
   const [sql, setSql] = useState(() => (isBug ? question.buggyQuery ?? '' : ''))
   const [result, setResult] = useState(null)
@@ -109,15 +109,17 @@ function SqlEditor({ question, onSubmit, isFeedback = false, snapshot, onNext, d
   }, [sql, submitting, onSubmit])
 
   const locked = disabled || isFeedback || running || submitting
-  const answer = isFeedback ? snapshot?.answers?.[snapshot.answers.length - 1] : null
+  const answer = isFeedback
+    ? (answerProp ?? snapshot?.answers?.[snapshot.answers.length - 1])
+    : null
   const isLast = snapshot ? snapshot.index + 1 >= snapshot.total || snapshot.lives <= 0 : false
 
   let statusText = 'Write your query, then submit'
   let statusTone = 'text-muted'
   let detail = null
   if (isFeedback && answer) {
-    statusText = answer.correct ? 'Correct!' : 'Not quite'
-    statusTone = answer.correct ? 'text-leaf-700' : 'text-danger-700'
+    statusText = answer.skipped ? 'Skipped' : answer.correct ? 'Correct!' : 'Not quite'
+    statusTone = answer.skipped ? 'text-muted' : answer.correct ? 'text-leaf-700' : 'text-danger-700'
     detail = (
       <>
         {answer.reason && <p className="mt-1 text-sm leading-relaxed text-body">{answer.reason}</p>}
@@ -217,19 +219,31 @@ function SqlEditor({ question, onSubmit, isFeedback = false, snapshot, onNext, d
           <button
             type="button"
             onClick={onNext}
-            className="group inline-flex shrink-0 items-center gap-2 rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white shadow-sm shadow-brand-600/20 transition hover:bg-brand-700 motion-safe:active:scale-[0.97]"
+            className="group inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white shadow-sm shadow-brand-600/20 outline-none transition hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 motion-safe:active:scale-[0.97]"
           >
-            {isLast ? 'See results' : 'Next question'}
+            {nextLabel ?? (isLast ? 'See results' : 'Next question')}
             <span aria-hidden="true" className="transition-transform motion-safe:group-hover:translate-x-0.5">→</span>
           </button>
         ) : (
           <>
-            <span className="hidden font-mono text-[11px] text-muted sm:inline">Ctrl / Cmd + Enter</span>
+            {showShortcutHint && (
+              <span className="hidden font-mono text-[11px] text-muted sm:inline">Ctrl / Cmd + Enter</span>
+            )}
+            {onSkip && (
+              <button
+                type="button"
+                onClick={onSkip}
+                disabled={running || submitting}
+                className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-semibold text-muted outline-none transition hover:text-ink focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Skip
+              </button>
+            )}
             <button
               type="button"
               onClick={handleRun}
               disabled={!sql.trim() || running || !schemaReady || disabled}
-              className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-line bg-white px-4 py-2 text-sm font-semibold text-body transition hover:bg-mist disabled:cursor-not-allowed disabled:opacity-40 motion-safe:enabled:active:scale-[0.97]"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-line bg-white px-4 text-sm font-semibold text-body outline-none transition hover:bg-mist focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 motion-safe:enabled:active:scale-[0.97]"
             >
               <PlayIcon className="h-3.5 w-3.5" />
               {running ? 'Running…' : 'Run'}
@@ -238,7 +252,7 @@ function SqlEditor({ question, onSubmit, isFeedback = false, snapshot, onNext, d
               type="button"
               onClick={handleSubmit}
               disabled={!sql.trim() || submitting || running || !schemaReady || disabled}
-              className="group inline-flex shrink-0 items-center gap-2 rounded-lg bg-brand-600 px-5 py-2 font-semibold text-white shadow-sm shadow-brand-600/20 transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40 motion-safe:enabled:active:scale-[0.97]"
+              className="group inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white shadow-sm shadow-brand-600/20 outline-none transition hover:bg-brand-700 focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 motion-safe:enabled:active:scale-[0.97]"
             >
               {submitting ? 'Checking…' : 'Submit'}
               <span aria-hidden="true" className="transition-transform motion-safe:group-hover:translate-x-0.5">→</span>

@@ -28,7 +28,7 @@ function HintReveal({ hint, label = 'Show hint', openLabel = 'Hide hint' }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition motion-safe:active:scale-[0.97] ${
+        className={`inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-xs font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 motion-safe:active:scale-[0.97] ${
           open
             ? 'border-brand-300 bg-brand-50 text-brand-700'
             : 'border-line bg-white text-muted hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'

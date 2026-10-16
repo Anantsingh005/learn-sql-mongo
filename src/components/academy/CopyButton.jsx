@@ -6,7 +6,7 @@ import { CheckIcon, CopyIcon } from './BlockIcons.jsx'
 // unavailable (older browsers / insecure contexts). Purely an affordance — the
 // block still computes nothing.
 
-export default function CopyButton({ text, className = '' }) {
+export default function CopyButton({ text, className = '', tone = 'light' }) {
   const [copied, setCopied] = useState(false)
   const timer = useRef(null)
 
@@ -36,18 +36,23 @@ export default function CopyButton({ text, className = '' }) {
     }
   }
 
+  const dark = tone === 'dark'
+  const state = copied
+    ? dark
+      ? 'border-leaf-400/50 bg-leaf-500/20 text-leaf-200'
+      : 'border-leaf-200 bg-leaf-50 text-leaf-700'
+    : dark
+      ? 'border-white/15 bg-white/5 text-paper/80 hover:border-white/25 hover:bg-white/10 hover:text-paper'
+      : 'border-line bg-white text-muted hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
+
   return (
     <button
       type="button"
       onClick={copy}
       aria-label={copied ? 'Copied to clipboard' : 'Copy code to clipboard'}
-      className={`inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider transition-colors ${
-        copied
-          ? 'border-leaf-200 bg-leaf-50 text-leaf-700'
-          : 'border-line bg-white text-muted hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700'
-      } ${className}`}
+      className={`inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2 ${dark ? 'focus-visible:ring-offset-ink' : ''} ${state} ${className}`}
     >
-      {copied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
+      {copied ? <CheckIcon className="h-3.5 w-3.5 pop-in" /> : <CopyIcon className="h-3.5 w-3.5" />}
       <span aria-live="polite">{copied ? 'Copied' : 'Copy'}</span>
     </button>
   )
