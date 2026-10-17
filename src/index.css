@@ -1881,3 +1881,252 @@ body:has(.sqlbook-page) {
     animation: quiz-opt-pop 280ms var(--ease-3d);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Leaderboard motion pass (the /leaderboard page only).
+   Section entrance, hero pops and count-ups, progress bar fills, the filter
+   crossfade and the table cascade. Transform/opacity only, and every animation
+   lives in the no-preference query (or is cancelled in the reduce block) so a
+   reduced-motion visitor lands on static states with no tweens.
+   --------------------------------------------------------------------------- */
+
+@keyframes lb-drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes lb-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes lb-shine {
+  from {
+    transform: translateX(-150%);
+  }
+  to {
+    transform: translateX(150%);
+  }
+}
+
+@keyframes lb-check-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes lb-shake {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  20% {
+    transform: translateX(-2px) rotate(-7deg);
+  }
+  40% {
+    transform: translateX(2px) rotate(7deg);
+  }
+  60% {
+    transform: translateX(-2px) rotate(-5deg);
+  }
+  80% {
+    transform: translateX(2px) rotate(5deg);
+  }
+}
+
+@keyframes lb-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(240 168 218 / 0);
+  }
+  50% {
+    box-shadow: 0 0 18px 2px rgb(240 168 218 / 0.55);
+  }
+}
+
+@keyframes lb-flash {
+  0% {
+    background-color: var(--color-brand-100);
+  }
+  100% {
+    background-color: var(--color-mist);
+  }
+}
+
+@keyframes lb-row-leave {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@layer utilities {
+  /* Hero drops in while the rest of the page rises after it. */
+  .lb-enter-drop {
+    animation: lb-drop-in 620ms var(--ease-out-soft) both;
+  }
+
+  /* Slow bob for the trophy medallion. */
+  .lb-float {
+    animation: lb-float 6s ease-in-out infinite;
+  }
+
+  /* One-shot sheen swept across the trophy medallion. */
+  .lb-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lb-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 34%,
+      rgb(255 255 255 / 0.85) 50%,
+      transparent 66%
+    );
+    transform: translateX(-150%);
+    animation: lb-shine 1100ms var(--ease-out-soft) 500ms 1 both;
+    pointer-events: none;
+  }
+
+  /* One-shot pop for a completed level's check. */
+  .lb-check-pop {
+    animation: lb-check-pop 440ms var(--ease-3d) both;
+  }
+
+  /* Progress bar held empty until its panel scrolls in, then it fills from 0. */
+  .lb-bar {
+    transform-origin: left center;
+    animation: bar-grow 520ms var(--ease-out-soft) both;
+    animation-play-state: paused;
+  }
+
+  .lb-in .lb-bar {
+    animation-play-state: running;
+  }
+
+  /* Small shake when a locked level row is tapped. */
+  .lb-shake {
+    animation: lb-shake 420ms var(--ease-3d);
+  }
+
+  /* Header flash after a level row jumps the page to the table. */
+  .lb-header-flash {
+    animation: lb-flash 720ms var(--ease-out-soft);
+  }
+
+  /* Rows cascade in when a board loads, dim while the next one is fetched,
+     then fade out a beat before the new rows take their place. */
+  .lb-row-in {
+    animation: table-row-in 440ms var(--ease-out-soft) both;
+  }
+
+  .lb-row-leave {
+    animation: lb-row-leave 200ms ease-in both;
+  }
+
+  .lb-rows-hold {
+    opacity: 0.4;
+    transition: opacity 220ms ease;
+  }
+
+  /* Continuous soft halo behind the signed-in player's own row. */
+  .lb-you-glow {
+    animation: lb-glow 3.6s ease-in-out infinite;
+  }
+
+  /* Rank-1 crown shimmer, one pass. */
+  .lb-crown-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lb-crown-shine::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgb(255 255 255 / 0.9) 50%,
+      transparent 70%
+    );
+    transform: translateX(-150%);
+    animation: lb-shine 1000ms var(--ease-out-soft) 600ms 1 both;
+    pointer-events: none;
+  }
+}
+
+@media (hover: hover) {
+  /* Faint pink highlight on the row under the pointer. */
+  .lb-row:not(.lb-you-glow):hover {
+    background-color: rgb(253 240 248 / 0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb-enter-drop,
+  .lb-check-pop,
+  .lb-shake,
+  .lb-header-flash,
+  .lb-row-in,
+  .lb-row-leave {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .lb-float,
+  .lb-shine::after,
+  .lb-crown-shine::after {
+    animation: none;
+  }
+
+  .lb-shine::after,
+  .lb-crown-shine::after {
+    opacity: 0;
+  }
+
+  /* Keep a static soft glow so the "you" row still reads as highlighted. */
+  .lb-you-glow {
+    animation: none;
+    box-shadow: 0 0 14px 1px rgb(240 168 218 / 0.4);
+  }
+
+  .lb-rows-hold {
+    opacity: 1;
+    transition: none;
+  }
+
+  .lb-bar {
+    animation: none;
+    transform: none;
+  }
+}

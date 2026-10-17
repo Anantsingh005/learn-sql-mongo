@@ -21,7 +21,7 @@ An interactive SQL quiz game built with React + Vite. Players answer SQL questio
   - `windowCte.js` — window functions and CTEs
   - `schemas.js` — shared in-browser schemas (e.g. `store`)
 - **Auth & leaderboard** — Supabase Auth (email/password + Google) for sign-in; signed-in users submit scores to a public leaderboard. Signup/password-reset go through a custom Edge Function (`supabase/functions/auth`) that uses the Admin API, so no confirmation emails are sent and the hosted email rate limit can't be hit. The name on a score is set by a database trigger, not by the browser, so a run that finishes before the profile has loaded still records under the right name.
-- **Categorized leaderboards** — boards scoped by mode (**MC / Write / Fix Bug / Global**) and difficulty (**Easy / Medium / Hard / All Levels**), on both the standalone `/leaderboard` page and a Profile card that defaults to your most recent category. Rows are ranked by **points → lives left → fastest time**, and signed-in players see their exact rank in the active category even when they're outside the top 10. A signed-in player with no score on the board yet gets a short callout with a link to play, rather than an empty table. On phones the board opens with no mode picked and asks which one instead of guessing, and the level row is hidden until a mode is chosen.
+- **Categorized leaderboards** — the standalone `/leaderboard` page opens with a trophy hero whose **Modes / Levels / Your best** stats count up on scroll, an expanded **SQL Game Progress** panel (per-mode Completed meters and level rows that act as filter shortcuts or jump straight into `/quiz/sql?mode=&level=`), a three-group filter bar (**Database** SQL/Mongo · **Mode** MC/Write/Fix Bug/Global · **Difficulty** Easy/Medium/Hard/All Levels), and a crossfading, cascading scores table. Rows are ranked by **points → lives left → fastest time**, with rank medallions, an animated "You" glow for your own row, a pinned row when you're outside the top 10, and a compact card layout on phones. Filters are mirrored to the URL (`?db=&mode=&level=`, with the legacy `?game=` still accepted), a signed-in player with no score gets a short callout with a link to play rather than an empty table, and MongoDB shows a "coming soon" placeholder with a Switch to SQL button. A Profile card defaults to your most recent category.
 - **Profile page** — signed-in users get account details, a per-mode/difficulty progress matrix rendered as **circular progress rings** (level initial / ✔ completed / 🔒 locked, color-coded by level) with level unlocks, session/play-time stats, the leaderboard card, and a **reset-progress** control (a three-step confirmation that clears level progress back to zero, with an option to also archive your score/attempt history).
 - **Per-level progress reports** — every answered question is recorded; each mode+level's report shows best %, a per-question breakdown (✓/✗/○, tries, accuracy), mastered count, and unlock hints. Levels unlock per mode: **Easy** and **Medium** are always available, **Hard** unlocks once both reach 75%, and **All Levels** (the full per-mode bank mixed) unlocks after all three hit 75% — locks are also surfaced on the Profile progress matrix.
 - **Progress tracking** — per-user progress is persisted to Postgres (per-question attempts, completed levels, and best scores).
@@ -115,8 +115,8 @@ These check the light theme. All but `browser-shots.mjs` exit non-zero on
 failure, so they work as a pre-commit gate; capturing PNGs cannot fail on a
 design problem so it is the exception. `browser-contrast`, `browser-design`,
 `browser-hero` and `browser-visual` need a dev server already running on port
-5173; `browser-practice-picker` boots its own, so it must be the only thing on
-that port.
+5173; `browser-practice-picker` and `browser-leaderboard` boot their own, so
+each must be the only thing on that port.
 
 | Command                                  | What it asserts |
 | ---------------------------------------- | --------------- |
@@ -125,6 +125,7 @@ that port.
 | `node scripts/browser-hero.mjs`          | Home fits 1080p without scrolling *above the footer*, plus typewriter and `prefers-reduced-motion` |
 | `node scripts/browser-visual.mjs`        | Gradients that are secretly flat, cards with no edge, elements with nothing painted, transparent text separated from its `background-clip: text` painter by an atomic inline, and classes with no generated CSS. **Needs `npm run build` first** — it reads `dist/assets/*.css` |
 | `node scripts/browser-practice-picker.mjs` | `/practice` picker end-to-end: option counts recomputed from the JSON bank, empty combinations disable Start, URL filters survive reload and back/forward, no horizontal scroll at 1440/1024/390, entrance + CTA-pulse animations on, all off under `prefers-reduced-motion`. Boots its own dev server |
+| `node scripts/browser-leaderboard.mjs`   | `/leaderboard` end-to-end: hero + progress panel, three filter groups, the `?db=&mode=&level=` URL sync, live rows per board, disabled Difficulty pills under Global, the Mongo placeholder, the not-on-board callout and Play-link hrefs, plus an optional signed-in suite (from a seeded session file) and a reduced-motion instant-swap check. Boots its own dev server |
 | `node scripts/browser-shots.mjs`         | Writes a PNG per route per width to `%TEMP%/opencode/shots` for human review |
 
 `browser-visual.mjs` exists because the other three are blind to a specific

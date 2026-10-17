@@ -1,8 +1,41 @@
 # Project Status
 
-Last updated: 2026-10-16
+Last updated: 2026-10-17
 
-## Current session (2026-10-16): practice session screen rebuild — stats HUD, dark SQL card, session rail, keyboard shortcuts
+## Current session (2026-10-17): leaderboard page rebuild — hero stat count-ups, filter bar, progress panel, animated table
+
+A visual-and-interaction rebuild of the **`/leaderboard` page**. The old screen was a centered column with a flat hero, inline filter pill rows, a reused `SqlProgressGrid`, and a plain table; it is now a full-width layout with a trophy hero that counts its own stats up, a dedicated three-group filter bar, an expanded **SQL Game Progress** panel whose mode cards drive the filters, and a table that crossfades and cascades between boards. **No route, data-fetch shape, Supabase schema, ranking or scoring change** — the only new *behaviour* is a `?db=` URL parameter (with `?game=` kept as a fallback) and the level rows / Play links acting as one- and two-click shortcuts into the quiz. Two files modified, four new; all uncommitted at write time.
+
+### `src/components/Leaderboard.jsx` (largest single change)
+- **Hero** (`hero-strip lb-enter-drop`) is now `flex` at ≥1000px: a floating `lb-shine` trophy medallion, the `SCOREBOARD · RANKED` eyebrow, a mono `Leaderboard & Progress` h1 with a gradient on *Progress*, and a row of **`HeroStatTile`s** (Modes / Levels / Your best) separated by `HeroDivider`s. The tiles count up from zero via `useInViewCount` once the hero scrolls in, staggered with `enter-pop`; *Your best* only appears when a signed-in user has a score.
+- **`?db=` parameter.** `initialGame` now prefers `?db=sql|mongo` and falls back to the legacy `?game=` so old links keep working; a new effect mirrors `{ db, mode, level }` back into the URL with `{ replace: true }`, so a copied link or reload restores the board.
+- **Table** is now a fixed-layout, sticky-headered, `max-h-[420px]` scroll region rendered as real `role="table"`/`row`/`cell` semantics, with a **`SkeletonRows`** shimmer while the first page loads. Rows carry rank medallions (`TableRank`: amber crown with a one-shot `lb-crown-shine`, silver/bronze, else a numbered chip), a per-name `avatarTone` avatar, a `Hearts` lives read-out, and score/lives/correct/time cells.
+- **Crossfade on filter change.** The fetch effect holds the outgoing rows, plays `lb-row-leave`, then commits the new rows 200ms later so they cascade in with `lb-row-in` (`animationDelay: index * 40ms`). Reduced motion (or an empty board) swaps instantly with no tween. A `#leaderboard-table` `scroll-mt-24` anchor plus `applyFromPanel` scroll the table into view (and flash the header via `lb-header-flash`) when a progress row is clicked.
+- **States:** a **MongoDB** empty card ("MongoDB boards are on the way." + a **Switch to SQL** button), an error card with a **Try again** button (`retry()` bumps `reloadKey`), the "No scores yet. Be the first!" card with a Play link, and the signed-in "not on this board yet" callout. `game === 'mongo'` short-circuits the fetch so the placeholder renders instead of an empty board.
+- **Mobile card rows.** Below 700px each `tr` becomes a `grid` card (`lb-you-glow`, chips for Correct/Lives/Time), and the table body swaps to spaced cards; the rank/name/score cluster keeps three columns.
+- Removed: the inline `GAMES`/`MODES` filter button rows and the `SqlProgressGrid` import (see below). `RankBadge` is no longer imported here — the table has its own `TableRank`.
+
+### New components
+- **`src/components/LeaderboardFilters.jsx`** — the filter deck, extracted: three `role="radiogroup"` groups (**Database** SQL/Mongo, **Mode** MC/Write/Fix Bug/Global, **Difficulty** Easy/Medium/Hard/All Levels) as `RadioPills` with roving `tabIndex`, Arrow/Home/End navigation, and `min-h-[44px]` pills. On phones each group is a horizontal snap-scroller with a mask fade; the Difficulty group is **disabled** (dimmed, `tabIndex={-1}`) while Global is selected, matching the old behaviour.
+- **`src/components/SqlProgressPanel.jsx`** — the SQL Game Progress panel, replacing `SqlProgressGrid` **on the leaderboard** (Profile still uses the grid). Three mode cards each carry a `role="progressbar"` **Completed** meter that fills (`lb-bar`) only once the panel scrolls in, plus four `LevelRow`s: completed = a `CheckIcon` with `lb-check-pop`, in-progress = a `PartialRing`, locked = a lock with a hover/focus **tooltip** and an `lb-shake` on tap, not-started = the level initial. An unlocked row's body applies `{ mode, level }` to the filters and scrolls to the table; a trailing Play `Link` goes straight to `/quiz/sql?mode=&level=`. Guests get a "Sign in to track your progress" banner and every row reads "Sign in to play".
+- **`src/hooks/useInViewCount.js`** — `useInViewCount(value, active, duration = 700)`: eases 0→`value` the first time `active` turns true, lands instantly on `target === 0` or under reduced motion, and defers its reset past the effect via `requestAnimationFrame` (no synchronous `setState`).
+
+### `src/index.css` (appended only)
+- A leaderboard motion pass: `lb-drop-in` / `lb-float` / `lb-shine` / `lb-check-pop` / `lb-shake` / `lb-glow` / `lb-flash` / `lb-row-leave` keyframes and the utilities `.lb-enter-drop`, `.lb-float`, `.lb-shine::after`, `.lb-check-pop`, `.lb-bar` (paused until `.lb-in`), `.lb-shake`, `.lb-header-flash`, `.lb-row-in`, `.lb-row-leave`, `.lb-rows-hold`, `.lb-you-glow`, `.lb-crown-shine::after`. The `@media (hover: hover)` row highlight and a `prefers-reduced-motion` reset (including a static glow for the "you" row and an un-paused, untransformed `.lb-bar`) round it out. All transform/opacity only.
+
+### `scripts/browser-leaderboard.mjs` (new)
+- Self-booting E2E (own dev server on 5173, headless Chrome on 9225): a **guest suite** asserting exactly one h1, the hero eyebrow and progress panel, three filter groups, the default `?db=sql&mode=mc&level=easy` URL, the guest sign-in banner, ≥12 "Sign in to play" rows, then board-by-board row assertions (`sql/mc/easy`, `sql/global`, empty `mc/all` + `mc/hard`, `write/medium`, `bug/easy`), the disabled Difficulty pills under Global, the Mongo placeholder + "Switch to SQL", and no horizontal overflow at 1280/375; a **reduced-motion suite** asserting the instant crossfade; and an optional **signed-in suite** (seeded Supabase session from `%TEMP%/opencode/smoke-session.json`) covering the Completed meters, "not started" rows, unlock lines, empty `0/4` meters, the Play-link href, and a level-row click updating the URL and scrolling the table into view.
+
+### Verified
+`npm run build` → success (1.27s; chunk-size warning only) · `npx oxlint src scripts` → no errors; only the long-standing `set-state-in-effect` / `exhaustive-deps` / `only-export-components` baseline warnings (Profile, SqlQuiz, Auth, AuthContext, LevelReport, AdminTable, ModeSelect, ChapterOutline, useIsAdmin), none in the touched files.
+
+### Known leftover
+- The untracked `src/data/practice/practice-questions (1).json` is still present — a browser-download duplicate of `practice-questions.json`, unreferenced by any import, deliberately left uncommitted and safe to delete.
+- `node scripts/browser-leaderboard.mjs` was not run in this session; its signed-in suite needs the smoke session file to exist, otherwise it is skipped.
+
+**Not done:** no human has looked at the rendered leaderboard; the hero count-ups, table crossfade, mobile card rows and progress meters are verified only by the build and lint.
+
+## Previous session (2026-10-16): practice session screen rebuild — stats HUD, dark SQL card, session rail, keyboard shortcuts
 
 A visual-and-interaction rebuild of the **practice session screen** (the quiz play view at `/practice` once a session has started), following the earlier picker redesign. The old screen was a narrow single column with a plain HUD, a mono prompt block and an ad-hoc feedback box; it is now a wide two-column layout (question card + sticky session rail), the question prompt is split into a dark syntax-highlighted SQL card and a lavender ask band, and the whole screen is keyboard-driven (A–D / Enter / Skip). **No engine, scoring, persistence, Supabase or question-bank change** — the practice dataset type `practice` is now treated as a first-class MCQ alias, and the only non-presentation imports added are `getQuizHelp`, `useAuth` and the feedback helpers. 11 files modified; all uncommitted at write time.
 
