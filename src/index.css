@@ -1182,15 +1182,6 @@ body {
   }
 }
 
-@keyframes quiz-dot-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @layer utilities {
   .quiz-col {
     animation: quiz-col-in 520ms var(--ease-out-soft) both;
@@ -1286,10 +1277,6 @@ body {
     animation: quiz-hint-drop 300ms var(--ease-out-soft) both;
   }
 
-  .quiz-dot-in {
-    animation: quiz-dot-in 260ms var(--ease-out-soft) both;
-  }
-
   /* Glow = static radial fill, only opacity/scale animate, so it stays on the
      compositor (no filter/box-shadow per frame). */
   .quiz-halo {
@@ -1332,7 +1319,6 @@ body {
   .quiz-fade-swap,
   .quiz-streak-pop,
   .quiz-hint-drop,
-  .quiz-dot-in,
   .quiz-halo,
   .quiz-sparkle-burst {
     animation: none;

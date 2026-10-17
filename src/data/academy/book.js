@@ -45,11 +45,6 @@ export const LEARNING_GAMES = [
 
 export const CHAPTERS = [ch01, ch02, ch03, ch04, ch05, ch06, ch07, ch08]
 
-export const PARTS = [
-  { label: 'Part One', title: 'Reading, filtering, ordering and combining', numbers: [1, 2, 3, 4, 5] },
-  { label: 'Part Two', title: 'Analysing, changing, and stepping back', numbers: [6, 7, 8] },
-]
-
 const CHAPTER_BY_SLUG = new Map(CHAPTERS.map((c) => [c.slug, c]))
 
 export function getChapter(slug) {
@@ -60,16 +55,7 @@ export function sectionKey(chapterSlug, sectionId) {
   return `${chapterSlug}--${sectionId}`
 }
 
-function chapterIndex(slug) {
-  return CHAPTERS.findIndex((c) => c.slug === slug)
-}
-
-export function neighbour(slug, offset) {
-  const i = chapterIndex(slug) + offset
-  return i >= 0 && i < CHAPTERS.length ? CHAPTERS[i] : null
-}
-
-export function totalSections() {
+function totalSections() {
   return CHAPTERS.reduce((n, c) => n + c.sections.length, 0)
 }
 
